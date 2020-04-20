@@ -35,7 +35,7 @@ def extractStreamlines(data):
 
 
 plt.ion()  # Keep interactive mode on
-workingDir = "..\\Two Pillar Studies\\"  # Directory you want to scan through
+workingDir = "..\\Two Pillar Studies\\CoarseResults\\"  # Directory you want to scan through
 caseName = "TwoInletsTwoColumns_coarse"
 tgtExt = ".txt"
 plotData = True
