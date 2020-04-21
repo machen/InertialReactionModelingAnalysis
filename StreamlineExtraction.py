@@ -21,11 +21,12 @@ def extractStreamlines(data):
     # Uses the first row to determine predominant flow direction
     if dData.loc[1, 'y'] > 0:
         subData = data.loc[dData.y < 0, :]
+        # Filter out entries not on the same streamline
+        subData = subData.loc[dData.sID == 0, :]
+        # Pick entries that go beyond a certain Y value
     elif dData.loc[1, 'y'] < 0:
         subData = data.loc[dData.y > 0, :]
-    # Filter out entries not on the same streamline
-    subData = subData.loc[dData.sID == 0, :]
-
+        subData = subData.loc[dData.sID == 0, :]
     # Create a slice of data containing only the streamlines targetted above
     tgt_sID = np.array(subData.sID.unique())
     print("No. Backward streamlines found: {}".format(len(tgt_sID)))
@@ -36,7 +37,7 @@ def extractStreamlines(data):
 
 
 plt.ion()  # Keep interactive mode on
-workingDir = "..\\Two Pillar Studies\\CoarseResults\\"  # Directory you want to scan through
+workingDir = "..\\Two Pillar Studies\\CoarseResults\\v1Results\\"  # Directory you want to scan through
 caseName = "TwoInletsTwoColumns_coarse"
 tgtExt = ".txt"
 plotData = True
@@ -64,6 +65,11 @@ for f in fileList:
                 subData = tgt_data.loc[tgt_data.sID == ID, :]
                 ax.plot(subData.x, subData.y, subData.z, label=ID)
                 ax.set_zlim([0, 100])
+                ax.set_ylim([-5000, 2000])
+                ax.set_xlim([-2000, 2000])
+                ax.set_xlabel('x')
+                ax.set_ylabel('y')
+                ax.set_zlabel('z')
 
 # # plt.show()
 # startPoints.to_csv(tgtFile+"_startPoints.csv")
