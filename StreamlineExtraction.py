@@ -18,6 +18,7 @@ UPDATE ME TO TAKE AN ARBITRARY GLOBAL DIRECTION.
 def extractStreamlines(data):
     dData = data.diff()
     # Select for data where the y value reverses direction
+    # Uses the first row to determine predominant flow direction
     if dData.loc[1, 'y'] > 0:
         subData = data.loc[dData.y < 0, :]
     elif dData.loc[1, 'y'] < 0:
@@ -39,6 +40,7 @@ workingDir = "..\\Two Pillar Studies\\CoarseResults\\"  # Directory you want to 
 caseName = "TwoInletsTwoColumns_coarse"
 tgtExt = ".txt"
 plotData = True
+saveData = False
 
 # FILE READER VERSION, NO PLOTTING
 
@@ -51,7 +53,8 @@ for f in fileList:
         data = pd.read_table(f, sep='\s+', skiprows=8,
                              names=['x', 'y', 'z', 'sID', 'val'])
         tgt_sID, tgt_data, startPoints = extractStreamlines(data)
-        startPoints.to_csv(f[:-4]+"_startPoints.csv")
+        if saveData:
+            startPoints.to_csv(f[:-4]+"_startPoints.csv")
         if plotData:
             fig = plt.figure()
             ax = fig.add_subplot(111, projection='3d')
