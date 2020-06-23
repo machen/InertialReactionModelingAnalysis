@@ -8,13 +8,26 @@ as a means of doing general data import from comsol. As a reminder, comsol files
 
 %TODO:
 
--Generate histogram of velocities -> easy?
+-Can I natively capture the column names? -> (\w+? \(.+?\)|\w+?) @ \d+?: will
+capture the header name, but it will not capture the resultant parameter info.
+Likely that info is not worth it, and should be kept in the file name.
+
+-BUT SHOULD I? No. I should format my data consistently
+
+FORMAT IS:
+x, y, z, MeshID, MeshVolumeScale, MeshElementVolume, u (m/s), v (m/s), w (m/s),
+p, Velocity Magnitude (m/s), Mass flow (kg/s)
+
+-Generate histogram of velocities -> DONE
 
 -Analyze for recirculation zone (how do we tag points as in or not in a zone?)
 -Do calculations for residence time?
     How?
 -Calcuate the change in pressure over the whole channel
+
+-Export: We should output the resulting velocity bins.
 """
+
 
 def produceVelPDF(data, nBins):
     """Produce a velocity histogram from the volumes and velocities
@@ -25,7 +38,7 @@ def produceVelPDF(data, nBins):
     # Bin velocities -> is there a better way to do that? We might need it since the bins need to be better at low velocities
     # Option, bin velocities such that the mean and median are within some tolerance or the RSD meets a certain criteria
     # velBin = np.linspace(data.velMag.min(), data.velMag.max(), num=nBins)
-    velBin = np.logspace(np.log10(data.velMag.min()), np.log10(data.velMag.max()), num = nBins)
+    velBin = np.logspace(np.log10(data.velMag.min()), np.log10(data.velMag.max()), num=nBins)
     groups = data.groupby(np.digitize(data.velMag, velBin))
     velVal = groups.velMag.mean()
     # Weight frequencies
@@ -34,6 +47,8 @@ def produceVelPDF(data, nBins):
     totalArea = np.trapz(weightedFreq, velVal)
     normFreq = weightedFreq/totalArea
     return normFreq, velVal, groups, velBin
+
+
 workingDir = "."
 plt.ion()
 data = pd.read_table('TestData.txt', header=9, sep='\s+', names=['x', 'y', 'z',
