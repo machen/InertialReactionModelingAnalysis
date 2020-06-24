@@ -53,7 +53,7 @@ def produceVelPDF(data, nBins):
     # Weight frequencies
     weightedFreq = groups.EleVol.sum()*groups.size()
     # Calculate area under current curve
-    totalArea = np.trapz(weightedFreq, velVal)
+    totalArea = np.trapz(weightedFreq)
     normFreq = weightedFreq/totalArea
     return normFreq, velVal, groups, velBin
 
@@ -145,4 +145,4 @@ plt.plot(metaData.dP, interpQ, ls='-', color='k')
 plt.xlabel('Pressure Difference (Pa)')
 plt.ylabel('Flow rate (m^3/s)')
 plt.title('Pressure vs Flow Rate')
-plt.savefig(caseName+'dPvsQ.png')
+plt.savefig(caseName+'_dPvsQ.png')
