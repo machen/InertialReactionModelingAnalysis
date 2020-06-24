@@ -86,6 +86,7 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     deltaP = data.p.max()-data.p.min()  # Pa
     return deltaP, q0
 
+
 # Read through files in a directory
 
 
@@ -94,7 +95,6 @@ caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
 caseExt = ".txt"
 createFresh = True  # Create a new metadata file
 
-plt.ion()
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
 fileList = os.listdir('.')
@@ -128,5 +128,21 @@ for fileName in fileList:
         velData = {'NormFreq': normFreq, 'velVal': velVals}
         velPDF = pd.DataFrame(velData)
         velPDF.to_csv(fileName[:-4]+"_histogram.csv")
+        plt.figure()
+        plt.plot(velVals, normFreq)
+        plt.xlabel('Average velocity of bin (m/s)')
+        plt.ylabel('Normalized Frequency (.)')
+        plt.savefig(fileName[:-4]+".png")
+        plt.close()
 
 metaData.to_csv(caseName+"_meta.csv")
+
+# Plot deltaP vs Q, also fit a line
+plt.plot(metaData.dP, metaData.q, ls='None', marker='*')
+linFit = np.polyfit(metaData.dP, metaData.q, 1)
+interpQ = np.polyval(linFit, metaData.dP)
+plt.plot(metaData.dP, interpQ, ls='-', color='k')
+plt.xlabel('Pressure Difference (Pa)')
+plt.ylabel('Flow rate (m^3/s)')
+plt.title('Pressure vs Flow Rate')
+plt.savefig(caseName+'dPvsQ.png')
