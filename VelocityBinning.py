@@ -2,6 +2,7 @@ import pandas as pd
 import numpy as np
 import re
 import matplotlib.pyplot as plt
+import os
 
 """ Purpose of script is to import data for velocity analysis,
 but will also serve as a means of doing general data import from comsol.
@@ -11,32 +12,29 @@ but will also serve as a means of doing general data import from comsol.
 -Can I natively capture the column names? -> (\w+? \(.+?\)|\w+?) @ \d+?: will
 capture the header name, but it will not capture the resultant parameter info.
 Likely that info is not worth it, and should be kept in the file name.
-
--BUT SHOULD I? No. I should format my data consistently
+BUT SHOULD I? No. I should format my data consistently
 
 FORMAT IS:
 x, y, z, MeshID, MeshVolumeScale, MeshElementVolume, u (m/s), v (m/s), w (m/s),
 p, Velocity Magnitude (m/s), Mass flow (kg/s)
 
--Generate histogram of velocities -> DONE
-
 -Analyze for recirculation zone (how do we tag points as in or not in a zone?)
 -Do calculations for residence time?
     How?
--Calcuate the change in pressure over the whole channel: wait this is easy
-it's literally data['p'].max()-data['p'].min(). The flow rate is determined
-by the Re number
 
-# vel = Re*nu/(c*c_ratio)
-# q0 = vel*c*depth
-q0 = Re*nu*depth
+-Metadata file handling:
 
--Export: We should output the resulting velocity bins.
+-Export
 """
 
 
 def produceVelPDF(data, nBins):
-    """Produce a velocity histogram from the volumes and velocities
+    """OUTPUT"
+    normFreq: Normalized frequencies for the defined bins
+    velVal: The mean velocity in each bin
+    groups: The binned data group
+    velBin: Velocity bin limits used
+    Produce a velocity histogram from the volumes and velocities
     1) Bin the velocities by magnitude
     2) Find the total grid size in each bin
     3) Weight the frequency by multiplying the number of bin entries
@@ -76,7 +74,7 @@ def extractParams(fileName):
 
 
 def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
-                  depth=100E-16):
+                  depth=100E-6):
     # vel = Re*nu/(c*cRatio)
     # q0 = vel*c*depth
     # nu is default kinematic viscosity for acetonitrile
@@ -88,30 +86,47 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     deltaP = data.p.max()-data.p.min()  # Pa
     return deltaP, q0
 
+# Read through files in a directory
 
-workingDir = "."
+
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
+caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
+caseExt = ".txt"
+createFresh = True  # Create a new metadata file
+
 plt.ion()
-nu = 1.6E-6  # m^2/s
-fileName = 'TwoInletsTwoColumns_v5.1_Normal_FlowData_d50_r1_50_r2_50_Re0.1.txt'
-data = pd.read_table(fileName, header=9, sep='\s+', names=['x', 'y', 'z',
-                     'meshID', 'EleVol', 'u', 'v', 'w', 'p', 'velMag',
-                     'massFlow'])
-avgVol = data['EleVol'].mean()
-data['NormScale'] = data['EleVol']/avgVol
-data['velMagCalc'] = np.sqrt(np.power(data['u'].values, 2) +
-                             np.power(data['v'].values, 2) +
-                             np.power(data['w'].values, 2))
-data['velMagScaled'] = np.divide(data['velMag'].values,
-                                 data['NormScale'].values)
-data['uScaled'] = np.divide(data['u'].values, data['NormScale'].values)
-data['vScaled'] = np.divide(data['v'].values, data['NormScale'].values)
-data['wScaled'] = np.divide(data['w'].values, data['NormScale'].values)
-# data.hist(column=['velMagScaled', 'uScaled', 'vScaled', 'wScaled'], bins=100)
-# data.hist(column=['velMag', 'u', 'v', 'w'], bins=100)
-# scat = data.plot.scatter('x', 'y', c='velMag', cmap='hsv', marker='.')
-# scat.axis('equal')
-normFreq, velVals, velGroups, velBin = produceVelPDF(data, 1000)
-plt.figure(4)
-plt.plot(velVals, normFreq)
-plt.show()
-params = extractParams(fileName)
+os.chdir(workingDir)
+filePat = re.compile(caseName+'.*?'+caseExt)
+fileList = os.listdir('.')
+# Check for existence of a metadata file which should be something like:
+# caseName+"_meta.csv"
+# Purpose of metadata file is to say what we've run already
+metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
+                                     'd', 'Re', 'dP', 'q'])
+for fileName in fileList:
+    if re.match(filePat, fileName):
+        print(fileName)
+        # Check for fileName already in metaData, skip if so
+        data = pd.read_table(fileName, header=9, sep='\s+',
+                             names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
+                                    'v', 'w', 'p', 'velMag', 'massFlow'])
+        # There's no need to do any of this because produceVelPDF does it
+        # avgVol = data['EleVol'].mean()
+        # data['NormScale'] = data['EleVol']/avgVol
+        # # The velMag doesn't need to be calculated, since it's output
+        # # data['velMagCalc'] = np.sqrt(data.u**2 + data.v**2 + data.w**2)
+        # # data['velMagErr'] = (data.velMagCalc-data.velMag)/data.velMag
+        # data['velMagScaled'] = data.velMag/data.NormScale
+        # data['uScaled'] = data.u/data.NormScale
+        # data['vScaled'] = data.v/data.NormScale
+        # data['wScaled'] = data.w.values/data.NormScale.values
+        normFreq, velVals, velGroups, velBin = produceVelPDF(data, 1000)
+        params = extractParams(fileName)
+        params['dP'], params['q'] = calcFlowPress(data, params)
+        params['fileName'] = fileName
+        metaData = metaData.append(params, ignore_index=True)
+        velData = {'NormFreq': normFreq, 'velVal': velVals}
+        velPDF = pd.DataFrame(velData)
+        velPDF.to_csv(fileName[:-4]+"_histogram.csv")
+
+metaData.to_csv(caseName+"_meta.csv")
