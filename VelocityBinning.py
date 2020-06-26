@@ -90,10 +90,11 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
-caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
-caseExt = ".txt"
-createFresh = True  # Create a new metadata file
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version4\\ExF\\FlowData\\"
+caseName = "TwoInletsTwoColumns_v4.1_ExF_FlowData"
+caseExt = "\.txt$"
+writeMeta = True  # Create a new metadata file
+binVel = True  # True to bin velocties, false to skip
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -120,22 +121,27 @@ for fileName in fileList:
         # data['uScaled'] = data.u/data.NormScale
         # data['vScaled'] = data.v/data.NormScale
         # data['wScaled'] = data.w.values/data.NormScale.values
-        normFreq, velVals, velGroups, velBin = produceVelPDF(data, 1000)
         params = extractParams(fileName)
         params['dP'], params['q'] = calcFlowPress(data, params)
         params['fileName'] = fileName
         metaData = metaData.append(params, ignore_index=True)
-        velData = {'NormFreq': normFreq, 'velVal': velVals}
-        velPDF = pd.DataFrame(velData)
-        velPDF.to_csv(fileName[:-4]+"_histogram.csv")
-        plt.figure()
-        plt.plot(velVals, normFreq)
-        plt.xlabel('Average velocity of bin (m/s)')
-        plt.ylabel('Normalized Frequency (.)')
-        plt.savefig(fileName[:-4]+".png")
-        plt.close()
+        if binVel:
+            normFreq, velVals, velGroups, velBin = produceVelPDF(data, 1000)
+            velData = {'NormFreq': normFreq, 'velVal': velVals}
+            velPDF = pd.DataFrame(velData)
+            velPDF.to_csv(fileName[:-4]+"_histogram.csv")
+            plt.figure()
+            plt.plot(velVals, normFreq)
+            plt.xlabel('Average velocity of bin (m/s)')
+            plt.ylabel('Normalized Frequency (.)')
+            plt.savefig(fileName[:-4]+".png")
+            plt.close()
 
-metaData.to_csv(caseName+"_meta.csv")
+if writeMeta:
+    metaData.to_csv(caseName+"_meta.csv")
+
+# Obtain the unique geometries used (i.e. by d, r1, and r2)
+# metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 
 # Plot deltaP vs Q, also fit a line
 plt.plot(metaData.dP, metaData.q, ls='None', marker='*')
