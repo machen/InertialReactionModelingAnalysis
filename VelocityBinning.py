@@ -45,13 +45,18 @@ def produceVelPDF(data, nBins):
     We might need it since the bins need to be better at low velocities
     # Option, bin velocities such that the mean and median are within
     some tolerance or the RSD meets a certain criteria
-    # velBin = np.linspace(data.velMag.min(), data.velMag.max(), num=nBins)"""
-    velBin = np.logspace(np.log10(data.velMag.min()),
-                         np.log10(data.velMag.max()), num=nBins)
-    groups = data.groupby(np.digitize(data.velMag, velBin))
+    # Frequencies need to be normalized to the bin size for a proper PDF!
+    """
+    velBin = np.linspace(data.velMag.min(), data.velMag.max(), num=nBins)
+    # velBin = np.logspace(np.log10(data.velMag.min()),
+    #                      np.log10(data.velMag.max()), num=nBins)
+    velBinSize = velBin[1:]-velBin[:-1]
+    data.loc[:, 'binID'] = np.digitize(data.velMag, velBin)
+    groups = data.groupby(data.binID)
     velVal = groups.velMag.mean()
-    # Weight frequencies
-    weightedFreq = groups.EleVol.sum()*groups.size()
+    # Weight frequencies -> There's a problem with binID contiaining IDs that are impossible
+    weightedFreq = groups.EleVol.sum()*groups.size() # \
+        # / groups.binID.median().apply(lambda x: velBinSize[x-1])
     # Calculate area under current curve
     totalArea = np.trapz(weightedFreq)
     normFreq = weightedFreq/totalArea
@@ -90,8 +95,9 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version4\\ExF\\FlowData\\"
-caseName = "TwoInletsTwoColumns_v4.1_ExF_FlowData"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
+workingDir = "."
+caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip

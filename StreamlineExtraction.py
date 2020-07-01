@@ -12,6 +12,9 @@ reverses in the y direction by establishing the initial direction
 from the first point and taking the derivative.
 UPDATE ME TO TAKE AN ARBITRARY GLOBAL DIRECTION.
 
+Ideas:
+-Extract backward streamlines of a certain length or larger
+
 """
 
 
