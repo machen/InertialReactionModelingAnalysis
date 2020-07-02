@@ -3,6 +3,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os
+import seaborn as sns
 
 """ Purpose of script is to import data for velocity analysis,
 but will also serve as a means of doing general data import from comsol.
@@ -107,8 +108,8 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
-workingDir = "."
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
+# workingDir = "."
 caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
@@ -160,14 +161,45 @@ if writeMeta:
     metaData.to_csv(caseName+"_meta.csv")
 
 # Obtain the unique geometries used (i.e. by d, r1, and r2)
-# metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
+uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
+colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
+
+f1, ax1 = plt.subplots(1, 1, sharex='col')
+
+for i in uniqueParam.index:
+    r1 = uniqueParam.loc[i, 'r1']
+    r2 = uniqueParam.loc[i, 'r2']
+    d = uniqueParam.loc[i, 'd']
+    subData = metaData.loc[(metaData.d == d) &
+                           (metaData.r1 == r1) & (metaData.r2 == r2), :]
+    ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[i-1],
+             marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
+    linFit = np.polyfit(subData.q, subData.dP, 1)
+    interp_dP = np.polyval(linFit, subData.q)
+    ax1.plot(subData.q, interp_dP, ls='-', color=colorPalette[i-1],
+             label='r1 = {}, r2 = {}, d = {} fit'.format(r1, r2, d))
+
+"""
+What do I want to do?
+
+For each unique combination of d, r1, and r2, I want to apply a coloration
+and marker to differentiate it, fit Q vs dP, and plot both.
+
+Option 1: Create table of the unique entries
+subselect data for each known entry
+
+Option 2: Iterate through d, r1, r2 unique values
+Bad because I may not have all combinations.
+"""
 
 # Plot deltaP vs Q, also fit a line
-plt.plot(metaData.q, metaData.dP, ls='None', marker='*')
+plt.plot(metaData.q, metaData.dP, ls='None', marker='*', color='k',
+         label='Overall')
 linFit = np.polyfit(metaData.q, metaData.dP, 1)
 interp_dP = np.polyval(linFit, metaData.q)
-plt.plot(metaData.q, interp_dP, ls='-', color='k')
-plt.xlabel('Pressure Difference (Pa)')
-plt.ylabel('Flow rate (m^3/s)')
-plt.title('Pressure vs Flow Rate')
+# plt.plot(metaData.q, interp_dP, ls='-', color='k', label='Overall fit')
+plt.legend(loc=0)
+plt.ylabel('Pressure Difference (Pa)')
+plt.xlabel('Flow rate (m^3/s)')
+plt.title('Flow rate vs Pressure')
 plt.savefig(caseName+'_dPvsQ.png')
