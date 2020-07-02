@@ -28,9 +28,16 @@ p, Velocity Magnitude (m/s), Mass flow (kg/s)
 """
 
 
-def produceVelPDF(data, nBins):
-    """OUTPUT"
-    normFreq: Normalized frequencies for the defined bins
+def produceVelPDF(data, nBins=1000, logBin=True):
+    """
+    INPUT:
+    data: data output from comsol, must include "velMag" & "eleVol" cols
+    nBins: Number of bins you want to use, default is 1000
+    logBin: True-> bins are evenly spaced in log space,
+    otherwise, linear spacing
+
+    OUTPUT
+    normFreq: Normalized frequencies for the defined bins by bin size
     velVal: The mean velocity in each bin
     groups: The binned data group
     velBin: Velocity bin limits used
@@ -41,22 +48,27 @@ def produceVelPDF(data, nBins):
     by the total vol in the bin
     4) Normalize the frequency to make the area under the curve 1.
     (I think it's sum (freq*area))
-    # Bin velocities -> is there a better way to do that?
-    We might need it since the bins need to be better at low velocities
-    # Option, bin velocities such that the mean and median are within
+
+    Option, bin velocities such that the mean and median are within
     some tolerance or the RSD meets a certain criteria
-    # Frequencies need to be normalized to the bin size for a proper PDF!
+
+    Bin size is taken as 1.01*max due to the way np.digitize works.
+    For a linear bin, without doing this, the last value will not belong to a
+    bin that has a proper size definition.
     """
-    velBin = np.linspace(data.velMag.min(), data.velMag.max(), num=nBins)
-    # velBin = np.logspace(np.log10(data.velMag.min()),
-    #                      np.log10(data.velMag.max()), num=nBins)
+    if logBin:
+        velBin = np.logspace(np.log10(data.velMag.min()),
+                             np.log10(data.velMag.max()*1.01), num=nBins)
+    else:
+        velBin = np.linspace(data.velMag.min(), data.velMag.max()*1.01,
+                             num=nBins)
     velBinSize = velBin[1:]-velBin[:-1]
     data.loc[:, 'binID'] = np.digitize(data.velMag, velBin)
     groups = data.groupby(data.binID)
     velVal = groups.velMag.mean()
-    # Weight frequencies -> There's a problem with binID contiaining IDs that are impossible
-    weightedFreq = groups.EleVol.sum()*groups.size() # \
-        # / groups.binID.median().apply(lambda x: velBinSize[x-1])
+    # Weight frequencies by included volume and normalize to bin size
+    weightedFreq = groups.EleVol.sum()*groups.size() \
+        / groups.binID.median().apply(lambda x: velBinSize[x-1])
     # Calculate area under current curve
     totalArea = np.trapz(weightedFreq)
     normFreq = weightedFreq/totalArea
@@ -132,7 +144,8 @@ for fileName in fileList:
         params['fileName'] = fileName
         metaData = metaData.append(params, ignore_index=True)
         if binVel:
-            normFreq, velVals, velGroups, velBin = produceVelPDF(data, 1000)
+            normFreq, velVals, velGroups, velBin = \
+                produceVelPDF(data, nBins=1000, logBin=True)
             velData = {'NormFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")
