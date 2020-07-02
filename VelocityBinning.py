@@ -163,10 +163,10 @@ if writeMeta:
 # metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 
 # Plot deltaP vs Q, also fit a line
-plt.plot(metaData.dP, metaData.q, ls='None', marker='*')
-linFit = np.polyfit(metaData.dP, metaData.q, 1)
-interpQ = np.polyval(linFit, metaData.dP)
-plt.plot(metaData.dP, interpQ, ls='-', color='k')
+plt.plot(metaData.q, metaData.dP, ls='None', marker='*')
+linFit = np.polyfit(metaData.q, metaData.dP, 1)
+interp_dP = np.polyval(linFit, metaData.q)
+plt.plot(metaData.q, interp_dP, ls='-', color='k')
 plt.xlabel('Pressure Difference (Pa)')
 plt.ylabel('Flow rate (m^3/s)')
 plt.title('Pressure vs Flow Rate')
