@@ -165,19 +165,20 @@ uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
 
 f1, ax1 = plt.subplots(1, 1, sharex='col')
-
+ci = 0
 for i in uniqueParam.index:
     r1 = uniqueParam.loc[i, 'r1']
     r2 = uniqueParam.loc[i, 'r2']
     d = uniqueParam.loc[i, 'd']
     subData = metaData.loc[(metaData.d == d) &
                            (metaData.r1 == r1) & (metaData.r2 == r2), :]
-    ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[i-1],
+    ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[ci],
              marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
     linFit = np.polyfit(subData.q, subData.dP, 1)
     interp_dP = np.polyval(linFit, subData.q)
-    ax1.plot(subData.q, interp_dP, ls='-', color=colorPalette[i-1],
+    ax1.plot(subData.q, interp_dP, ls='-', color=colorPalette[ci],
              label='r1 = {}, r2 = {}, d = {} fit'.format(r1, r2, d))
+    ci += 1
 
 """
 What do I want to do?
