@@ -108,9 +108,9 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
+caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
@@ -147,7 +147,7 @@ for fileName in fileList:
         if binVel:
             normFreq, velVals, velGroups, velBin = \
                 produceVelPDF(data, nBins=1000, logBin=True)
-            velData = {'NormFreq': normFreq, 'velVal': velVals}
+            velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")
             plt.figure()
