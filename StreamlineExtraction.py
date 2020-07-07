@@ -18,7 +18,9 @@ Ideas:
 """
 
 
-def extractStreamlines(data):
+def extractStreamlines(data, minLen=1):
+    # data = data with x, y, z, sID
+    # minLen = minimum length of streamline
     dData = data.diff()
     # Select for data where the y value reverses direction
     # Uses the first row to determine predominant flow direction
@@ -31,16 +33,20 @@ def extractStreamlines(data):
         subData = data.loc[dData.y > 0, :]
         subData = subData.loc[dData.sID == 0, :]
     # Create a slice of data containing only the streamlines targetted above
-    tgt_sID = np.array(subData.sID.unique())
+    groups = subData.groupby(subData.sID)
+    tgt_sID = groups.sID.count()[groups.sID.count()>minLen].index.values
+    # tgt_sID = np.array(subData.sID.unique()) # Only selects unique values
     print("No. Backward streamlines found: {}".format(len(tgt_sID)))
     tgt_data = data.loc[data.sID.isin(tgt_sID), :]
+    # groupData = tgt_data.groupby(tgt_data.sID)
+    # sIDLen = groupData.len()
     dtgt_data = dData.loc[data.sID.isin(tgt_sID), :]
     startPoints = tgt_data.loc[dtgt_data.sID != 0, :]
     return tgt_sID, tgt_data, startPoints
 
 
 plt.ion()  # Keep interactive mode on
-workingDir = "..\\Two Pillar Studies\\CoarseResults\\v1Results\\"  # Directory you want to scan through
+workingDir = "..\\Comsol5.3\\Two Pillar Studies\\CoarseResults\\v1Results\\"  # Directory you want to scan through
 caseName = "TwoInletsTwoColumns_coarse"
 tgtExt = ".txt"
 plotData = True
@@ -73,6 +79,3 @@ for f in fileList:
                 ax.set_xlabel('x')
                 ax.set_ylabel('y')
                 ax.set_zlabel('z')
-
-# # plt.show()
-# startPoints.to_csv(tgtFile+"_startPoints.csv")
