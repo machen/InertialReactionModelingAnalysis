@@ -28,6 +28,18 @@ p, Velocity Magnitude (m/s), Mass flow (kg/s)
 -Export
 """
 
+def subSelectData(data, xRange=None, yRange=None, zRange=None):
+    """Assumes that each of the inputs to the function is a tuple containing
+     max and min values of x, y, and z that we wish to include. Use for rough
+     chopping of the data to exclude main channel flows"""
+    if xRange:
+        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
+    if yRange:
+        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
+    if zRange:
+        data = data.loc[(data.z > min(zRange)) & (data.z < min(zRange)), :]
+    return data
+
 
 def produceVelPDF(data, nBins=1000, logBin=True):
     """
@@ -108,9 +120,9 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly"
+caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
@@ -130,6 +142,7 @@ for fileName in fileList:
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
+        data = subSelectData(data, yRange=[-1000, 250])
         # There's no need to do any of this because produceVelPDF does it
         # avgVol = data['EleVol'].mean()
         # data['NormScale'] = data['EleVol']/avgVol
