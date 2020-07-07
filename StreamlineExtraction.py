@@ -33,14 +33,16 @@ def extractStreamlines(data, minLen=1):
         subData = data.loc[dData.y > 0, :]
         subData = subData.loc[dData.sID == 0, :]
     # Create a slice of data containing only the streamlines targetted above
-    groups = subData.groupby(subData.sID)
-    tgt_sID = groups.sID.count()[groups.sID.count()>minLen].index.values
-    # tgt_sID = np.array(subData.sID.unique()) # Only selects unique values
-    print("No. Backward streamlines found: {}".format(len(tgt_sID)))
+    # groups = subData.groupby(subData.sID)
+    # tgt_sID = groups.sID.count()[groups.sID.count() > minLen].index.values
+    tgt_sID = np.array(subData.sID.unique()) # Only selects unique values
     tgt_data = data.loc[data.sID.isin(tgt_sID), :]
-    # groupData = tgt_data.groupby(tgt_data.sID)
-    # sIDLen = groupData.len()
-    dtgt_data = dData.loc[data.sID.isin(tgt_sID), :]
+    groups = tgt_data.groupby(tgt_data.sID)
+    minsID = groups.sID.count()[groups.sID.count() > minLen].index.values
+    print("No. Backward streamlines found: {}".format(len(minsID)))
+    tgt_data = tgt_data.loc[tgt_data.sID.isin(minsID)]
+    dtgt_data = dData.loc[data.sID.isin(minsID), :]
+    # Captures the streamlines by using the transition
     startPoints = tgt_data.loc[dtgt_data.sID != 0, :]
     return tgt_sID, tgt_data, startPoints
 
@@ -62,7 +64,7 @@ for f in fileList:
         print(f)
         data = pd.read_table(f, sep='\s+', skiprows=8,
                              names=['x', 'y', 'z', 'sID', 'val'])
-        tgt_sID, tgt_data, startPoints = extractStreamlines(data)
+        tgt_sID, tgt_data, startPoints = extractStreamlines(data, 100)
         if saveData:
             startPoints.to_csv(f[:-4]+"_startPoints.csv")
         if plotData:
