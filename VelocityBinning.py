@@ -54,18 +54,12 @@ def produceVelPDF(data, nBins=1000, logBin=True):
     velVal: The mean velocity in each bin
     groups: The binned data group
     velBin: Velocity bin limits used
-    Produce a velocity histogram from the volumes and velocities
-    1) Bin the velocities by magnitude
-    2) Find the total grid size in each bin
-    3) Weight the frequency by multiplying the number of bin entries
-    by the total vol in the bin
-    4) Normalize the frequency to make the area under the curve 1.
-    (I think it's sum (freq*area))
+    Produce a velocity PDF from the input data
 
     Option, bin velocities such that the mean and median are within
     some tolerance or the RSD meets a certain criteria
 
-    Bin size is taken as 1.01*max due to the way np.digitize works.
+    Max velocity is taken as 1.01*max due to the way np.digitize works.
     For a linear bin, without doing this, the last value will not belong to a
     bin that has a proper size definition.
     """
@@ -82,8 +76,8 @@ def produceVelPDF(data, nBins=1000, logBin=True):
     # Weight frequencies by included volume and normalize to bin size
     weightedFreq = groups.EleVol.sum()*groups.size() \
         / groups.binID.median().apply(lambda x: velBinSize[x-1])
-    # Calculate area under current curve
-    totalArea = np.trapz(weightedFreq)
+    # Calculate area under freq-vel curve to obtain a PDF
+    totalArea = np.trapz(weightedFreq, x=velVal)
     normFreq = weightedFreq/totalArea
     return normFreq, velVal, groups, velBin
 
@@ -120,16 +114,20 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\Normal\\FlowData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_Normal_FlowData"
+caseName = "TwoInletsTwoColumns_v5.1_ExF"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
 
+dataRegion = [-1000, 250]
+nBins = 500
+
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
 fileList = os.listdir('.')
+
 # Check for existence of a metadata file which should be something like:
 # caseName+"_meta.csv"
 # Purpose of metadata file is to say what we've run already
@@ -142,7 +140,7 @@ for fileName in fileList:
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
-        data = subSelectData(data, yRange=[-1000, 250])
+        data = subSelectData(data, yRange=dataRegion)
         # There's no need to do any of this because produceVelPDF does it
         # avgVol = data['EleVol'].mean()
         # data['NormScale'] = data['EleVol']/avgVol
@@ -159,7 +157,7 @@ for fileName in fileList:
         metaData = metaData.append(params, ignore_index=True)
         if binVel:
             normFreq, velVals, velGroups, velBin = \
-                produceVelPDF(data, nBins=1000, logBin=True)
+                produceVelPDF(data, nBins=nBins, logBin=True)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")
@@ -167,7 +165,10 @@ for fileName in fileList:
             plt.plot(velVals, normFreq)
             plt.xlabel('Average velocity of bin (m/s)')
             plt.ylabel('Normalized Frequency (.)')
-            plt.savefig(fileName[:-4]+".png")
+            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.yscale('log')
+            plt.xscale('log')
+            plt.savefig(fileName[:-4]+"_log.png")
             plt.close()
 
 if writeMeta:
@@ -188,9 +189,12 @@ for i in uniqueParam.index:
     ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[ci],
              marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
     linFit = np.polyfit(subData.q, subData.dP, 1)
-    interp_dP = np.polyval(linFit, subData.q)
-    ax1.plot(subData.q, interp_dP, ls='-', color=colorPalette[ci],
-             label='r1 = {}, r2 = {}, d = {} fit'.format(r1, r2, d))
+    quadFit = np.polyfit(subData.q, subData.dP, 2)
+    interpQ = np.linspace(min(subData.q), max(subData.q), num=100)
+    interp_dP = np.polyval(linFit, interpQ)
+    interpQuad_dP = np.polyval(quadFit, interpQ)
+    ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label=None)
+    ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label=None)
     ci += 1
 
 """
@@ -207,13 +211,13 @@ Bad because I may not have all combinations.
 """
 
 # Plot deltaP vs Q, also fit a line
-plt.plot(metaData.q, metaData.dP, ls='None', marker='*', color='k',
-         label='Overall')
-linFit = np.polyfit(metaData.q, metaData.dP, 1)
-interp_dP = np.polyval(linFit, metaData.q)
+# plt.plot(metaData.q, metaData.dP, ls='None', marker='*', color='k',
+#          label='Overall')
+# linFit = np.polyfit(metaData.q, metaData.dP, 1)
+# interp_dP = np.polyval(linFit, metaData.q)
 # plt.plot(metaData.q, interp_dP, ls='-', color='k', label='Overall fit')
 plt.legend(loc=0)
 plt.ylabel('Pressure Difference (Pa)')
 plt.xlabel('Flow rate (m^3/s)')
 plt.title('Flow rate vs Pressure')
-plt.savefig(caseName+'_dPvsQ.png')
+plt.savefig(caseName+'_dPvsQ.png', dpi=600)

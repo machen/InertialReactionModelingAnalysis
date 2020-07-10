@@ -29,9 +29,9 @@ def extractParams(fileName):
     return res
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\Meta\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly"
+caseName = "TwoInletsTwoColumns_v5."
 caseExt = "Re100_histogram\.csv$"
 
 # Plot ALL the files together
@@ -50,7 +50,7 @@ for fileName in fileList:
         data = pd.read_csv(fileName, header=0,
                            names=['binID', 'normFreq', 'velVal'])
         plt.plot(data.velVal, data.normFreq,
-                 label='r1:{r1} r2:{r2} d:{d} Re:{Re}'.format(**params))
+                 label=fileName)
 plt.legend(loc=0)
 plt.ion()
 plt.show()
