@@ -99,12 +99,19 @@ def extractParams(fileName):
 
 def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
                   depth=100E-6):
-    # vel = Re*nu/(c*cRatio)
+    """# vel = Re*nu/(c*cRatio)
     # q0 = vel*c*depth
     # nu is default kinematic viscosity for acetonitrile
     # c is the channel width
     # cRatio is the ratio of the inlet channel width to the outlet channel
     # depth is the channel depth
+    You should more explicitly calculate pressure of the inflow and outflow
+    1) Group data by y value (could be 1 micron intervals) -> data.groupby(data.y)
+    Or you could do subDataMin = data.loc[(data.y <= TARGETMAX) & (data.y>= TARGETMIN), :]
+    2) find average pressure in each bin which represents a y slice-> WORTH OUTPUTTING POTENTIALLY
+    3) Find absolute value of pressure difference of max y bin and min y bin
+    4) Output some statistics about that pressure/info about where it's from
+    maybe also the distance over which the pressure drop is realized"""
     velInlet = params['Re']*nu/(c*cRatio)
     q0 = velInlet*c*depth  # m^3/s
     deltaP = data.p.max()-data.p.min()  # Pa
@@ -121,7 +128,7 @@ caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = [-1000, 250]
+dataRegion = None
 nBins = 500
 
 os.chdir(workingDir)
@@ -141,16 +148,6 @@ for fileName in fileList:
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
         data = subSelectData(data, yRange=dataRegion)
-        # There's no need to do any of this because produceVelPDF does it
-        # avgVol = data['EleVol'].mean()
-        # data['NormScale'] = data['EleVol']/avgVol
-        # # The velMag doesn't need to be calculated, since it's output
-        # # data['velMagCalc'] = np.sqrt(data.u**2 + data.v**2 + data.w**2)
-        # # data['velMagErr'] = (data.velMagCalc-data.velMag)/data.velMag
-        # data['velMagScaled'] = data.velMag/data.NormScale
-        # data['uScaled'] = data.u/data.NormScale
-        # data['vScaled'] = data.v/data.NormScale
-        # data['wScaled'] = data.w.values/data.NormScale.values
         params = extractParams(fileName)
         params['dP'], params['q'] = calcFlowPress(data, params)
         params['fileName'] = fileName
