@@ -98,13 +98,14 @@ def extractParams(fileName):
 
 
 def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
-                  depth=100E-6):
+                  depth=100E-6, regionSize=10):
     """# vel = Re*nu/(c*cRatio)
     # q0 = vel*c*depth
     # nu is default kinematic viscosity for acetonitrile
     # c is the channel width
     # cRatio is the ratio of the inlet channel width to the outlet channel
     # depth is the channel depth
+    # Region size is how wide a slice you want to use for pressure averaging
     You should more explicitly calculate pressure of the inflow and outflow
     1) Group data by y value (could be 1 micron intervals) -> data.groupby(data.y)
     Or you could do subDataMin = data.loc[(data.y <= TARGETMAX) & (data.y>= TARGETMIN), :]
@@ -114,8 +115,15 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     maybe also the distance over which the pressure drop is realized"""
     velInlet = params['Re']*nu/(c*cRatio)
     q0 = velInlet*c*depth  # m^3/s
-    deltaP = data.p.max()-data.p.min()  # Pa
-    return deltaP, q0
+    yInlet = data.y.min()
+    inletData = data.loc[(data.y <= yInlet+regionSize), :]
+    yOutlet = data.y.max()
+    outletData = data.loc[(data.y >= yOutlet-regionSize)]
+    inletP = inletData.p.mean()
+    outletP = outletData.p.mean()
+    deltaP = abs(inletP - outletP)  # Pa
+    dx = abs(inletData.y.mean() - outletData.y.mean())
+    return deltaP, q0, dx
 
 
 # Read through files in a directory
@@ -123,12 +131,12 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_ExF"
+caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly"
 caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = None
+dataRegion = None #[-1000, 250]
 nBins = 500
 
 os.chdir(workingDir)
@@ -139,7 +147,7 @@ fileList = os.listdir('.')
 # caseName+"_meta.csv"
 # Purpose of metadata file is to say what we've run already
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
-                                     'd', 'Re', 'dP', 'q'])
+                                     'd', 'Re', 'dP', 'q', 'l'])
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
@@ -149,7 +157,7 @@ for fileName in fileList:
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
         data = subSelectData(data, yRange=dataRegion)
         params = extractParams(fileName)
-        params['dP'], params['q'] = calcFlowPress(data, params)
+        params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
         metaData = metaData.append(params, ignore_index=True)
         if binVel:
@@ -175,7 +183,7 @@ if writeMeta:
 uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
 
-f1, ax1 = plt.subplots(1, 1, sharex='col')
+f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
 ci = 0
 for i in uniqueParam.index:
     r1 = uniqueParam.loc[i, 'r1']
@@ -187,11 +195,14 @@ for i in uniqueParam.index:
              marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
     linFit = np.polyfit(subData.q, subData.dP, 1)
     quadFit = np.polyfit(subData.q, subData.dP, 2)
+    logFit = np.polyfit(np.log(subData.q), np.log(subData.dP), 1)
     interpQ = np.linspace(min(subData.q), max(subData.q), num=100)
     interp_dP = np.polyval(linFit, interpQ)
     interpQuad_dP = np.polyval(quadFit, interpQ)
-    ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label=None)
-    ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label=None)
+    interpLog_dP = np.exp(np.polyval(logFit, np.log(interpQ)))
+    ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label="{:.2e}*q+{:2e}".format(*linFit))
+    ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
+    ax1.plot(interpQ, interpLog_dP, ls='dotted', label="log(dP) = {:.2e}*log(q)+{:.2e}".format(*logFit))
     ci += 1
 
 """
