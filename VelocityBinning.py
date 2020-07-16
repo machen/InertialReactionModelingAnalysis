@@ -136,8 +136,9 @@ caseExt = "\.txt$"
 writeMeta = True  # Create a new metadata file
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = None #[-1000, 250]
-nBins = 500
+dataRegion = [-1000, 250]
+nBins = 5000
+logBins = True # True to use log spaced bins, False to use linear bins
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -162,7 +163,7 @@ for fileName in fileList:
         metaData = metaData.append(params, ignore_index=True)
         if binVel:
             normFreq, velVals, velGroups, velBin = \
-                produceVelPDF(data, nBins=nBins, logBin=True)
+                produceVelPDF(data, nBins=nBins, logBin=logBins)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")

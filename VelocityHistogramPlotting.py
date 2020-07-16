@@ -29,10 +29,10 @@ def extractParams(fileName):
     return res
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\Meta\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - 100 log bins\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5."
-caseExt = "Re100_histogram\.csv$"
+caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly_r1_100_r2_100_d100"
+caseExt = "_histogram\.csv$"
 
 # Plot ALL the files together
 os.chdir(workingDir)
@@ -49,8 +49,10 @@ for fileName in fileList:
         params = extractParams(fileName)
         data = pd.read_csv(fileName, header=0,
                            names=['binID', 'normFreq', 'velVal'])
-        plt.plot(data.velVal, data.normFreq,
+        plt.plot(data.velVal/data.velVal.mean(), data.normFreq/data.normFreq.mean(),
                  label=fileName)
+        # plt.xscale('log')
+        # plt.yscale('log')
 plt.legend(loc=0)
 plt.ion()
 plt.show()
