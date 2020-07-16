@@ -29,10 +29,10 @@ def extractParams(fileName):
     return res
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - 100 log bins\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - 500 log bins\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly_r1_100_r2_100_d100"
-caseExt = "_histogram\.csv$"
+caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly_"
+caseExt = "Re10_histogram\.csv$"
 
 # Plot ALL the files together
 os.chdir(workingDir)
@@ -41,7 +41,8 @@ fileList = os.listdir('.')
 
 
 # Plot for everything
-plt.figure()
+f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
+f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
 
 for fileName in fileList:
     if re.match(filePat, fileName):
@@ -49,10 +50,20 @@ for fileName in fileList:
         params = extractParams(fileName)
         data = pd.read_csv(fileName, header=0,
                            names=['binID', 'normFreq', 'velVal'])
-        plt.plot(data.velVal/data.velVal.mean(), data.normFreq/data.normFreq.mean(),
-                 label=fileName)
-        # plt.xscale('log')
-        # plt.yscale('log')
-plt.legend(loc=0)
+        ax1.plot(data.velVal, data.normFreq, label=fileName)
+        ax2.plot(data.velVal/data.velVal.mean(),
+                 data.normFreq, label=fileName)
+        # ax1.set_xscale('log')
+        # ax1.set_yscale('log')
+        # ax2.set_xscale('log')
+        # ax2.set_yscale('log')
+ax1.set_title("Aggregated velocity PDFs")
+ax2.set_title("Normalized velocity PDFs")
+ax1.set_xlabel("Velocity (m/s)")
+ax1.set_ylabel("Normalized freq.")
+ax2.set_xlabel("Velocity/Average Velocity")
+ax2.set_ylabel("Normalized freq.")
+ax1.legend(loc=0)
+ax2.legend(loc=0)
 plt.ion()
 plt.show()
