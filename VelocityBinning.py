@@ -133,12 +133,12 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
 # workingDir = "."
 caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly"
 caseExt = "\.txt$"
-writeMeta = True  # Create a new metadata file
+writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
 dataRegion = [-1000, 250]
-nBins = 5000
-logBins = True # True to use log spaced bins, False to use linear bins
+nBins = 500
+logBins = True  # True to use log spaced bins, False to use linear bins
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -177,9 +177,9 @@ for fileName in fileList:
             plt.savefig(fileName[:-4]+"_log.png")
             plt.close()
 
-if writeMeta:
-    metaData.to_csv(caseName+"_meta.csv")
-
+flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
+                                        'quadA', 'quadB', 'quadC', 'expA',
+                                        'expB'])
 # Obtain the unique geometries used (i.e. by d, r1, and r2)
 uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
@@ -201,10 +201,18 @@ for i in uniqueParam.index:
     interp_dP = np.polyval(linFit, interpQ)
     interpQuad_dP = np.polyval(quadFit, interpQ)
     interpLog_dP = np.exp(np.polyval(logFit, np.log(interpQ)))
+    caseParam = {'r1': r1, 'r2': r2, 'd': d, 'linA': linFit[0],
+                 'linB': linFit[1], 'quadA': quadFit[0], 'quadB': quadFit[1],
+                 'quadC': [2], 'expA': logFit[0], 'expB': logFit[1]}
+    flowFitData = flowFitData.append(caseParam, ignore_index=True)
     ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label="{:.2e}*q+{:2e}".format(*linFit))
     ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
     ax1.plot(interpQ, interpLog_dP, ls='dotted', label="log(dP) = {:.2e}*log(q)+{:.2e}".format(*logFit))
     ci += 1
+
+if writeMeta:
+    metaData.to_csv(caseName+"_meta.csv")
+    flowFitData.to_csv(caseName+"_flowFits.csv")
 
 """
 What do I want to do?
