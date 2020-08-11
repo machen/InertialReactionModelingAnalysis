@@ -82,18 +82,24 @@ def produceVelPDF(data, nBins=1000, logBin=True):
     return normFreq, velVal, groups, velBin
 
 
-def extractParams(fileName):
+def extractParams(fileName, nPil = 2):
     # Produces a dictionary of experimental parameters
-    r1Pat = re.compile('r1_(\d+?)_')
-    r2Pat = re.compile('r2_(\d+?)_')
-    rePat = re.compile('Re(.*?).txt')
+    rePat = re.compile('Re(.*?).flowdata.txt')
     dPat = re.compile('d(\d+?)_')
-    r1Val = re.search(r1Pat, fileName).group(1)
-    r2Val = re.search(r2Pat, fileName).group(1)
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
-    res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
-           'Re': float(reVal)}
+    if nPil == 2:
+        r1Pat = re.compile('r1_(\d+?)_')
+        r2Pat = re.compile('r2_(\d+?)_')
+        r1Val = re.search(r1Pat, fileName).group(1)
+        r2Val = re.search(r2Pat, fileName).group(1)
+        res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
+               'Re': float(reVal)}
+    if nPil == 1:
+        rPat = re.compile('r(\d+?)_')
+        rVal = re.search(rPat, fileName).group(1)
+        res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
+               'Re': float(reVal)}
     return res
 
 
@@ -129,16 +135,17 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
+workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\FlowData_Normal\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly"
-caseExt = "\.txt$"
+caseName = "Multipillar_v5.2_Normal"
+caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = [-1000, 250]
-nBins = 500
+dataRegion = [-2500, 250]  # [-5000, 250]
+nBins = 200
 logBins = True  # True to use log spaced bins, False to use linear bins
+nPil = 1  # Number of pillars in file specification
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -157,7 +164,7 @@ for fileName in fileList:
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
         data = subSelectData(data, yRange=dataRegion)
-        params = extractParams(fileName)
+        params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
         metaData = metaData.append(params, ignore_index=True)
@@ -184,7 +191,7 @@ flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
 uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
 
-f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
+f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 ci = 0
 for i in uniqueParam.index:
     r1 = uniqueParam.loc[i, 'r1']
@@ -203,7 +210,7 @@ for i in uniqueParam.index:
     interpLog_dP = np.exp(np.polyval(logFit, np.log(interpQ)))
     caseParam = {'r1': r1, 'r2': r2, 'd': d, 'linA': linFit[0],
                  'linB': linFit[1], 'quadA': quadFit[0], 'quadB': quadFit[1],
-                 'quadC': [2], 'expA': logFit[0], 'expB': logFit[1]}
+                 'quadC': quadFit[2], 'expA': logFit[0], 'expB': logFit[1]}
     flowFitData = flowFitData.append(caseParam, ignore_index=True)
     ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label="{:.2e}*q+{:2e}".format(*linFit))
     ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
