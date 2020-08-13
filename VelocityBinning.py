@@ -135,15 +135,15 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\FlowData_Normal\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\Re250\\EqualPillar\\FlowData\\"
 # workingDir = "."
-caseName = "Multipillar_v5.2_Normal"
+caseName = "TwoInletsTwoColumns_v5.2_ExF"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = [-2500, 250]  # [-5000, 250]
-nBins = 200
+dataRegion = [-1000, 250]  # [-5000, 250]
+nBins = 500
 logBins = True  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 

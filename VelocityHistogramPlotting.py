@@ -45,10 +45,10 @@ def dataPlot(workingDir, caseName, caseExt):
     return
 
 
-workingDirA = "..\\Comsol5.4\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\Re250\\EqualPillar\\FlowData\\Pillar region - 500 log bins\\"
 # workingDir = "."
-caseNameA = "Multipillar_v5.2_Normal_r"
-caseExtA = "Re100_histogram\.csv$"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF"
+caseExtA = "Re250\.flowdata_histogram\.csv$"
 
 workingDirB = "."
 caseNameB = "Multipillar_v5.2_Normal_r200"

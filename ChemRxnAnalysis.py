@@ -23,6 +23,15 @@ c_TCPO (mol/m^3), c_product (mol/m^3), k (m^3/(s*mol))
 """
 
 
+def dataReduction(data, xBin, yBin, zBin):
+    """Reduce the data by averaging into a coraser grid.
+    Should maybe also weight the entries by volume.
+    How do we do this? I bet we can use the group by function to group things into
+    a defined grid (like I want 50 entries in x y and z)"""
+
+    return data
+
+
 def subSelectData(data, xRange=None, yRange=None, zRange=None):
     """Assumes that each of the inputs to the function is a tuple containing
      max and min values of x, y, and z that we wish to include. Use for rough
@@ -60,15 +69,12 @@ def extractParams(fileName, nPil=2):
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\FlowData_Normal\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\"
 # workingDir = "."
-caseName = "Multipillar_v5.2_Normal"
-caseExt = "\.txt$"
-
-dataRegion = [-2500, 250]  # [-5000, 250]
-nBins = 200
-logBins = True  # True to use log spaced bins, False to use linear bins
-nPil = 1  # Number of pillars in file specification
+caseName = "TwoInletsTwoColumns_v5.2_ExF"
+caseExt = "\.chemdata\.txt$"
+writeMeta = True
+dataRegionY = [-250, 1500]
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -77,14 +83,34 @@ fileList = os.listdir('.')
 # Check for existence of a metadata file which should be something like:
 # caseName+"_meta.csv"
 # Purpose of metadata file is to say what we've run already
-metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
-                                     'd', 'Re', 'dP', 'q', 'l'])
+metaData = pd.DataFrame([], columns=['fileName', 'totalProd', 'totalH2O2',
+                                     'totalTCPO', 'dCdtAvg', 'totalVol',
+                                     'M'])
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
         # Check for fileName already in metaData, skip if so
-        data = pd.read_table(fileName, header=9, sep='\s+',
-                             names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow'])
-        data = subSelectData(data, yRange=dataRegion)
+        data = pd.read_table(fileName, header=10, sep='\s+',
+                             names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
+                                    'v', 'w', 'p', 'velMag', 'massFlow',
+                                    'h2o2', 'tcpo', 'cProduct', 'k'])
+        data = subSelectData(data, yRange=dataRegionY)
+        data['dCdt'] = data.h2o2*data.tcpo*data.k
+        data['prodMass'] = data.cProduct*data.eleVol
+        data['tcpoMass'] = data.tcpo*data.eleVol
+        data['h2o2Mass'] = data.h2o2*data.eleVol
+        data['M'] = (data.tcpo+data.cProduct)*(data.tcpo+data.cProduct)*data.eleVol
+        res = {}
+        res['fileName'] = fileName
+        res['totalProd'] = data.prodMass.sum()
+        res['totalH2O2'] = data.h2o2Mass.sum()
+        res['totalTCPO'] = data.tcpoMass.sum()
+        res['totalVol'] = data.eleVol.sum()
+        res['dCdtAvg'] = data.dCdt.mean()
+        res['M'] = data.M.sum()
 
+        # data = subSelectData(data, yRange=dataRegionY)
+        metaData = metaData.append(res, ignore_index=True)
+
+if writeMeta:
+    metaData.to_csv(caseName+"_meta.csv")
