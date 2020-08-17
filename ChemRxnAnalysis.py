@@ -66,6 +66,50 @@ def extractParams(fileName, nPil=2):
     return res
 
 
+def producePDF(data, dataCol, nBins=1000, logBin=True):
+    """
+    INPUT:
+    data: data output from comsol, must include "eleVol" col and column
+    named in dataCol
+    dataCol: String of the named column to bin
+    nBins: Number of bins you want to use, default is 1000
+    logBin: True-> bins are evenly spaced in log space,
+    otherwise, linear spacing
+
+    OUTPUT
+    normFreq: Normalized frequencies for the defined bins by bin size
+    meanVal: The mean velocity in each bin
+    groups: The binned data group
+    bins: Velocity bin limits used
+    Produce a velocity PDF from the input data
+
+    Option, bin velocities such that the mean and median are within
+    some tolerance or the RSD meets a certain criteria
+
+    Max velocity is taken as 1.01*max due to the way np.digitize works.
+    For a linear bin, without doing this, the last value will not belong to a
+    bin that has a proper size definition.
+    """
+    if logBin:
+        bins = np.logspace(np.log10(data.loc[:, dataCol].min()),
+                           np.log10(data.loc[:, dataCol].max()*1.01),
+                           num=nBins)
+    else:
+        bins = np.linspace(data.loc[:, dataCol].min(),
+                           data.loc[:, dataCol].max()*1.01,
+                           num=nBins)
+    binsSize = bins[1:]-bins[:-1]
+    data.loc[:, 'binID'] = np.digitize(data.loc[:, dataCol], bins)
+    groups = data.groupby(data.binID)
+    meanVal = groups.loc[:, dataCol].mean()
+    # Weight frequencies by included volume and normalize to bin size
+    weightedFreq = groups.EleVol.sum()*groups.size() \
+        / groups.binID.median().apply(lambda x: binsSize[x-1])
+    # Calculate area under freq-vel curve to obtain a PDF
+    totalArea = np.trapz(weightedFreq, x=meanVal)
+    normFreq = weightedFreq/totalArea
+    return normFreq, meanVal, groups, bins
+
 # Read through files in a directory
 
 
@@ -74,6 +118,8 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\"
 caseName = "TwoInletsTwoColumns_v5.2_ExF"
 caseExt = "\.chemdata\.txt$"
 writeMeta = True
+binProd = True
+binRate = True
 dataRegionY = [-250, 1500]
 
 os.chdir(workingDir)
@@ -95,7 +141,36 @@ for fileName in fileList:
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
         data = subSelectData(data, yRange=dataRegionY)
+        if binProd:
+            prodFreq, prodMean, prodGroups, prodBins = producePDF(data, 'cProduct', logBin=False)
+            prodData = {'normFreq': prodFreq, 'velVal': prodMean}
+            velPDF = pd.DataFrame(prodData)
+            velPDF.to_csv(fileName[:-4]+"_ProductHistogram.csv")
+            plt.figure()
+            plt.plot(prodMean, prodFreq)
+            plt.xlabel('Average value (m/s)')
+            plt.ylabel('Normalized Frequency (.)')
+            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.yscale('log')
+            plt.xscale('log')
+            plt.savefig(fileName[:-4]+"_log.png")
+            plt.close()
         data['dCdt'] = data.h2o2*data.tcpo*data.k
+        if binRate:
+            rateFreq, rateMean, rateGroups, rateBins = producePDF(data, 'dCdt', logBin=False)
+            rateData = {'normFreq': rateFreq, 'velVal': rateMean}
+            velPDF = pd.DataFrame(rateData)
+            velPDF.to_csv(fileName[:-4]+"_RateHistogram.csv")
+            plt.figure()
+            plt.plot(rateMean, rateFreq)
+            plt.xlabel('Average value (m/s)')
+            plt.ylabel('Normalized Frequency (.)')
+            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.yscale('log')
+            plt.xscale('log')
+            plt.savefig(fileName[:-4]+"_log.png")
+            plt.close()
+
         data['prodMass'] = data.cProduct*data.eleVol
         data['tcpoMass'] = data.tcpo*data.eleVol
         data['h2o2Mass'] = data.h2o2*data.eleVol
