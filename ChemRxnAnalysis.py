@@ -101,9 +101,9 @@ def producePDF(data, dataCol, nBins=1000, logBin=True):
     binsSize = bins[1:]-bins[:-1]
     data.loc[:, 'binID'] = np.digitize(data.loc[:, dataCol], bins)
     groups = data.groupby(data.binID)
-    meanVal = groups.loc[:, dataCol].mean()
+    meanVal = groups[dataCol].mean()
     # Weight frequencies by included volume and normalize to bin size
-    weightedFreq = groups.EleVol.sum()*groups.size() \
+    weightedFreq = groups.eleVol.sum()*groups.size() \
         / groups.binID.median().apply(lambda x: binsSize[x-1])
     # Calculate area under freq-vel curve to obtain a PDF
     totalArea = np.trapz(weightedFreq, x=meanVal)
