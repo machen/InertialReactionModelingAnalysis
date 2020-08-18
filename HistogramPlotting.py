@@ -45,10 +45,10 @@ def dataPlot(workingDir, caseName, caseExt):
     return
 
 
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - 500 log bins"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.1_ExF_FlowOnly_r1_100"
-caseExtA = "100_histogram\.csv$"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF"
+caseExtA = "ProductHistogram\.csv$"
 
 workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 caseNameB = "Multipillar_v5.2_Normal_r100"
@@ -60,7 +60,7 @@ f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 dataPlot(workingDirA, caseNameA, caseExtA)
-dataPlot(workingDirB, caseNameB, caseExtB)
+# dataPlot(workingDirB, caseNameB, caseExtB)
 
 
 ax1.set_title("Velocity PDFs")

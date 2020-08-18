@@ -120,7 +120,9 @@ caseExt = "\.chemdata\.txt$"
 writeMeta = True
 binProd = True
 binRate = True
-dataRegionY = [-250, 1500]
+dataRegionY = [-300, -200]
+dataRegionX = [125, 375]
+nBins = 100
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -140,35 +142,35 @@ for fileName in fileList:
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
-        data = subSelectData(data, yRange=dataRegionY)
+        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         if binProd:
-            prodFreq, prodMean, prodGroups, prodBins = producePDF(data, 'cProduct', logBin=False)
-            prodData = {'normFreq': prodFreq, 'velVal': prodMean}
+            prodFreq, prodMean, prodGroups, prodBins = producePDF(data, 'cProduct', nBins=nBins, logBin=False)
+            prodData = {'normFreq': prodFreq, 'valMean': prodMean}
             velPDF = pd.DataFrame(prodData)
             velPDF.to_csv(fileName[:-4]+"_ProductHistogram.csv")
             plt.figure()
             plt.plot(prodMean, prodFreq)
-            plt.xlabel('Average value (m/s)')
+            plt.xlabel('Average value')
             plt.ylabel('Normalized Frequency (.)')
-            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.savefig(fileName[:-4]+"_Product_linear.png")
             plt.yscale('log')
             plt.xscale('log')
-            plt.savefig(fileName[:-4]+"_log.png")
+            plt.savefig(fileName[:-4]+"_Product_log.png")
             plt.close()
         data['dCdt'] = data.h2o2*data.tcpo*data.k
         if binRate:
-            rateFreq, rateMean, rateGroups, rateBins = producePDF(data, 'dCdt', logBin=False)
-            rateData = {'normFreq': rateFreq, 'velVal': rateMean}
+            rateFreq, rateMean, rateGroups, rateBins = producePDF(data, 'dCdt', nBins=nBins, logBin=False)
+            rateData = {'normFreq': rateFreq, 'valMean': rateMean}
             velPDF = pd.DataFrame(rateData)
             velPDF.to_csv(fileName[:-4]+"_RateHistogram.csv")
             plt.figure()
             plt.plot(rateMean, rateFreq)
-            plt.xlabel('Average value (m/s)')
+            plt.xlabel('Average value')
             plt.ylabel('Normalized Frequency (.)')
-            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.savefig(fileName[:-4]+"_Rate_linear.png")
             plt.yscale('log')
             plt.xscale('log')
-            plt.savefig(fileName[:-4]+"_log.png")
+            plt.savefig(fileName[:-4]+"_Rate_log.png")
             plt.close()
 
         data['prodMass'] = data.cProduct*data.eleVol

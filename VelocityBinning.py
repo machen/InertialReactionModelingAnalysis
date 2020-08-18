@@ -135,17 +135,18 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\Re250\\EqualPillar\\FlowData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF"
+caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
-dataRegion = [-1000, 250]  # [-5000, 250]
+dataRegionX = [100, 400]
+dataRegionY = [-600, -200]  # [-5000, 250]
 nBins = 500
 logBins = True  # True to use log spaced bins, False to use linear bins
-nPil = 1  # Number of pillars in file specification
+nPil = 2  # Number of pillars in file specification
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -163,7 +164,7 @@ for fileName in fileList:
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow'])
-        data = subSelectData(data, yRange=dataRegion)
+        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
