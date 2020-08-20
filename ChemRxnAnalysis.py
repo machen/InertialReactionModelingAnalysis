@@ -120,7 +120,7 @@ caseExt = "\.chemdata\.txt$"
 writeMeta = True
 binProd = True
 binRate = True
-dataRegionY = [-300, -200]
+dataRegionY = [-450, -350]
 dataRegionX = [125, 375]
 nBins = 100
 
@@ -143,8 +143,9 @@ for fileName in fileList:
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        data['cProductNorm'] = data.cProduct/1.0
         if binProd:
-            prodFreq, prodMean, prodGroups, prodBins = producePDF(data, 'cProduct', nBins=nBins, logBin=False)
+            prodFreq, prodMean, prodGroups, prodBins = producePDF(data, 'cProductNorm', nBins=nBins, logBin=False)
             prodData = {'normFreq': prodFreq, 'valMean': prodMean}
             velPDF = pd.DataFrame(prodData)
             velPDF.to_csv(fileName[:-4]+"_ProductHistogram.csv")
@@ -154,12 +155,13 @@ for fileName in fileList:
             plt.ylabel('Normalized Frequency (.)')
             plt.savefig(fileName[:-4]+"_Product_linear.png")
             plt.yscale('log')
-            plt.xscale('log')
+            # plt.xscale('log')
             plt.savefig(fileName[:-4]+"_Product_log.png")
             plt.close()
         data['dCdt'] = data.h2o2*data.tcpo*data.k
+        data['dCdtNorm'] = data.h2o2*data.tcpo/(1.0**2)
         if binRate:
-            rateFreq, rateMean, rateGroups, rateBins = producePDF(data, 'dCdt', nBins=nBins, logBin=False)
+            rateFreq, rateMean, rateGroups, rateBins = producePDF(data, 'dCdtNorm', nBins=nBins, logBin=False)
             rateData = {'normFreq': rateFreq, 'valMean': rateMean}
             velPDF = pd.DataFrame(rateData)
             velPDF.to_csv(fileName[:-4]+"_RateHistogram.csv")
@@ -169,7 +171,7 @@ for fileName in fileList:
             plt.ylabel('Normalized Frequency (.)')
             plt.savefig(fileName[:-4]+"_Rate_linear.png")
             plt.yscale('log')
-            plt.xscale('log')
+            # plt.xscale('log')
             plt.savefig(fileName[:-4]+"_Rate_log.png")
             plt.close()
 

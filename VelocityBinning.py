@@ -144,7 +144,7 @@ binVel = True  # True to bin velocties, false to skip
 
 dataRegionX = [100, 400]
 dataRegionY = [-600, -200]  # [-5000, 250]
-nBins = 500
+nBins = 100
 logBins = True  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
 

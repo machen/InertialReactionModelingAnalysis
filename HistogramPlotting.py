@@ -18,7 +18,7 @@ def extractParams(fileName):
     # Produces a dictionary of experimental parameters
     r1Pat = re.compile('r1_(\d+?)_')
     r2Pat = re.compile('r2_(\d+?)_')
-    rePat = re.compile('Re(.*?)_histogram.csv')
+    rePat = re.compile('Re(.*?)_')
     dPat = re.compile('d(\d+?)_')
     r1Val = re.search(r1Pat, fileName).group(1)
     r2Val = re.search(r2Pat, fileName).group(1)
@@ -38,22 +38,22 @@ def dataPlot(workingDir, caseName, caseExt):
             print(fileName)
             # params = extractParams(fileName)
             data = pd.read_csv(fileName, header=0,
-                               names=['binID', 'normFreq', 'velVal'])
-            ax1.plot(data.velVal, data.normFreq, label=fileName)
-            ax2.plot(data.velVal/data.velVal.mean(),
+                               names=['binID', 'normFreq', 'valMean'])
+            ax1.plot(data.valMean, data.normFreq, label=fileName)
+            ax2.plot(data.valMean/data.valMean.mean(),
                      data.normFreq, label=fileName)
     return
 
 
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap"
+# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap_Norm"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar gap - 500 log bins\\"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF"
-caseExtA = "ProductHistogram\.csv$"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly"
+caseExtA = "Re250.flowdata_histogram\.csv$"
 
 workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 caseNameB = "Multipillar_v5.2_Normal_r100"
 caseExtB = "Re100_histogram\.csv$"
-
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -63,11 +63,11 @@ dataPlot(workingDirA, caseNameA, caseExtA)
 # dataPlot(workingDirB, caseNameB, caseExtB)
 
 
-ax1.set_title("Velocity PDFs")
+ax1.set_title("PDFs")
 ax2.set_title("Normalized velocity PDFs")
-ax1.set_xlabel("Velocity (m/s)")
+ax1.set_xlabel("Value")
 ax1.set_ylabel("Normalized freq.")
-ax2.set_xlabel("Velocity/Average Velocity")
+ax2.set_xlabel("Val/Average Val")
 ax2.set_ylabel("Normalized freq.")
 ax1.legend(loc=0)
 ax2.legend(loc=0)
