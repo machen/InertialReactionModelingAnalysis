@@ -74,17 +74,21 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
 
     if logBin:
         if binMin > 0:
-            velBin = np.logspace(np.log10(binMin),
+            velBin = np.logspace(np.log10(binMin)*0.99,
                                  np.log10(binMax)*1.01, num=nBins)
         elif binMin < 0:
-            velBin = np.logspace(np.log10(binMax*-1),
+            velBin = np.logspace(np.log10(binMax*-.99),
                                  np.log10(binMin*-1.01), num=nBins)
             velBin *= -1
     else:
         if binMin < 0:
-            binMin = binMin*1.01
+            binMin *= 1.01
+        else:
+            binMin *= 0.99
         if binMax > 0:
-            binMax = binMax*1.01
+            binMax *= 1.01
+        else:
+            binMax *=0.99
         velBin = np.linspace(binMin, binMax, num=nBins)
     velBinSize = abs(velBin[1:]-velBin[:-1])
     data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
