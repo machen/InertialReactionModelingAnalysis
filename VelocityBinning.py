@@ -64,13 +64,29 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     For a linear bin, without doing this, the last value will not belong to a
     bin that has a proper size definition.
     """
+
+    binMin = data.loc[:, prop].min()
+    binMax = data.loc[:, prop].max()
+
+    if binMin*binMax < 0:
+        print('Data range not compatible with log binning, binning in linear space')
+        logBin = False
+
     if logBin:
-        velBin = np.logspace(np.log10(data.loc[:, prop].min()),
-                             np.log10(data.loc[:, prop].max()*1.01), num=nBins)
+        if binMin > 0:
+            velBin = np.logspace(np.log10(binMin),
+                                 np.log10(binMax)*1.01, num=nBins)
+        elif binMin < 0:
+            velBin = np.logspace(np.log10(binMax*-1),
+                                 np.log10(binMin*-1.01), num=nBins)
+            velBin *= -1
     else:
-        velBin = np.linspace(data.loc[:, prop].min(),
-                             data.loc[:, prop].max()*1.01, num=nBins)
-    velBinSize = velBin[1:]-velBin[:-1]
+        if binMin < 0:
+            binMin = binMin*1.01
+        if binMax > 0:
+            binMax = binMax*1.01
+        velBin = np.linspace(binMin, binMax, num=nBins)
+    velBinSize = abs(velBin[1:]-velBin[:-1])
     data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
     groups = data.groupby(data.binID)
     velVal = groups[prop].mean()
@@ -83,7 +99,7 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     return normFreq, velVal, groups, velBin
 
 
-def extractParams(fileName, nPil = 2):
+def extractParams(fileName, nPil=2):
     # Produces a dictionary of experimental parameters
     rePat = re.compile('Re(.*?).flowdata.txt')
     dPat = re.compile('d(\d+?)_')
@@ -142,13 +158,13 @@ caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
-binProp = 'v'  # Name of column to run PDF on
 
 dataRegionX = [100, 400]
 dataRegionY = [-700, -100]  # [-5000, 250]
-nBins = 100
-logBins = True  # True to use log spaced bins, False to use linear bins
+nBins = 1000
+logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
+binProp = 'v'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
