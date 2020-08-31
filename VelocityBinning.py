@@ -41,13 +41,14 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
     return data
 
 
-def produceVelPDF(data, nBins=1000, logBin=True):
+def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
     INPUT:
-    data: data output from comsol, must include "velMag" & "eleVol" cols
+    data: data output from comsol, must include column specified by prop & "eleVol" cols
     nBins: Number of bins you want to use, default is 1000
     logBin: True-> bins are evenly spaced in log space,
     otherwise, linear spacing
+    prop: Column name of data you wish to use, default, velMag (velocity magnitude)
 
     OUTPUT
     normFreq: Normalized frequencies for the defined bins by bin size
@@ -64,15 +65,15 @@ def produceVelPDF(data, nBins=1000, logBin=True):
     bin that has a proper size definition.
     """
     if logBin:
-        velBin = np.logspace(np.log10(data.velMag.min()),
-                             np.log10(data.velMag.max()*1.01), num=nBins)
+        velBin = np.logspace(np.log10(data.loc[:, prop].min()),
+                             np.log10(data.loc[:, prop].max()*1.01), num=nBins)
     else:
-        velBin = np.linspace(data.velMag.min(), data.velMag.max()*1.01,
-                             num=nBins)
+        velBin = np.linspace(data.loc[:, prop].min(),
+                             data.loc[:, prop].max()*1.01, num=nBins)
     velBinSize = velBin[1:]-velBin[:-1]
-    data.loc[:, 'binID'] = np.digitize(data.velMag, velBin)
+    data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
     groups = data.groupby(data.binID)
-    velVal = groups.velMag.mean()
+    velVal = groups[prop].mean()
     # Weight frequencies by included volume and normalize to bin size
     weightedFreq = groups.EleVol.sum()*groups.size() \
         / groups.binID.median().apply(lambda x: velBinSize[x-1])
@@ -135,15 +136,16 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Raw Data\\"
 # workingDir = "."
 caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
+binProp = 'v'  # Name of column to run PDF on
 
 dataRegionX = [100, 400]
-dataRegionY = [-600, -200]  # [-5000, 250]
+dataRegionY = [-700, -100]  # [-5000, 250]
 nBins = 100
 logBins = True  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
@@ -171,7 +173,7 @@ for fileName in fileList:
         metaData = metaData.append(params, ignore_index=True)
         if binVel:
             normFreq, velVals, velGroups, velBin = \
-                produceVelPDF(data, nBins=nBins, logBin=logBins)
+                produceVelPDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")

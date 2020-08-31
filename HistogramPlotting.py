@@ -40,20 +40,21 @@ def dataPlot(workingDir, caseName, caseExt):
             data = pd.read_csv(fileName, header=0,
                                names=['binID', 'normFreq', 'valMean'])
             ax1.plot(data.valMean, data.normFreq, label=fileName)
-            ax2.plot(data.valMean/data.valMean.mean(),
+            ax2.plot(data.valMean,
                      data.normFreq, label=fileName)
     return
 
 
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap_Norm"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar gap - 500 log bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar gap II - 100 log bins"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly"
-caseExtA = "Re250.flowdata_histogram\.csv$"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_SmallGap_r1_100_r2_100"
+caseExtA = "Re10.flowdata_histogram.csv$"
 
-workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
-caseNameB = "Multipillar_v5.2_Normal_r100"
-caseExtB = "Re100_histogram\.csv$"
+# workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
+workingDirB = "."
+caseNameB = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_r1_100"
+caseExtB = "Re250.flowdata_histogram\.csv$"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -64,12 +65,14 @@ dataPlot(workingDirA, caseNameA, caseExtA)
 
 
 ax1.set_title("PDFs")
-ax2.set_title("Normalized velocity PDFs")
+ax2.set_title("PDFs")
 ax1.set_xlabel("Value")
 ax1.set_ylabel("Normalized freq.")
-ax2.set_xlabel("Val/Average Val")
+ax2.set_xlabel("Value")
 ax2.set_ylabel("Normalized freq.")
 ax1.legend(loc=0)
 ax2.legend(loc=0)
+plt.yscale('log')
+plt.xscale('log')
 plt.ion()
 plt.show()

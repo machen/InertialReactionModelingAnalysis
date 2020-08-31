@@ -113,15 +113,15 @@ def producePDF(data, dataCol, nBins=1000, logBin=True):
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\"
+workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\ChemRxn_Normal\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF"
+caseName = "Multipillar_v5.2_Normal_r50_d50"
 caseExt = "\.chemdata\.txt$"
 writeMeta = True
 binProd = True
 binRate = True
-dataRegionY = [-450, -350]
-dataRegionX = [125, 375]
+dataRegionY = [-150, -100]
+dataRegionX = [200, 300]
 nBins = 100
 
 os.chdir(workingDir)
