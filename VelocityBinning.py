@@ -76,12 +76,25 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     binMin = data.loc[:, prop].min()
     binMax = data.loc[:, prop].max()
 
-    if binMin*binMax < 0:
-        print('Data range not compatible with log binning, binning in linear space')
-        logBin = False
-
     if logBin:
-        if binMin > 0:
+        if binMin*binMax < 0:
+            # If the binning crosses 0, log binning will not work.
+            binPos = data.loc[data.loc[:, prop] > 0, prop]
+            binNeg = data.loc[data.loc[:, prop] < 0, prop]
+            binPosMax = binPos.max()
+            binPosMin = binPos.min()
+            binNegMax = abs(binNeg).max()
+            binNegMin = abs(binNeg).min()
+            velBinPos = np.logspace(np.log10(binPosMin*0.99),
+                                    np.log10(binPosMax*1.01),
+                                    num=int((nBins-2)/2))
+            velBinNeg = np.logspace(np.log10(binNegMin*0.99),
+                                    np.log10(binNegMax*1.01),
+                                    num=int((nBins-2)/2))
+            velBinNeg *= -1
+            velBinNeg.sort()
+            velBin = np.concatenate((velBinNeg, [0], velBinPos))
+        elif binMin > 0:
             velBin = np.logspace(np.log10(binMin*0.99),
                                  np.log10(binMax*1.01), num=nBins)
         elif binMin < 0:
@@ -164,19 +177,19 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowData\\RawData-Stokes\\"
-workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVarSmall_r1_100_r2_100_d20_Re1"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Raw Data\\"
+# workingDir = "."
+caseName = "TwoInletsTwoColumns_v5.2"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
-dataRegionX = None  # [100, 400]
-dataRegionY = None  # [-700, -100]  # [-5000, 250]
+dataRegionX = [100, 400]
+dataRegionY = [-550, -250]  # [-5000, 250]
 nBins = 250
 logBins = True  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'v'  # Name of column to run PDF on
+binProp = 'velMag'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
