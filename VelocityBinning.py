@@ -63,6 +63,14 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     Max velocity is taken as 1.01*max due to the way np.digitize works.
     For a linear bin, without doing this, the last value will not belong to a
     bin that has a proper size definition.
+
+    Alternate bin scheme to enable log binning of negative numbers and ranges
+    that cross 0:
+    -ID minimum absolute value and maximum absolute value
+    -logbin that min to max range
+    -duplicate range, reverse it, and then multiply by -1
+    -concatenate the two ranges, including 0 between the two
+    -pass the ranges directly to the remainder of the calculation
     """
 
     binMin = data.loc[:, prop].min()
@@ -74,8 +82,8 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
 
     if logBin:
         if binMin > 0:
-            velBin = np.logspace(np.log10(binMin)*0.99,
-                                 np.log10(binMax)*1.01, num=nBins)
+            velBin = np.logspace(np.log10(binMin*0.99),
+                                 np.log10(binMax*1.01), num=nBins)
         elif binMin < 0:
             velBin = np.logspace(np.log10(binMax*-.99),
                                  np.log10(binMin*-1.01), num=nBins)
@@ -88,7 +96,7 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
         if binMax > 0:
             binMax *= 1.01
         else:
-            binMax *=0.99
+            binMax *= 0.99
         velBin = np.linspace(binMin, binMax, num=nBins)
     velBinSize = abs(velBin[1:]-velBin[:-1])
     data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
@@ -156,17 +164,17 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Raw Data\\"
-# workingDir = "."
-caseName = "TwoInletsTwoColumns_v5."
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowData\\RawData-Stokes\\"
+workingDir = "."
+caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVarSmall_r1_100_r2_100_d20_Re1"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 binVel = True  # True to bin velocties, false to skip
 
-dataRegionX = [100, 400]
-dataRegionY = [-700, -100]  # [-5000, 250]
-nBins = 1000
-logBins = False  # True to use log spaced bins, False to use linear bins
+dataRegionX = None  # [100, 400]
+dataRegionY = None  # [-700, -100]  # [-5000, 250]
+nBins = 250
+logBins = True  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
 binProp = 'v'  # Name of column to run PDF on
 
