@@ -41,7 +41,7 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
     return data
 
 
-def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
+def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
     INPUT:
     data: data output from comsol, must include column specified by prop & "eleVol" cols
@@ -79,8 +79,8 @@ def produceVelPDF(data, nBins=1000, logBin=True, prop="velMag"):
     if logBin:
         if binMin*binMax < 0:
             # If the binning crosses 0, log binning will not work.
-            binPos = data.loc[data.loc[:, prop] > 0, prop]
-            binNeg = data.loc[data.loc[:, prop] < 0, prop]
+            binPos = data.loc[data.loc[:, prop] > 0, prop].values
+            binNeg = data.loc[data.loc[:, prop] < 0, prop].values
             binPosMax = binPos.max()
             binPosMin = binPos.min()
             binNegMax = abs(binNeg).max()
@@ -174,22 +174,37 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     return deltaP, q0, dx
 
 
+def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
+    """each entry is just the string"""
+    ux = data.loc[:, uxName].values
+    uy = data.loc[:, uyName].values
+    uz = data.loc[:, uzName].values
+    wx = data.loc[:, wxName].values
+    wy = data.loc[:, wyName].values
+    wz = data.loc[:, wzName].values
+    velMag = np.sqrt(ux**2+uy**2+uz**2)
+    vortMag = np.sqrt(wx**2+wy**2+wz**2)
+    angle = (ux*wx+uy*wy+uz*wz)/(velMag*vortMag)
+    angle = np.degrees(np.arccos(angle))
+    return angle
+
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Raw Data\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
 # workingDir = "."
 caseName = "TwoInletsTwoColumns_v5.2"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
-binVel = True  # True to bin velocties, false to skip
+vortAng = True
 
+binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
-dataRegionY = [-550, -250]  # [-5000, 250]
+dataRegionY = [-550, 250]  # [-5000, 250]
 nBins = 250
-logBins = True  # True to use log spaced bins, False to use linear bins
+logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on
+binProp = 'angle'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -206,27 +221,32 @@ for fileName in fileList:
         # Check for fileName already in metaData, skip if so
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow'])
+                                    'v', 'w', 'p', 'velMag', 'massFlow',
+                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
         metaData = metaData.append(params, ignore_index=True)
+        if vortAng:
+            data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
+                                                    'vortX', 'vortY', 'vortZ')
         if binVel:
             normFreq, velVals, velGroups, velBin = \
-                produceVelPDF(data, nBins=nBins, logBin=logBins, prop=binProp)
+                producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(fileName[:-4]+"_histogram.csv")
             plt.figure()
             plt.plot(velVals, normFreq)
-            plt.xlabel('Average velocity of bin (m/s)')
+            plt.xlabel('Average value of bin')
             plt.ylabel('Normalized Frequency (.)')
             plt.savefig(fileName[:-4]+"_linear.png")
             plt.yscale('log')
-            plt.xscale('log')
+            #plt.xscale('log')
             plt.savefig(fileName[:-4]+"_log.png")
             plt.close()
+
 
 flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
                                         'quadA', 'quadB', 'quadC', 'expA',
