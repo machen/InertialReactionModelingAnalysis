@@ -114,7 +114,7 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     velBinSize = abs(velBin[1:]-velBin[:-1])
     data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
     groups = data.groupby(data.binID)
-    velVal = groups[prop].mean()
+    velVal = groups[prop].median()
     # Weight frequencies by included volume and normalize to bin size
     weightedFreq = groups.EleVol.sum()*groups.size() \
         / groups.binID.median().apply(lambda x: velBinSize[x-1])
@@ -201,10 +201,10 @@ vortAng = True
 binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
 dataRegionY = [-550, 250]  # [-5000, 250]
-nBins = 250
+nBins = 1000
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'angle'  # Name of column to run PDF on
+binProp = 'velMag'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
