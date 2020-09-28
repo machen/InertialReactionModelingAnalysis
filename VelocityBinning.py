@@ -41,6 +41,14 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
     return data
 
 
+def crossings_nonzero_all(data):
+    # Will calculate a zero crossing and return the indices where the crossing occurs
+    # Credit to https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
+    pos = data > 0
+    npos = ~pos
+    return ((pos[:-1] & npos[1:]) | (npos[:-1] & pos[1:])).nonzero()[0]
+
+
 def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
     INPUT:
@@ -110,7 +118,14 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
             binMax *= 1.01
         else:
             binMax *= 0.99
-        velBin = np.linspace(binMin, binMax, num=nBins)
+        if binMin*binMax < 0:
+            # If the space crosses 0, insert 0 at the interface
+            velBin = np.linspace(binMin, binMax, num=nBins)
+            zc = crossings_nonzero_all(velBin)+1
+            velBin = np.insert(velBin, zc, [0])
+
+        else:
+            velBin = np.linspace(binMin, binMax, num=nBins)
     velBinSize = abs(velBin[1:]-velBin[:-1])
     data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
     groups = data.groupby(data.binID)
@@ -191,9 +206,9 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
+workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2"
+caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 vortAng = True
@@ -201,10 +216,10 @@ vortAng = True
 binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
 dataRegionY = [-550, 250]  # [-5000, 250]
-nBins = 1000
+nBins = 180
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on
+binProp = 'angle'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)

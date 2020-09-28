@@ -14,6 +14,9 @@ CURRENTLY SWEEPS A WORKING FOLDER, TURN INTO A FUNCTION
 WOULD BE NICE TO MAKE A COMPARITOR FUNCTION THAT CAN TAKE TWO FILE NAMES (OR TWO COMPARISON DIRECTORIES)
 
  """
+plt.rcParams['svg.fonttype'] = 'none'
+
+
 def extractParams(fileName):
     # Produces a dictionary of experimental parameters
     r1Pat = re.compile('r1_(\d+?)_')
@@ -29,7 +32,7 @@ def extractParams(fileName):
     return res
 
 
-def dataPlot(workingDir, caseName, caseExt):
+def dataPlot(workingDir, caseName, caseExt, linestyle='-'):
     os.chdir(workingDir)
     filePat = re.compile(caseName+'.*?'+caseExt)
     fileList = os.listdir('.')
@@ -39,30 +42,30 @@ def dataPlot(workingDir, caseName, caseExt):
             # params = extractParams(fileName)
             data = pd.read_csv(fileName, header=0,
                                names=['binID', 'normFreq', 'valMean'])
-            ax1.plot(data.valMean, data.normFreq, label=fileName)
+            ax1.plot(data.valMean, data.normFreq, label=fileName, ls=linestyle)
             ax2.plot(data.valMean,
-                     data.normFreq, label=fileName)
+                     data.normFreq, label=fileName, ls=linestyle)
     return
 
 
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap_Norm"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar gap II - 100 log bins"
+workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Region - Angle - 180 linear bins"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_SmallGap_r1_100_r2_100"
-caseExtA = "Re10.flowdata_histogram.csv$"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_Stokes_r1_100_r2_100_d50"
+caseExtA = ".flowdata_histogram\.csv"
 
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
-workingDirB = "."
-caseNameB = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_r1_100"
-caseExtB = "Re250.flowdata_histogram\.csv$"
+workingDirB = "..\\..\\..\\..\\..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - angle - 180 linear bins"
+caseNameB = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_r1_100_r2_100_d50"
+caseExtB = ".flowdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 dataPlot(workingDirA, caseNameA, caseExtA)
-# dataPlot(workingDirB, caseNameB, caseExtB)
-
+dataPlot(workingDirB, caseNameB, caseExtB, linestyle='--')
+# ax2.plot([0, 0], [0.01, 1E6], ls='--', color='k')
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
@@ -71,8 +74,9 @@ ax1.set_ylabel("Normalized freq.")
 ax2.set_xlabel("Value")
 ax2.set_ylabel("Normalized freq.")
 ax1.legend(loc=0)
+# ax1.set_yscale('log')
 ax2.legend(loc=0)
 plt.yscale('log')
-plt.xscale('log')
+# plt.xscale('log')
 plt.ion()
 plt.show()

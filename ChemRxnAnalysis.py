@@ -113,7 +113,7 @@ def producePDF(data, dataCol, nBins=1000, logBin=True):
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\ChemRxn_Normal\\"
+workingDir = "..\\Comsol5.4\\Multipillar\\Normal\\ChemRxn_Normal\\First pillar gap\\"
 # workingDir = "."
 caseName = "Multipillar_v5.2_Normal_r50_d50"
 caseExt = "\.chemdata\.txt$"
