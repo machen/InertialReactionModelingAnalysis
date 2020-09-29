@@ -130,17 +130,11 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
 
         else:
             velBin = np.linspace(binMin, binMax, num=nBins)
-    velBinSize = abs(velBin[1:]-velBin[:-1])
-    data.loc[:, 'binID'] = np.digitize(data.loc[:, prop].values, velBin)
-    groups = data.groupby(data.binID)
-    velVal = groups[prop].median()
-    # Weight frequencies by included volume and normalize to bin size
-    weightedFreq = groups.EleVol.sum()*groups.size() \
-        / groups.binID.first().apply(lambda x: velBinSize[x-1])
-    # Calculate area under freq-vel curve to obtain a PDF
-    totalArea = np.trapz(weightedFreq, x=velVal)
-    normFreq = weightedFreq/totalArea
-    return normFreq, velVal, groups, velBin
+    velVal = (velBin[1:]+velBin[:-1])/2
+    normFreq, velBinCopy = np.histogram(data.loc[:, prop].values, bins=velBin,
+                                        weights=data.loc[:, 'EleVol'],
+                                        density=True)
+    return normFreq, velVal, velBin
 
 
 def extractParams(fileName, nPil=2):
@@ -182,12 +176,12 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     maybe also the distance over which the pressure drop is realized"""
     velInlet = params['Re']*nu/(c*cRatio)
     q0 = velInlet*c*depth  # m^3/s
-    yInlet = data.y.min()
+    yInlet = data.y.values.min()
     inletData = data.loc[(data.y <= yInlet+regionSize), :]
-    yOutlet = data.y.max()
+    yOutlet = data.y.values.max()
     outletData = data.loc[(data.y >= yOutlet-regionSize)]
-    inletP = inletData.p.mean()
-    outletP = outletData.p.mean()
+    inletP = inletData.p.values.mean()
+    outletP = outletData.p.values.mean()
     deltaP = abs(inletP - outletP)  # Pa
     dx = abs(inletData.y.mean() - outletData.y.mean())
     return deltaP, q0, dx
@@ -215,7 +209,7 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         binType = 'log'
     else:
         binType = 'linear'
-    outputPath = '..\\Pillar result - {} - {} {} bins\\'.format(binProp, nBins, binType)
+    outputPath = '..\\Pillar result-{}-{} {} bins\\'.format(binProp, nBins, binType)
     outputFile = outputPath+'Parameters.txt'
     if not os.path.isdir(outputPath):
         os.mkdir(outputPath)
@@ -235,8 +229,8 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 
 
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
-workingDir = "TestData"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+#workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
@@ -248,7 +242,7 @@ dataRegionY = [-550, 250]  # [-5000, 250]
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'v'  # Name of column to run PDF on
+binProp = 'velMag'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -267,7 +261,8 @@ for fileName in fileList:
         # Check for fileName already in metaData, skip if so
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow'])
+                                    'v', 'w', 'p', 'velMag', 'massFlow',
+                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
@@ -277,7 +272,7 @@ for fileName in fileList:
             data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
                                                     'vortX', 'vortY', 'vortZ')
         if binVel:
-            normFreq, velVals, velGroups, velBin = \
+            normFreq, velVals, velBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
