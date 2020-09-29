@@ -51,6 +51,10 @@ def crossings_nonzero_all(data):
 
 def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
+    TO DO: Try to boost computational efficiency by subselecting the data to work on
+    (i.e., don't use the columns you don't need)
+    subData = data.loc[:,('EleVol', prop)]
+
     INPUT:
     data: data output from comsol, must include column specified by prop & "eleVol" cols
     nBins: Number of bins you want to use, default is 1000
@@ -203,23 +207,47 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
     angle = np.degrees(np.arccos(angle))
     return angle
 
+
+def genOutputFolderAndParams(dataDir, caseName, nBins, logBins, binProp,
+                             dataRegionX=None, dataRegion=None,
+                             dataRegionZ=None):
+    if logBins:
+        binType = 'log'
+    else:
+        binType = 'linear'
+    outputPath = '..\\Pillar result - {} - {} {} bins\\'.format([binProp, nBins, binType])
+    outputFile = outputPath+'Parameters.txt'
+    if ~os.path.isdir(outputPath):
+        os.mkdir(outputPath)
+    with open(outputFile, "w") as outFile:
+        outFile.write("Data directory: {}\n".format(dataDir))
+        outFile.write("Case name: {}\n".format(caseName))
+        outFile.write("Binned property:{}\n").format(binProp)
+        outFile.write("Number of bins: {}\n".format(nBins))
+        outFile.write("Bin type: {}\n").format(binType)
+        outFile.write("X Region: {}\n").format(dataRegionX)
+        outFile.write("Y Region: {}\n").format(dataRegionY)
+        outFile.write("Z Region: {}\n").format(dataRegionZ)
+    return outputPath
+
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
 # workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_"
+caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar"
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
-vortAng = True
+vortAng = False
 
 binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
 dataRegionY = [-550, 250]  # [-5000, 250]
-nBins = 180
+nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'angle'  # Name of column to run PDF on
+binProp = 'v'  # Name of column to run PDF on
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
