@@ -136,7 +136,7 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     velVal = groups[prop].median()
     # Weight frequencies by included volume and normalize to bin size
     weightedFreq = groups.EleVol.sum()*groups.size() \
-        / groups.binID.median().apply(lambda x: velBinSize[x-1])
+        / groups.binID.first().apply(lambda x: velBinSize[x-1])
     # Calculate area under freq-vel curve to obtain a PDF
     totalArea = np.trapz(weightedFreq, x=velVal)
     normFreq = weightedFreq/totalArea
@@ -208,35 +208,36 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
     return angle
 
 
-def genOutputFolderAndParams(dataDir, caseName, nBins, logBins, binProp,
-                             dataRegionX=None, dataRegion=None,
+def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
+                             binProp, dataRegionX=None, dataRegion=None,
                              dataRegionZ=None):
     if logBins:
         binType = 'log'
     else:
         binType = 'linear'
-    outputPath = '..\\Pillar result - {} - {} {} bins\\'.format([binProp, nBins, binType])
+    outputPath = '..\\Pillar result - {} - {} {} bins\\'.format(binProp, nBins, binType)
     outputFile = outputPath+'Parameters.txt'
-    if ~os.path.isdir(outputPath):
+    if not os.path.isdir(outputPath):
         os.mkdir(outputPath)
     with open(outputFile, "w") as outFile:
         outFile.write("Data directory: {}\n".format(dataDir))
         outFile.write("Case name: {}\n".format(caseName))
-        outFile.write("Binned property:{}\n").format(binProp)
+        outFile.write("Case extension: {}\n".format(caseExt))
+        outFile.write("Binned property:{}\n".format(binProp))
         outFile.write("Number of bins: {}\n".format(nBins))
-        outFile.write("Bin type: {}\n").format(binType)
-        outFile.write("X Region: {}\n").format(dataRegionX)
-        outFile.write("Y Region: {}\n").format(dataRegionY)
-        outFile.write("Z Region: {}\n").format(dataRegionZ)
+        outFile.write("Bin type: {}\n".format(binType))
+        outFile.write("X Region: {}\n".format(dataRegionX))
+        outFile.write("Y Region: {}\n".format(dataRegionY))
+        outFile.write("Z Region: {}\n".format(dataRegionZ))
     return outputPath
 
 # Read through files in a directory
 
 
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
-# workingDir = "."
-caseName = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar"
+# workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\RawData-wVorticity\\"
+workingDir = "TestData"
+caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
 vortAng = False
@@ -258,14 +259,15 @@ fileList = os.listdir('.')
 # Purpose of metadata file is to say what we've run already
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
+outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
+                                   nBins, logBins, binProp)
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
         # Check for fileName already in metaData, skip if so
         data = pd.read_table(fileName, header=9, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow',
-                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
+                                    'v', 'w', 'p', 'velMag', 'massFlow'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
@@ -279,15 +281,15 @@ for fileName in fileList:
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             velData = {'normFreq': normFreq, 'velVal': velVals}
             velPDF = pd.DataFrame(velData)
-            velPDF.to_csv(fileName[:-4]+"_histogram.csv")
+            velPDF.to_csv(outFile+fileName[:-4]+"_histogram.csv")
             plt.figure()
             plt.plot(velVals, normFreq)
             plt.xlabel('Average value of bin')
             plt.ylabel('Normalized Frequency (.)')
-            plt.savefig(fileName[:-4]+"_linear.png")
+            plt.savefig(outFile+fileName[:-4]+"_linear.png")
             plt.yscale('log')
             #plt.xscale('log')
-            plt.savefig(fileName[:-4]+"_log.png")
+            plt.savefig(outFile+fileName[:-4]+"_log.png")
             plt.close()
 
 
