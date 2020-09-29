@@ -85,8 +85,8 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     -pass the ranges directly to the remainder of the calculation
     """
 
-    binMin = data.loc[:, prop].min()
-    binMax = data.loc[:, prop].max()
+    binMin = data.loc[:, prop].values.min()
+    binMax = data.loc[:, prop].values.max()
 
     if logBin:
         if binMin*binMax < 0:
@@ -131,7 +131,7 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
         else:
             velBin = np.linspace(binMin, binMax, num=nBins)
     velBinSize = abs(velBin[1:]-velBin[:-1])
-    data.loc[:, 'binID'] = np.digitize(data.loc[:, prop], velBin)
+    data.loc[:, 'binID'] = np.digitize(data.loc[:, prop].values, velBin)
     groups = data.groupby(data.binID)
     velVal = groups[prop].median()
     # Weight frequencies by included volume and normalize to bin size
