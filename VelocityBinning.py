@@ -14,6 +14,10 @@ but will also serve as a means of doing general data import from comsol.
 capture the header name, but it will not capture the resultant parameter info.
 Likely that info is not worth it, and should be kept in the file name.
 BUT SHOULD I? No. I should format my data consistently
+-This should report the left and right bin boundaries,
+rather than doing interpolation of the values for the velocity of a given bin
+Or one bin side and the corresponding bin size.
+
 
 FORMAT IS:
 x, y, z, MeshID, MeshVolumeScale, MeshElementVolume, u (m/s), v (m/s), w (m/s),
@@ -229,13 +233,13 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
-vortAng = True
+vortAng = False
 
 binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
@@ -279,7 +283,8 @@ for fileName in fileList:
         if binVel:
             normFreq, velVals, velBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
-            velData = {'normFreq': normFreq, 'velVal': velVals}
+            velData = {'normFreq': normFreq, 'velVal': velVals,
+                       'leftBin': velBin[:-1], 'rightBin': velBin[1:]}
             velPDF = pd.DataFrame(velData)
             velPDF.to_csv(outFile+fileName[:-4]+"_histogram.csv")
             plt.figure()
