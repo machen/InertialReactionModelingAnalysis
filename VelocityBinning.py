@@ -203,13 +203,14 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 
 
 def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
-                             binProp, dataRegionX=None, dataRegion=None,
-                             dataRegionZ=None):
+                             binProp, regionName='Result', dataRegionX=None,
+                             dataRegionY=None, dataRegionZ=None):
     if logBins:
         binType = 'log'
     else:
         binType = 'linear'
-    outputPath = '..\\Pillar result-{}-{} {} bins\\'.format(binProp, nBins, binType)
+    outputPath = '..\\{} -{}-{} {} bins\\'.format(regionName,
+                                                  binProp, nBins, binType)
     outputFile = outputPath+'Parameters.txt'
     if not os.path.isdir(outputPath):
         os.mkdir(outputPath)
@@ -228,21 +229,22 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 # Read through files in a directory
 
 
-# workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.flowdata.txt$"
 writeMeta = True  # Create new metadata files
-vortAng = False
+vortAng = True
 
 binVel = True  # True to bin velocties, false to skip
 dataRegionX = [100, 400]
 dataRegionY = [-550, 250]  # [-5000, 250]
-nBins = 100
+regionName = 'Pillar region'
+nBins = 1000
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on
+binProp = 'u'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -254,7 +256,10 @@ fileList = os.listdir('.')
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
 outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
-                                   nBins, logBins, binProp)
+                                   nBins, logBins, binProp,
+                                   regionName=regionName,
+                                   dataRegionX=dataRegionX,
+                                   dataRegionY=dataRegionY)
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
