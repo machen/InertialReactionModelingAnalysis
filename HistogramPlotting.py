@@ -32,27 +32,47 @@ def extractParams(fileName):
     return res
 
 
-def dataPlot(workingDir, caseName, caseExt, linestyle='-'):
+def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     os.chdir(workingDir)
     filePat = re.compile(caseName+'.*?'+caseExt)
     fileList = os.listdir('.')
+    dataSets = {}
     for fileName in fileList:
         if re.match(filePat, fileName):
             print(fileName)
             # params = extractParams(fileName)
             data = pd.read_csv(fileName, header=0,
                                names=['binID', 'normFreq', 'valMean'])
-            ax1.plot(data.valMean, data.normFreq, label=fileName, ls=linestyle)
-            ax2.plot(data.valMean,
-                     data.normFreq, label=fileName, ls=linestyle)
+            if smooth:
+                # Smooth data with rolling average of size window
+                data = dataSmoothing(data, window)
+                # Drop NaNs
+                data = data.dropna()
+            dataSets[fileName] = data
+    return dataSets
+
+
+def dataSetPlot(dataSets, linestyle='-'):
+    for key in dataSets:
+        data = dataSets[key]
+        ax1.plot(data.valMean, data.normFreq, label=key, ls=linestyle)
+        ax2.plot(data.valMean,
+                 data.normFreq, label=key, ls=linestyle)
     return
 
 
-# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\PillarGap_Norm"
-workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Region - Angle - 180 linear bins"
+def dataSmoothing(data, window=5):
+    dataSmooth = data.rolling(window, center=True).mean()
+    return dataSmooth
+
+window = 5
+smooth = True
+
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar region-angle-180 linear bins\\"
+#workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Region - Angle - 180 linear bins"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_Stokes_r1_100_r2_100_d50"
-caseExtA = ".flowdata_histogram\.csv"
+caseNameA = "TwoInletsTwoColumns_v5.2_"
+caseExtA = "Re10.flowdata_histogram\.csv"
 
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 workingDirB = "..\\..\\..\\..\\..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - angle - 180 linear bins"
@@ -63,8 +83,10 @@ caseExtB = ".flowdata_histogram\.csv"
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
-dataPlot(workingDirA, caseNameA, caseExtA)
-dataPlot(workingDirB, caseNameB, caseExtB, linestyle='--')
+dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+dataSetPlot(dataSetA)
+# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB)
+# dataPlot(dataSetB)
 # ax2.plot([0, 0], [0.01, 1E6], ls='--', color='k')
 
 ax1.set_title("PDFs")
@@ -74,9 +96,9 @@ ax1.set_ylabel("Normalized freq.")
 ax2.set_xlabel("Value")
 ax2.set_ylabel("Normalized freq.")
 ax1.legend(loc=0)
-# ax1.set_yscale('log')
+ax1.set_yscale('log')
 ax2.legend(loc=0)
 plt.yscale('log')
-# plt.xscale('log')
+plt.xscale('log')
 plt.ion()
 plt.show()
