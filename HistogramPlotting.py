@@ -3,6 +3,7 @@ import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os
+import scipy.stats as stats
 # import seaborn as sns
 
 """Purpose of script is to open and plot generated histogram files, skipping
@@ -41,8 +42,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
         if re.match(filePat, fileName):
             print(fileName)
             # params = extractParams(fileName)
-            data = pd.read_csv(fileName, header=0,
-                               names=['binID', 'normFreq', 'valMean'])
+            data = pd.read_csv(fileName, header=0)
             if smooth:
                 # Smooth data with rolling average of size window
                 data = dataSmoothing(data, window)
@@ -58,6 +58,7 @@ def dataSetPlot(dataSets, linestyle='-'):
         ax1.plot(data.valMean, data.normFreq, label=key, ls=linestyle)
         ax2.plot(data.valMean,
                  data.normFreq, label=key, ls=linestyle)
+# HEY UNIFY THE NAMING IN THE MAIN SCRIPT SINCE IT'S NOT ALWAYS VELOCITIES
     return
 
 
@@ -65,19 +66,27 @@ def dataSmoothing(data, window=5):
     dataSmooth = data.rolling(window, center=True).mean()
     return dataSmooth
 
+
+def genGaussian(mu, variance):
+    sigma = np.sqrt(variance)
+    x = np.linspace(mu-5*sigma, mu+5*sigma, 1000)
+    y = stats.norm.pdf(x,mu,sigma)
+    return x, y
+
+
 window = 5
 smooth = True
 
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar region-angle-180 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Region - Angle - 180 linear bins"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_"
-caseExtA = "Re10.flowdata_histogram\.csv"
-
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVarSmall_"
+caseExtA = "Re50.flowdata_histogram\.csv"
+filepath_or_buffer
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
-workingDirB = "..\\..\\..\\..\\..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData_FlowOnly\\Pillar region - angle - 180 linear bins"
-caseNameB = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_r1_100_r2_100_d50"
-caseExtB = ".flowdata_histogram\.csv"
+workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
+caseNameB = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVarSmall_"
+caseExtB = "Re50.flowdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -85,9 +94,12 @@ f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetPlot(dataSetA)
-# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB)
-# dataPlot(dataSetB)
-# ax2.plot([0, 0], [0.01, 1E6], ls='--', color='k')
+dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+dataSetPlot(dataSetB)
+# for i in range(10):
+#     xGauss, yGauss = genGaussian(90, i)
+#     ax1.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
+#     ax2.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")

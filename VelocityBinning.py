@@ -32,6 +32,21 @@ p, Velocity Magnitude (m/s), Mass flow (kg/s)
 -Export
 """
 
+
+def dataLoader(filename, type='flowdata.txt'):
+    if type == 'flowdata.txt':
+        data = pd.read_table(fileName, header=9, sep='\s+',
+                             names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
+                                    'v', 'w', 'p', 'velMag', 'massFlow',
+                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
+    if type == 'chemdata.txt':
+        data = pd.read_table(fileName, header=10, sep='\s+',
+                             names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
+                                    'v', 'w', 'p', 'velMag', 'massFlow',
+                                    'h2o2', 'tcpo', 'cProduct', 'k'])
+    return data
+
+
 def subSelectData(data, xRange=None, yRange=None, zRange=None):
     """Assumes that each of the inputs to the function is a tuple containing
      max and min values of x, y, and z that we wish to include. Use for rough
@@ -213,8 +228,8 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         binType = 'log'
     else:
         binType = 'linear'
-    outputPath = '..\\{} -{}-{} {} bins\\'.format(regionName,
-                                                  binProp, nBins, binType)
+    outputPath = '..\\{}-{}-{} {} bins\\'.format(regionName,
+                                                 binProp, nBins, binType)
     outputFile = outputPath+'Parameters.txt'
     if not os.path.isdir(outputPath):
         os.mkdir(outputPath)
@@ -234,21 +249,25 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
-caseExt = "\.flowdata.txt$"
+caseExt = "\.chemdata.txt$"
+calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 writeMeta = True  # Create new metadata files
-vortAng = False
+vortAng = True  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = False  # Do calculations for PDF from chemistry
+
+#PDF Properties
 
 binVel = True  # True to bin velocties, false to skip
-dataRegionX = [100, 400]
-dataRegionY = [-550, 250]  # [-5000, 250]
-regionName = 'Pillar region'
-nBins = 1000
+dataRegionX = [150, 350]
+dataRegionY = [-550, -250]  # [-5000, 250]
+regionName = 'Pillar gap'
+nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
-nPil = 2  # Number of pillars in file specification
-binProp = 'u'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+nPil = 1  # Number of pillars in file specification
+binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -264,31 +283,44 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    regionName=regionName,
                                    dataRegionX=dataRegionX,
                                    dataRegionY=dataRegionY)
+print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
         # Check for fileName already in metaData, skip if so
-        data = pd.read_table(fileName, header=9, sep='\s+',
-                             names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow',
-                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
+        data = dataLoader(fileName, type=caseExt[2:-1])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
-        metaData = metaData.append(params, ignore_index=True)
         if vortAng:
             data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
                                                     'vortX', 'vortY', 'vortZ')
+        if calcChem:
+            kVal = data.loc[data.index[0], 'k']
+            dCdt = data.h2o2.values*data.tcpo.values*kVal
+            data.loc['dCdt'] = dCdt
+            elementVol = data.eleVol.values
+            params['totalVol'] = np.sum(elementVol)
+            params['totalProd'] = np.sum(np.product(data.cProduct.values, elementVol))
+            params['totalTCPO'] = np.sum(np.product(data.tcpo.values, elementVol))
+            params['totalH2O2'] = np.sum(np.product(data.h2o2.values, elementVol))
+            params['dCdtAvg'] = np.mean(dCdt)
+            params['dCdtStd'] = np.std(dCdt)
+            constC = (data.tcpo.values+data.cProduct.values)  # Conservative component
+            dCdtNorm = data.h2o2.values*data.tcpo.values/(1.0**2)
+
+            params['conservative'] = data.cProduct.values*data.eleVol.values
         if binVel:
-            normFreq, velVals, velBin = \
+            normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
-            velData = {'normFreq': normFreq, 'velVal': velVals,
-                       'leftBin': velBin[:-1], 'rightBin': velBin[1:]}
-            velPDF = pd.DataFrame(velData)
-            velPDF.to_csv(outFile+fileName[:-4]+"_histogram.csv")
+            pdfData = {'normFreq': normFreq, 'valMean': valMean,
+                       'leftBin': valBin[:-1], 'rightBin': valBin[1:]}
+            velDF = pd.DataFrame(pdfData)
+            velDF.to_csv(outFile+fileName[:-4]+"_histogram.csv")
             plt.figure()
-            plt.plot(velVals, normFreq)
+            plt.plot(valMean, normFreq)
+            plt.title(binProp)
             plt.xlabel('Average value of bin')
             plt.ylabel('Normalized Frequency (.)')
             plt.savefig(outFile+fileName[:-4]+"_linear.png")
@@ -296,6 +328,7 @@ for fileName in fileList:
             #plt.xscale('log')
             plt.savefig(outFile+fileName[:-4]+"_log.png")
             plt.close()
+        metaData = metaData.append(params, ignore_index=True)
 
 
 flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
@@ -306,32 +339,31 @@ uniqueParam = metaData.loc[~metaData.duplicated(['d', 'r1', 'r2']), :]
 colorPalette = sns.color_palette('deep', n_colors=len(uniqueParam.index))
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-ci = 0
-for i in uniqueParam.index:
-    r1 = uniqueParam.loc[i, 'r1']
-    r2 = uniqueParam.loc[i, 'r2']
-    d = uniqueParam.loc[i, 'd']
-    subData = metaData.loc[(metaData.d == d) &
-                           (metaData.r1 == r1) & (metaData.r2 == r2), :]
-    ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[ci],
-             marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
-    linFit = np.polyfit(subData.q, subData.dP, 1)
-    quadFit = np.polyfit(subData.q, subData.dP, 2)
-    logFit = np.polyfit(np.log(subData.q), np.log(subData.dP), 1)
-    interpQ = np.linspace(min(subData.q), max(subData.q), num=100)
-    interp_dP = np.polyval(linFit, interpQ)
-    interpQuad_dP = np.polyval(quadFit, interpQ)
-    interpLog_dP = np.exp(np.polyval(logFit, np.log(interpQ)))
-    caseParam = {'r1': r1, 'r2': r2, 'd': d, 'linA': linFit[0],
-                 'linB': linFit[1], 'quadA': quadFit[0], 'quadB': quadFit[1],
-                 'quadC': quadFit[2], 'expA': logFit[0], 'expB': logFit[1]}
-    flowFitData = flowFitData.append(caseParam, ignore_index=True)
-    ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label="{:.2e}*q+{:2e}".format(*linFit))
-    ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
-    ax1.plot(interpQ, interpLog_dP, ls='dotted', label="log(dP) = {:.2e}*log(q)+{:.2e}".format(*logFit))
-    ci += 1
-
-if writeMeta:
+if calcFlow:
+    ci = 0
+    for i in uniqueParam.index:
+        r1 = uniqueParam.loc[i, 'r1']
+        r2 = uniqueParam.loc[i, 'r2']
+        d = uniqueParam.loc[i, 'd']
+        subData = metaData.loc[(metaData.d == d) &
+                               (metaData.r1 == r1) & (metaData.r2 == r2), :]
+        ax1.plot(subData.q, subData.dP, ls='None', color=colorPalette[ci],
+                 marker='o', label='r1 = {}, r2 = {}, d = {}'.format(r1, r2, d))
+        linFit = np.polyfit(subData.q, subData.dP, 1)
+        quadFit = np.polyfit(subData.q, subData.dP, 2)
+        logFit = np.polyfit(np.log(subData.q), np.log(subData.dP), 1)
+        interpQ = np.linspace(min(subData.q), max(subData.q), num=100)
+        interp_dP = np.polyval(linFit, interpQ)
+        interpQuad_dP = np.polyval(quadFit, interpQ)
+        interpLog_dP = np.exp(np.polyval(logFit, np.log(interpQ)))
+        caseParam = {'r1': r1, 'r2': r2, 'd': d, 'linA': linFit[0],
+                     'linB': linFit[1], 'quadA': quadFit[0], 'quadB': quadFit[1],
+                     'quadC': quadFit[2], 'expA': logFit[0], 'expB': logFit[1]}
+        flowFitData = flowFitData.append(caseParam, ignore_index=True)
+        ax1.plot(interpQ, interp_dP, ls='-', color=colorPalette[ci], label="{:.2e}*q+{:2e}".format(*linFit))
+        ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
+        ax1.plot(interpQ, interpLog_dP, ls='dotted', label="log(dP) = {:.2e}*log(q)+{:.2e}".format(*logFit))
+        ci += 1
     metaData.to_csv(caseName+"_meta.csv")
     flowFitData.to_csv(caseName+"_flowFits.csv")
 

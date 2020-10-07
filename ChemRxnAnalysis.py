@@ -186,7 +186,7 @@ for fileName in fileList:
         res['totalTCPO'] = data.tcpoMass.sum()
         res['totalVol'] = data.eleVol.sum()
         res['dCdtAvg'] = data.dCdt.mean()
-        res['M'] = data.M.sum()
+        res['M'] = data.M.sum()  # Is supposed to represent quantity used to calculate the scalar dissipiation rate
 
         # data = subSelectData(data, yRange=dataRegionY)
         metaData = metaData.append(res, ignore_index=True)
