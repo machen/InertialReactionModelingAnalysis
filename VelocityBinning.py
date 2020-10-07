@@ -36,7 +36,7 @@ p, Velocity Magnitude (m/s), Mass flow (kg/s)
 def dataLoader(filename, type='flowdata.txt'):
     if type == 'flowdata.txt':
         data = pd.read_table(fileName, header=9, sep='\s+',
-                             names=['x', 'y', 'z', 'meshID', 'EleVol', 'u',
+                             names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'vortX', 'vortY', 'vortZ', 'vortMag'])
     if type == 'chemdata.txt':
@@ -151,14 +151,14 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
             velBin = np.linspace(binMin, binMax, num=nBins)
     velVal = (velBin[1:]+velBin[:-1])/2
     normFreq, velBinCopy = np.histogram(data.loc[:, prop].values, bins=velBin,
-                                        weights=data.loc[:, 'EleVol'],
+                                        weights=data.loc[:, 'eleVol'],
                                         density=True)
     return normFreq, velVal, velBin
 
 
-def extractParams(fileName, nPil=2):
+def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
-    rePat = re.compile('Re(.*?).flowdata.txt')
+    rePat = re.compile('Re(.*?).'+caseExt)
     dPat = re.compile('d(\d+?)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
@@ -248,15 +248,15 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 # Read through files in a directory
 
 
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
 caseExt = "\.chemdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 writeMeta = True  # Create new metadata files
-vortAng = True  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = False  # Do calculations for PDF from chemistry
+vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = True  # Do calculations for PDF from chemistry
 
 #PDF Properties
 
@@ -290,7 +290,7 @@ for fileName in fileList:
         # Check for fileName already in metaData, skip if so
         data = dataLoader(fileName, type=caseExt[2:-1])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
-        params = extractParams(fileName, nPil)
+        params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['fileName'] = fileName
         if vortAng:
@@ -299,12 +299,12 @@ for fileName in fileList:
         if calcChem:
             kVal = data.loc[data.index[0], 'k']
             dCdt = data.h2o2.values*data.tcpo.values*kVal
-            data.loc['dCdt'] = dCdt
+            data.loc[:, 'dCdt'] = dCdt
             elementVol = data.eleVol.values
             params['totalVol'] = np.sum(elementVol)
-            params['totalProd'] = np.sum(np.product(data.cProduct.values, elementVol))
-            params['totalTCPO'] = np.sum(np.product(data.tcpo.values, elementVol))
-            params['totalH2O2'] = np.sum(np.product(data.h2o2.values, elementVol))
+            params['totalProd'] = np.sum(np.multiply(data.cProduct.values, elementVol))
+            params['totalTCPO'] = np.sum(np.multiply(data.tcpo.values, elementVol))
+            params['totalH2O2'] = np.sum(np.multiply(data.h2o2.values, elementVol))
             params['dCdtAvg'] = np.mean(dCdt)
             params['dCdtStd'] = np.std(dCdt)
             constC = (data.tcpo.values+data.cProduct.values)  # Conservative component
