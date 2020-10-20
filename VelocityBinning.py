@@ -131,6 +131,7 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
         elif binMin < 0:
             velBin = np.logspace(np.log10(binMax*-.99),
                                  np.log10(binMin*-1.01), num=nBins)
+            velBin = np.flip(velBin)
             velBin *= -1
     else:
         if binMin < 0:
@@ -248,15 +249,17 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_v5."
-caseExt = "\.chemdata.txt$"
-calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
+caseExt = "\.flowdata.txt$"
+calcFlow = True  # Do Pressure/Flow rate fitting? Only valid with flow
 writeMeta = True  # Create new metadata files
-vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = True  # Do calculations for PDF from chemistry
+vortAng = True # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = False  # Do calculations for PDF from chemistry
+
+print(workingDir)
 
 #PDF Properties
 
@@ -264,10 +267,10 @@ binVel = True  # True to bin velocties, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250]
 regionName = 'Pillar gap'
-nBins = 100
+nBins = 1000
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'w'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -310,7 +313,7 @@ for fileName in fileList:
             constC = (data.tcpo.values+data.cProduct.values)  # Conservative component
             dCdtNorm = data.h2o2.values*data.tcpo.values/(1.0**2)
 
-            params['conservative'] = data.cProduct.values*data.eleVol.values
+            params['conservative'] = np.sum(data.cProduct.values*data.eleVol.values)
         if binVel:
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
@@ -330,6 +333,7 @@ for fileName in fileList:
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
 
+metaData.to_csv(caseName+"_meta.csv")
 
 flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
                                         'quadA', 'quadB', 'quadC', 'expA',
@@ -364,7 +368,7 @@ if calcFlow:
         ax1.plot(interpQ, interpQuad_dP, ls='--', color=colorPalette[ci], label="{:.2e}*q^2+{:.2e}*q+{:.2e}".format(*quadFit))
         ax1.plot(interpQ, interpLog_dP, ls='dotted', label="log(dP) = {:.2e}*log(q)+{:.2e}".format(*logFit))
         ci += 1
-    metaData.to_csv(caseName+"_meta.csv")
+
     flowFitData.to_csv(caseName+"_flowFits.csv")
 
 """
