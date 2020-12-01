@@ -13,7 +13,7 @@ Things I need to do:
 
 -To prep for analysis, I need to also do the statistical calculations I
 used in the sim analysis suite
-
+-The images have noticeable noise, I should provide ameans to do do background subtraction
 
 """
 
@@ -68,12 +68,21 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
     return outputPath
 
 
-def producePDF(file, imageDict, outFile, maxNorm, bins=100, xRange=None, yRange=None):
+def producePDF(file, imageDict, outFile, maxNorm, bg=None, bins=100,
+               xRange=None, yRange=None):
+    # This version assumes all images are stacked into 1 file, where imageDict refers index of each channel
     img = Image.open(file)
+    if bg:
+        bgImg = Image.open(bg)
     imgList = []
     for key in imageDict:
         img.seek(imageDict[key])
         data = np.array(img)
+        if bg:
+            # If supplied a background image, will do a background subtraction
+            bgImg.seek(imageDict[key])
+            bgData = np.array(bgImg)
+            data -= bgData
         if maxNorm:  # If using maximum normalization, all values scaled to largest value
             data = data/np.max(data)
         data = subSelectData(data, xRange=xRange, yRange=yRange)
@@ -82,32 +91,61 @@ def producePDF(file, imageDict, outFile, maxNorm, bins=100, xRange=None, yRange=
                     'leftBin': dataLeft, 'rightBin': dataRight}
         dataDF = pd.DataFrame(dataDict)
         dataDF.to_csv(outFile+file[:-4]+'_{}_hist.csv'.format(key))
-        imgList.append(Image.fromarray(data))
+        if maxNorm:
+            # To get the image output values right you have to un-normalize them
+            # HEY DON'T USE THOSE IMAGES IT'S JUST FOR REFERENCE
+            imgList.append(Image.fromarray(np.uint16(data*(2**16-1))))
+        else:
+            imgList.append(Image.fromarray(data))
     imgList[0].save(outFile+file[:-4]+'.tiff', compression='tiff_deflate',
                     save_all=True, append_images=imgList[1:])
     return
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\DataProcessing\\"
+def produceSinglePDF(file, imageDict, outFile, maxNorm, bins=100,
+                     xRange=None, yRange=None):
+    # Single image. No background subtraction for the moment.
+    img = Image.open(file)
+    imageDictInv = {v: k for k, v in imageDict.items()}
+    channelPat = re.compile('C=(\d)')
+    channel = int(re.search(channelPat, file).group(1))
+    channelName = imageDictInv[channel]
+    data = np.array(img)
+    if maxNorm:
+        data = data/np.max(data)
+    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
+    dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
+                'leftBin': dataLeft, 'rightBin': dataRight}
+    dataDF = pd.DataFrame(dataDict)
+    dataDF.to_csv(outFile+file[:-4]+'_{}_hist.csv'.format(channelName))
+    dataImage = Image.fromarray(data)
+    dataImage.save(outFile+file[:-4]+'.tiff')
+    return
+
+
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\DataProcessingDenoise\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 100
 xRange = [830, 1155]  # Should be matrix indices for the given image
 yRange = [900, 1350]  # Should be matrix indices for the given image
 maxNorm = True
+bgFile = 'NoDevice.tif'
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
+                                   regionName='Result denoise',
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
 
 for file in os.listdir():
     if re.match(filePat, file):
         print(file)
-        producePDF(file, imageDict, outFile, maxNorm,
-                   bins=100, xRange=xRange, yRange=yRange)
+        produceSinglePDF(file, imageDict, outFile, maxNorm,
+                         bins=100, xRange=xRange, yRange=yRange)
         # img = Image.open(file)
         # img.seek(0)
         # bright = np.array(img)

@@ -4,7 +4,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 import scipy.stats as stats
-# import seaborn as sns
+import seaborn as sns
 
 """Purpose of script is to open and plot generated histogram files, skipping
 the analysis, but instead just putting out the images.
@@ -23,13 +23,14 @@ HEY SOME STUFF YOU NEED TO DO
 
  """
 plt.rcParams['svg.fonttype'] = 'none'
+sns.set_context('talk')
 
 
 def extractParams(fileName):
     # Produces a dictionary of experimental parameters
     r1Pat = re.compile('r1_(\d+?)_')
     r2Pat = re.compile('r2_(\d+?)_')
-    rePat = re.compile('Re(.*?).(chem)|(flow)data.txt')
+    rePat = re.compile('Re(.*?)\.(chem|flow)data')
     dPat = re.compile('d(\d+?)_')
     stokesPat = re.compile('_Stokes_')
     r1Val = re.search(r1Pat, fileName).group(1)
@@ -73,12 +74,13 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
         params['PDFstd'] = np.sqrt(dataVar)
         metaData = metaData.append(params, ignore_index=True)
         dataMid = np.mean([np.min(data.normFreq), np.max(data.normFreq)])
+        pmf, xPmf = genPMF(data)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
         ax1.plot([dataMean, dataMean],
                  [np.min(data.normFreq), np.max(data.normFreq)],
-                 ls='-', color=c)
+                 ls='-', color='k')
         # ax1.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
         #          [dataMid, dataMid], ls='--', color=c)
 
@@ -86,13 +88,14 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
                       data.normFreq, label=key+'smooth {}'.format(smooth),
                       ls=linestyle)
         c = a2[0].get_color()
-        ax2.plot([dataMean, dataMean],
-                 [np.min(data.normFreq), np.max(data.normFreq)],
-                 ls='-', color=c)
+        # ax2.plot([dataMean, dataMean],
+        #          [np.min(data.normFreq), np.max(data.normFreq)],
+        #          ls='-', color='k')
         # ax2.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
         #          [dataMid, dataMid], ls='--', color=c)
         diffPDF = np.diff(data.normFreq)/np.diff(data.valMean)
         ax3.plot(data.valMean[1:], diffPDF, label=key, ls=linestyle)
+        ax5.plot(xPmf, pmf, label=key, ls=linestyle)
 # HEY UNIFY THE NAMING IN THE MAIN SCRIPT SINCE IT'S NOT ALWAYS VELOCITIES
     return metaData
 
@@ -128,31 +131,53 @@ def semilogYFitting(data, xPropName, yPropName, xRange):
 def metaPlot(metaData, prop='Re', flowCond='NS'):
     subData = metaData.loc[metaData.loc[:, 'Flow'] == flowCond, :]
     subData.sort_values(by=prop)
-    ax4.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'], ls='none', marker='o')
+    ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
+                 yerr=subData.loc[:,'PDFstd'], ls='none', marker='o',
+                 capsize=2, label=flowCond)
     return
 
 
-window = 2
-smooth = False
+def genPMF(data):
+    """Perform trapz calculation manually so we can use cumsum() to get the PMF
+    Not saving it in the main dataframe since we have to reduce the dimensionality
+    to estimate the integral
+
+    PMF is technically defined for a given region (i.e. from where to where do
+    I integrate the PDF?)
+
+    For this calculation, I produce a result, g(x) = integral from 0 to x of
+    f(a)da using the trapezoidal rule
+    """
+    f = data.normFreq.values
+    x = data.valMean.values
+    fInt = (f[1:]+f[:-1])/2*(x[1:]-x[:-1])
+    PMF = np.cumsum(fInt)
+    xVal = (x[1:]+x[:-1])/2  # Use average to give what x is the corresponding value
+    return PMF, xVal
+
+
+window = 10
+smooth = True
 fitRange = np.array([85, 90])
 # fitRange = np.array([65, 85])
-# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
 # workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap -angle- 180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
+#workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_r1_100_r2_100_d100"
-caseExtA = ".chemdata_histogram\.csv"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_r1"
+caseExtA = "_r2_100_d100_Re[0-9]*\.flowdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
-# workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
-caseNameB = "TwoInletsTwoColumns_v5.2_ExF_r1_100_r2_100_d100"
-caseExtB = ".chemdata_histogram\.csv"
+workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
+#workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
+caseNameB = "TwoInletsTwoColumns_ExF_FlowMed_GapVarMed_r1"
+caseExtB = "_r2_100_d100_Re[0-9]*\.flowdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
@@ -181,7 +206,8 @@ metaData = dataSetPlot(dataSetB, metaData, smooth=window)
 #     ax1.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 #     ax2.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 
-metaPlot(metaData)
+metaPlot(metaData, prop='Re', flowCond='Stokes')
+metaPlot(metaData, prop='Re', flowCond='NS')
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
@@ -194,7 +220,22 @@ ax1.legend(loc=0)
 ax1.set_yscale('log')
 ax2.legend(loc=0)
 ax3.legend(loc=0)
-# plt.yscale('log')
+ax4.set_xlabel('Re')
+ax4.set_ylabel('Mean of PDF')
+ax3.set_yscale('log')
 # plt.xscale('log')
+ax4.legend(loc=0)
+ax5.set_title("PMFs")
+ax5.set_xlabel('Value')
+ax5.set_ylabel('PMF')
+ax5.legend(loc=0)
+ax5.set_yscale('log')
+
+sns.despine(f1)
+sns.despine(f2)
+sns.despine(f3)
+sns.despine(f4)
+sns.despine(f5)
+
 plt.ion()
 plt.show()
