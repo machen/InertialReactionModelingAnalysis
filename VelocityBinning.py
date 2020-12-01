@@ -246,18 +246,32 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("Z Region: {}\n".format(dataRegionZ))
     return outputPath
 
+
+def calcDilutionIndex(data, prop):
+    # The values coming out are fine... probably, but we need an appropriate thing to normalize to
+    dV = data.eleVol.values
+    c = data.loc[:, prop].values
+    mTot = np.sum(c*dV)
+    mTotMax = np.sum(0.5*dV)
+    p = c*dV/mTot
+    pMax = 0.5*dV/mTotMax
+    e = np.exp(-np.sum(p*np.log(p)))*np.mean(dV)
+    vTot = np.sum(dV)
+    eMax = np.exp(-np.sum(np.log(pMax)*pMax))*np.mean(dV)
+    return e, e/eMax
+
 # Read through files in a directory
 
 
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoInletsTwoColumns_v5."
-caseExt = "\.flowdata.txt$"
-calcFlow = True  # Do Pressure/Flow rate fitting? Only valid with flow
+caseName = "TwoInletsTwoColumns_"
+caseExt = "\.chemdata.txt$"
+calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 writeMeta = True  # Create new metadata files
-vortAng = True # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = False  # Do calculations for PDF from chemistry
+vortAng = False # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = True  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
@@ -267,10 +281,10 @@ binVel = True  # True to bin velocties, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250]
 regionName = 'Pillar gap'
-nBins = 1000
+nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
-nPil = 1  # Number of pillars in file specification
-binProp = 'w'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+nPil = 2  # Number of pillars in file specification
+binProp = 'dCdtMaxNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -310,8 +324,12 @@ for fileName in fileList:
             params['totalH2O2'] = np.sum(np.multiply(data.h2o2.values, elementVol))
             params['dCdtAvg'] = np.mean(dCdt)
             params['dCdtStd'] = np.std(dCdt)
-            constC = (data.tcpo.values+data.cProduct.values)  # Conservative component
-            dCdtNorm = data.h2o2.values*data.tcpo.values/(1.0**2)
+            params['dilutionTCPO'], params['reactorTCPO'] = calcDilutionIndex(data, 'tcpo')
+            data.loc[:, 'constC'] = data.tcpo.values+data.cProduct.values # Conservative component
+            params['dilutionConserv'], params['reactorConserv'] = calcDilutionIndex(data, 'constC')
+            dCdtNorm = data.h2o2.values*data.tcpo.values/(1.0**2)  # Max rate is ca*cb/c0a/c0b
+            dCdtMaxNorm = data.h2o2.values*data.tcpo.values/np.max(data.h2o2.values*data.tcpo.values)
+            data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
             params['conservative'] = np.sum(data.cProduct.values*data.eleVol.values)
         if binVel:
@@ -333,7 +351,7 @@ for fileName in fileList:
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
 
-metaData.to_csv(caseName+"_meta.csv")
+metaData.to_csv(outFile+caseName+"_meta.csv")
 
 flowFitData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'linA', 'linB',
                                         'quadA', 'quadB', 'quadC', 'expA',
