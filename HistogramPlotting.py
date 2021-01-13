@@ -78,9 +78,9 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
-        ax1.plot([dataMean, dataMean],
-                 [np.min(data.normFreq), np.max(data.normFreq)],
-                 ls='-', color='k')
+        # ax1.plot([dataMean, dataMean],
+        #          [np.min(data.normFreq), np.max(data.normFreq)],
+        #          ls='-', color='k')
         # ax1.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
         #          [dataMid, dataMid], ls='--', color=c)
 
@@ -131,9 +131,16 @@ def semilogYFitting(data, xPropName, yPropName, xRange):
 def metaPlot(metaData, prop='Re', flowCond='NS'):
     subData = metaData.loc[metaData.loc[:, 'Flow'] == flowCond, :]
     subData.sort_values(by=prop)
-    ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                 yerr=subData.loc[:,'PDFstd'], ls='none', marker='o',
-                 capsize=2, label=flowCond)
+    if prop == 'Re':
+        ax4.errorbar(subData.loc[:, prop]*subData.loc[:, 'r1']*2/500,
+                     subData.loc[:, 'PDFmean'], yerr=subData.loc[:, 'PDFstd'],
+                     ls='none', marker='o', capsize=2, label=flowCond)
+        ax4.set_xlabel('Re_pillar')
+    else:
+        ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
+                     yerr=subData.loc[:,'PDFstd'], ls='none', marker='o',
+                     capsize=2, label=flowCond)
+        ax4.set_xlabel(prop)
     return
 
 
@@ -160,17 +167,17 @@ window = 10
 smooth = True
 fitRange = np.array([85, 90])
 # fitRange = np.array([65, 85])
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
+#workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
 # workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap -angle- 180 linear bins"
-#workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_FlowOnly_GapVar_r1"
-caseExtA = "_r2_100_d100_Re[0-9]*\.flowdata_histogram\.csv"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_"
+caseExtA = "d100_Re[0-9]*\.chemdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
-workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-#workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
-caseNameB = "TwoInletsTwoColumns_ExF_FlowMed_GapVarMed_r1"
-caseExtB = "_r2_100_d100_Re[0-9]*\.flowdata_histogram\.csv"
+#workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
+workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
+caseNameB = "TwoInletsTwoColumns_v5.2_ExF_"
+caseExtB = "d100_Re[0-9]*\.chemdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -206,7 +213,7 @@ metaData = dataSetPlot(dataSetB, metaData, smooth=window)
 #     ax1.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 #     ax2.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 
-metaPlot(metaData, prop='Re', flowCond='Stokes')
+# metaPlot(metaData, prop='Re', flowCond='Stokes')
 metaPlot(metaData, prop='Re', flowCond='NS')
 
 ax1.set_title("PDFs")
@@ -220,7 +227,7 @@ ax1.legend(loc=0)
 ax1.set_yscale('log')
 ax2.legend(loc=0)
 ax3.legend(loc=0)
-ax4.set_xlabel('Re')
+
 ax4.set_ylabel('Mean of PDF')
 ax3.set_yscale('log')
 # plt.xscale('log')

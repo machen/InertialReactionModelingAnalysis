@@ -97,12 +97,12 @@ def metaPlot(metaData, prop='q'):
 
 plt.rcParams['svg.fonttype'] = 'none'
 smooth = False
-window = 10
+window = 5
 
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\Result 100 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\Result denoise max norm 100 bins\\"
 os.chdir(workingDirA)
-caseNameA = '\d*q_Pillars\d*'
+caseNameA = '81q_Pillars\d*'
 
 caseExtA = ".*dark_hist\.csv"
 
@@ -131,7 +131,7 @@ ax2.legend(loc=0)
 ax3.legend(loc=0)
 ax4.set_xlabel('q')
 ax4.set_ylabel('Mean of PDF')
-ax3.set_yscale('log')
+# ax3.set_yscale('log')
 # plt.xscale('log')
 ax4.legend(loc=0)
 plt.ion()

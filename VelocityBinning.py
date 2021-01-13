@@ -161,20 +161,24 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
     rePat = re.compile('Re(.*?).'+caseExt)
     dPat = re.compile('d(\d+?)_')
+    cPat = re.compile('(\d+?)c')
+    kPat = re.compile('k(\d+?)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
+    cVal = re.search(cPat, fileName).group(1)
+    kVal = re.search(kPat, fileName).group(1)
     if nPil == 2:
         r1Pat = re.compile('r1_(\d+?)_')
         r2Pat = re.compile('r2_(\d+?)_')
         r1Val = re.search(r1Pat, fileName).group(1)
         r2Val = re.search(r2Pat, fileName).group(1)
         res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
-               'Re': float(reVal)}
+               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
     if nPil == 1:
         rPat = re.compile('r(\d+?)_')
         rVal = re.search(rPat, fileName).group(1)
         res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
-               'Re': float(reVal)}
+               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
     return res
 
 
@@ -264,7 +268,7 @@ def calcDilutionIndex(data, prop):
 
 
 workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_"
 caseExt = "\.chemdata.txt$"
