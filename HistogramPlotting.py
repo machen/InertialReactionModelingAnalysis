@@ -26,23 +26,57 @@ plt.rcParams['svg.fonttype'] = 'none'
 sns.set_context('talk')
 
 
-def extractParams(fileName):
-    # Produces a dictionary of experimental parameters
-    r1Pat = re.compile('r1_(\d+?)_')
-    r2Pat = re.compile('r2_(\d+?)_')
-    rePat = re.compile('Re(.*?)\.(chem|flow)data')
-    dPat = re.compile('d(\d+?)_')
-    stokesPat = re.compile('_Stokes_')
-    r1Val = re.search(r1Pat, fileName).group(1)
-    r2Val = re.search(r2Pat, fileName).group(1)
-    dVal = re.search(dPat, fileName).group(1)
-    reVal = re.search(rePat, fileName).group(1)
-    if re.search(stokesPat, fileName):
-        flow = 'Stokes'
+def importParams(dir='.'):
+    # Scans for a metafile containing the file name associated parameters
+    metaPat = re.compile('.*_meta.csv')
+    for fileName in os.listdir(dir):
+        if re.match(metaPat, fileName):
+            metaData = pd.read_csv(fileName, index_col=0)
+            return metaData
+        else:
+            continue
+        return
+
+
+def extractParams(fileName, metaData=None):
+    # Produces a dictionary of experimental parameters based on the file name
+    # Now also will attempt to extract those params from the existing file
+    # Need to update this to capture c and k values
+    # Really need to up date this to pull the correct file from the metaData file if available
+    print(metaData)
+    if not metaData.empty:
+        # This will break if you are not outputting the metaData file from VelocityBinning.py
+        origFileName = fileName.replace('_histogram.csv', '.txt')
+        entry = metaData.loc[metaData.fileName == origFileName]
+        res = entry.to_dict('records')[0]
     else:
-        flow = 'NS'
-    res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
-           'Re': float(reVal), 'Flow': flow}
+        # Since the bining script ALWAYS outputs metadata this should not ever be called
+        r1Pat = re.compile('r1_(\d+?)_')
+        r2Pat = re.compile('r2_(\d+?)_')
+        rePat = re.compile('Re(.*?)\.(chem|flow)data')
+        dPat = re.compile('d(\d+?)_')
+        cPat = re.compile('(\d+?)c')
+        kPat = re.compile('k(\d+?)_')
+        r1Val = float(re.search(r1Pat, fileName).group(1))
+        r2Val = float(re.search(r2Pat, fileName).group(1))
+        dVal = float(re.search(dPat, fileName).group(1))
+        reVal = float(re.search(rePat, fileName).group(1))
+        cVal = float(re.search(cPat, fileName).group(1))
+        kVal = float(re.search(kPat, fileName).group(1))
+        vel = reVal*1.6E-6/500E-6  # Viscosity, and 500 um channel width
+        daAdv = kVal*cVal/1000*2E-6*r1Val/vel  # Convert r1 to microns and give it as a diameter
+        daDiff = kVal*cVal/1000*(2E-6*r1Val)**2/3E-9  # Assuming TCPO diff. coeff.
+        pe = vel*r1Val*2E-6/3E-9
+        res = {'r1': r1Val, 'r2': r2Val, 'd': dVal,
+               'Re': reVal, 'c': cVal, 'k': kVal, 'velChar': vel, 'DaAdv': daAdv,
+               'DaDiff': daDiff, 'Pe': pe}
+    stokesPat = re.compile('_Stokes_')
+    if re.search(stokesPat, fileName):
+        res['Flow'] = 'Stokes'
+    else:
+        res['Flow'] = 'NS'
+    rePillar = res['Re']*res['r1']*2/500  # Assume 500 um channel width
+    res['RePil'] = rePillar
     return res
 
 
@@ -66,9 +100,11 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
 
 
 def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
+    # In this case, key refers to the filename for the given data set
+    workingDirParams = importParams()
     for key in dataSets:
         data = dataSets[key]
-        params = extractParams(key)
+        params = extractParams(key, workingDirParams)
         dataMean, dataVar = pdfStats(data)
         params['PDFmean'] = dataMean
         params['PDFstd'] = np.sqrt(dataVar)
@@ -78,21 +114,21 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
-        # ax1.plot([dataMean, dataMean],
-        #          [np.min(data.normFreq), np.max(data.normFreq)],
-        #          ls='-', color='k')
-        # ax1.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
-        #          [dataMid, dataMid], ls='--', color=c)
+        ax1.plot([dataMean, dataMean],
+                 [np.min(data.normFreq), np.max(data.normFreq)],
+                 ls='-', color='k')
+        ax1.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
+                 [dataMid, dataMid], ls='--', color='k')
 
         a2 = ax2.plot(data.valMean,
                       data.normFreq, label=key+'smooth {}'.format(smooth),
                       ls=linestyle)
         c = a2[0].get_color()
-        # ax2.plot([dataMean, dataMean],
-        #          [np.min(data.normFreq), np.max(data.normFreq)],
-        #          ls='-', color='k')
-        # ax2.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
-        #          [dataMid, dataMid], ls='--', color=c)
+        ax2.plot([dataMean, dataMean],
+                 [np.min(data.normFreq), np.max(data.normFreq)],
+                 ls='--', color='k')
+        ax2.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
+                 [dataMid, dataMid], ls='--', color='k')
         diffPDF = np.diff(data.normFreq)/np.diff(data.valMean)
         ax3.plot(data.valMean[1:], diffPDF, label=key, ls=linestyle)
         ax5.plot(xPmf, pmf, label=key, ls=linestyle)
@@ -131,16 +167,10 @@ def semilogYFitting(data, xPropName, yPropName, xRange):
 def metaPlot(metaData, prop='Re', flowCond='NS'):
     subData = metaData.loc[metaData.loc[:, 'Flow'] == flowCond, :]
     subData.sort_values(by=prop)
-    if prop == 'Re':
-        ax4.errorbar(subData.loc[:, prop]*subData.loc[:, 'r1']*2/500,
-                     subData.loc[:, 'PDFmean'], yerr=subData.loc[:, 'PDFstd'],
-                     ls='none', marker='o', capsize=2, label=flowCond)
-        ax4.set_xlabel('Re_pillar')
-    else:
-        ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                     yerr=subData.loc[:,'PDFstd'], ls='none', marker='o',
-                     capsize=2, label=flowCond)
-        ax4.set_xlabel(prop)
+    ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
+                 yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
+                 capsize=2, label=flowCond+" "+prop)
+    ax4.set_xlabel(prop)
     return
 
 
@@ -166,18 +196,19 @@ def genPMF(data):
 window = 10
 smooth = True
 fitRange = np.array([85, 90])
+prop = 'reactorConserv'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe
 # fitRange = np.array([65, 85])
 #workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
 # workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap -angle- 180 linear bins"
 workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoInletsTwoColumns_v5.2_ExF_"
-caseExtA = "d100_Re[0-9]*\.chemdata_histogram\.csv"
+caseExtA = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
 workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
 caseNameB = "TwoInletsTwoColumns_v5.2_ExF_"
-caseExtB = "d100_Re[0-9]*\.chemdata_histogram\.csv"
+caseExtB = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -213,8 +244,8 @@ metaData = dataSetPlot(dataSetB, metaData, smooth=window)
 #     ax1.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 #     ax2.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 
-# metaPlot(metaData, prop='Re', flowCond='Stokes')
-metaPlot(metaData, prop='Re', flowCond='NS')
+metaPlot(metaData, prop=prop, flowCond='NS')
+metaPlot(metaData, prop=prop, flowCond='Stokes')
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
