@@ -268,7 +268,7 @@ def calcDilutionIndex(data, prop):
 
 
 workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_"
 caseExt = "\.chemdata.txt$"
@@ -289,6 +289,12 @@ nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
 binProp = 'dCdtMaxNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+
+# Chemistry props
+diff = 3E-9  # m2/s, H2O2
+nu = 1.6E-6  #m^2/s Acetnonitrile kinematic viscosity
+
+# Scipt start
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -336,6 +342,12 @@ for fileName in fileList:
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
             params['conservative'] = np.sum(data.cProduct.values*data.eleVol.values)
+            params['DH2O2'] = diff
+            params['nu'] = nu
+            params['velChar'] = params['Re']*nu/500E-6  #Assume 500 um channel width
+            params['Pe'] = params['velChar']*params['r1']*2E-6/diff
+            params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
+            params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
         if binVel:
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
