@@ -56,7 +56,7 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
     if yRange:
         data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
     if zRange:
-        data = data.loc[(data.z > min(zRange)) & (data.z < min(zRange)), :]
+        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
     return data
 
 
@@ -264,18 +264,53 @@ def calcDilutionIndex(data, prop):
     eMax = np.exp(-np.sum(np.log(pMax)*pMax))*np.mean(dV)
     return e, e/eMax
 
+
+def estimateMRT(data):
+    # Estimate the mean residence time
+    # data should be data that is already pre-selected for the region of interest
+    data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel
+    midPlane = subSelectData(data, zRange=[49.9, 50.1])  # Use the middle plane
+    minU = midPlane.velMag.min()
+    centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
+    centerCoords = [float(centerPointRow.x.values),
+                    float(centerPointRow.y.values),
+                    float(centerPointRow.z.values)]
+    recircYSize = abs(centerCoords[1]-250)  # Assumes recirculation zone is symmetric in size
+    # This is essentially the defined recirculation zone.
+    recircData = subSelectData(data, yRange=[250, centerCoords[1]+recircYSize])
+    # If we're feeling motivated we should probably ID where flux enters/leaves
+    recircVol = recircData.eleVol.sum()  # Native units
+    # This is a cut plane, the total flux through the plane should be 0
+    recircPlane = subSelectData(data, xRange=[centerCoords[0]-0.1,
+                                              centerCoords[0]+0.1])
+    """As a first approximation we can assume the recirculation plane coordinates
+    define the cross sectional area.
+    The second approximation will be to scale the flux off of each elements volume,
+    but assume a constant depth
+    The most accurate would be to determine the actual cross sectional surface
+    area of each grid element but that doesn't really seem worth it."""
+
+    # DON'T FORGET XYZ COORDINATES ARE IN um BUT YOU NEED IT IN m!!!!
+    # Constant surface area
+    totalRecircFluxA = recircPlane.u.sum()*(recircPlane.y.max()-recircPlane.y.min())*(recircPlane.z.max()-recircPlane.z.min())
+    # Constant depth
+    totalRecircFluxB = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(recircPlane.z.max()-recircPlane.z.min()))
+    posRecircPlane = recircPlane.loc[recircPlane.u > 0, :]
+    postiveFluxA = posRecircPlane.u.sum()*(posRecircPlane.y.max()-posRecircPlane.y.min())*(posRecircPlane.z.max()-posRecircPlane.z.min())
+    postiveFluxB =np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(posRecircPlane.z.max()-posRecircPlane.z.min()))
+    return centerCoords, totalRecircFluxA, totalRecircFluxB, postiveFluxA, postiveFluxB, recircVol
 # Read through files in a directory
 
 
-workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
-#workingDir = "TestData"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_"
 caseExt = "\.chemdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-writeMeta = True  # Create new metadata files
+writeMeta = False  # Create new metadata files
 vortAng = False # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = True  # Do calculations for PDF from chemistry
+calcChem = False  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
@@ -288,7 +323,7 @@ regionName = 'Pillar gap'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'dCdtMaxNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'cProduct'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2

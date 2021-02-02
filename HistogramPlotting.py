@@ -43,7 +43,6 @@ def extractParams(fileName, metaData=None):
     # Now also will attempt to extract those params from the existing file
     # Need to update this to capture c and k values
     # Really need to up date this to pull the correct file from the metaData file if available
-    print(metaData)
     if not metaData.empty:
         # This will break if you are not outputting the metaData file from VelocityBinning.py
         origFileName = fileName.replace('_histogram.csv', '.txt')
@@ -87,7 +86,6 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     dataSets = {}
     for fileName in fileList:
         if re.match(filePat, fileName):
-            print(fileName)
             # params = extractParams(fileName)
             data = pd.read_csv(fileName, header=0)
             if smooth:
@@ -171,6 +169,9 @@ def metaPlot(metaData, prop='Re', flowCond='NS'):
                  yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
                  capsize=2, label=flowCond+" "+prop)
     ax4.set_xlabel(prop)
+    ax6.errorbar(subData.loc[:, prop], subData.loc[:, 'RePil'],
+                 yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
+                 capsize=2, label=flowCond+" "+prop)
     return
 
 
@@ -196,17 +197,17 @@ def genPMF(data):
 window = 10
 smooth = True
 fitRange = np.array([85, 90])
-prop = 'reactorConserv'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe
+prop = 'reactorConserv'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
 # fitRange = np.array([65, 85])
 #workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
 # workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap -angle- 180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-cProduct-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoInletsTwoColumns_v5.2_ExF_"
 caseExtA = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdtMaxNorm-100 linear bins\\"
+workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-cProduct-100 linear bins\\"
 caseNameB = "TwoInletsTwoColumns_v5.2_ExF_"
 caseExtB = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 
@@ -216,6 +217,7 @@ f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
