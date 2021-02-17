@@ -23,6 +23,8 @@ FORMAT IS:
 x, y, z, MeshID, MeshVolumeScale, MeshElementVolume, u (m/s), v (m/s), w (m/s),
 p, Velocity Magnitude (m/s), Mass flow (kg/s)
 
+DON'T FORGET: X is along channel width, Y is along channel length, Z is along channel depth
+
 -Analyze for recirculation zone (how do we tag points as in or not in a zone?)
 -Do calculations for residence time?
     How?
@@ -30,6 +32,21 @@ p, Velocity Magnitude (m/s), Mass flow (kg/s)
 -Metadata file handling:
 
 -Export
+
+Some notes about current results:
+The area approximation is kind of inaccurate, as evidenced by studying the math
+for a plane just through the main channel width.
+
+For a 0.2 um slice, the cross sectional area is something like 50% of the actual
+For a 2 um slice, the area is more like 25% of actual
+For a 20 um slice, the area is about 5% of actual
+
+However the total flux is really far off however. I suspect it's because
+there is a mismatch beteween the estimated cross sectional area and the
+associated flux.
+
+Comparing against the flux in the channel however, the error seems low.
+It's easy enough to pull the total flux to see what the rough error is.
 """
 
 
@@ -165,8 +182,12 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     kPat = re.compile('k(\d+?)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
-    cVal = re.search(cPat, fileName).group(1)
-    kVal = re.search(kPat, fileName).group(1)
+    if caseExt == 'chemdata.txt':
+        cVal = re.search(cPat, fileName).group(1)
+        kVal = re.search(kPat, fileName).group(1)
+    else:
+        cVal = 0
+        kVal = 0
     if nPil == 2:
         r1Pat = re.compile('r1_(\d+?)_')
         r2Pat = re.compile('r2_(\d+?)_')
@@ -227,8 +248,9 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 
 
 def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
-                             binProp, regionName='Result', dataRegionX=None,
-                             dataRegionY=None, dataRegionZ=None):
+                             binProp, regionName='Result', recircCenter=False,
+                             dataRegionX=None, dataRegionY=None,
+                             dataRegionZ=None):
     if logBins:
         binType = 'log'
     else:
@@ -248,6 +270,7 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("X Region: {}\n".format(dataRegionX))
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
+        outFile.write("Region defined by recirc center: {}\n".format(recircCenter))
     return outputPath
 
 
@@ -265,65 +288,101 @@ def calcDilutionIndex(data, prop):
     return e, e/eMax
 
 
-def estimateMRT(data):
-    # Estimate the mean residence time
+def recircVolCalc(data, centerCoords, r1, r2, d):
+    """
+    Calculate the recirculation volume by defining it as a trapezoid contained
+    defined by the following points in order:
+    -1 and 2 the center of each pillar
+    -3 and 4, the intersection of a line passing through the recirculation zone
+    center line and the edge of the pillar
+
+      4   3
+    1      2
+    Trapezoid area therefore is: (abs(x4-x3)+abs(x1-x2))/2*(abs(y_recircCenter-yCenter=250))
+    Area of pillar in trapezoid is calculated from the wedge of the circle
+    The angle of the trapezoid corner is given by
+    cos(theta_2) = abs(x3-x2)/r_2 and cos(theta_1) = abs(x4-x1)/r1
+    Subtracted wedge area is then: pi*r_i^2*theta_i/2*pi
+
+    This may actually be unnecessary, since COMSOL doesn't resolve the grid in
+    the space that comprises the pillars, so if I define a rectangle that
+    runs through the pillar centers and the recirculation center.
+
+    I still need to calculate the recirculation center, which is easy enough to
+    figure out if I just sub-select my data to a rough box defined by:
+
+    (xPil1,250), (xPil2, 250), (xPil1,250+r1), (xPil2, 250+r2)
+    """
+    recircVol = 0
+    return recircVol
+
+
+def estimateFluxes(data, planeWidth=1):
+    """# Estimate the mean residence time given:
+    data: comsol output, preferrably already pre cut to contain the rough zone of recirculation
+    planeWidth: how wide are the planes, which are defined off of coord+/- plane width
     # data should be data that is already pre-selected for the region of interest
+    # Break this up into separate functions for calculating:
+    center coords
+    recircVol -> You should check this against the sum of the eleVol data in the
+    recirculation plane, it could easily be that it's just captured
+
+    FIX YOUR RECIRC VOL CALCULATION BY ESTIMATING THE TRAPEZOID AND SUBTRACTING THE
+    AREA WHERE THE TRAPEZOID INTERSECTS THE PILLARS
+    """
     data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel
-    midPlane = subSelectData(data, zRange=[49.9, 50.1])  # Use the middle plane
+    midPlane = subSelectData(data, zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
                     float(centerPointRow.z.values)]
-    recircYSize = abs(centerCoords[1]-250)  # Assumes recirculation zone is symmetric in size
     # This is essentially the defined recirculation zone.
-    recircData = subSelectData(data, yRange=[250, centerCoords[1]+recircYSize])
+    recircData = subSelectData(data, xRange=[250, centerCoords[0]])
     # If we're feeling motivated we should probably ID where flux enters/leaves
-    recircVol = recircData.eleVol.sum()  # Native units
+    recircVol = recircData.eleVol.sum()  # Native units.
     # This is a cut plane, the total flux through the plane should be 0
-    recircPlane = subSelectData(data, xRange=[centerCoords[0]-0.1,
-                                              centerCoords[0]+0.1])
-    """As a first approximation we can assume the recirculation plane coordinates
-    define the cross sectional area.
-    The second approximation will be to scale the flux off of each elements volume,
-    but assume a constant depth
+    recircPlane = subSelectData(data, xRange=[centerCoords[0]-planeWidth,
+                                              centerCoords[0]+planeWidth])
+    """Scale the flux off of each elements volume, but assume a constant depth
+    sum(velocity*dV/estimated width (constant)) = sum(u*eleVol)/estimatedWidth
     The most accurate would be to determine the actual cross sectional surface
     area of each grid element but that doesn't really seem worth it."""
 
     # DON'T FORGET XYZ COORDINATES ARE IN um BUT YOU NEED IT IN m!!!!
-    # Constant surface area
-    totalRecircFluxA = recircPlane.u.sum()*(recircPlane.y.max()-recircPlane.y.min())*(recircPlane.z.max()-recircPlane.z.min())
     # Constant depth
-    totalRecircFluxB = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(recircPlane.z.max()-recircPlane.z.min()))
+    totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(2E-6))
     posRecircPlane = recircPlane.loc[recircPlane.u > 0, :]
-    postiveFluxA = posRecircPlane.u.sum()*(posRecircPlane.y.max()-posRecircPlane.y.min())*(posRecircPlane.z.max()-posRecircPlane.z.min())
-    postiveFluxB =np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(posRecircPlane.z.max()-posRecircPlane.z.min()))
-    return centerCoords, totalRecircFluxA, totalRecircFluxB, postiveFluxA, postiveFluxB, recircVol
+    posFlux = np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(2E-6))
+    negFlux = totalRecircFlux-posFlux  # Find the opposing flux as well to check accuracy
+    return centerCoords, totalRecircFlux, posFlux, negFlux, recircVol
+
 # Read through files in a directory
 
-
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData\\"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
-workingDir = "TestData"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
+workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+#workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_"
 caseExt = "\.chemdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-writeMeta = False  # Create new metadata files
 vortAng = False # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = False  # Do calculations for PDF from chemistry
+calcChem = True  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
 #PDF Properties
 
-binVel = True  # True to bin velocties, false to skip
-dataRegionX = [150, 350]
+binProp = True  # True to bin velocties, false to skip
+dataRegionX = [250, 500]
 dataRegionY = [-550, -250]  # [-5000, 250]
-regionName = 'Pillar gap'
+regionName = 'RecircVol'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
 binProp = 'cProduct'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+recircDefinedRegion = True
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
@@ -344,7 +403,8 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    nBins, logBins, binProp,
                                    regionName=regionName,
                                    dataRegionX=dataRegionX,
-                                   dataRegionY=dataRegionY)
+                                   dataRegionY=dataRegionY,
+                                   recircCenter=recircDefinedRegion)
 print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
@@ -354,6 +414,9 @@ for fileName in fileList:
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
+        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'] = estimateFluxes(data, 1)
+        params['posMRT'] = params['recircVol']/params['posFlux']
+        params['negMRT'] = params['recircVol']/abs(params['negFlux'])
         params['fileName'] = fileName
         if vortAng:
             data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
@@ -383,7 +446,12 @@ for fileName in fileList:
             params['Pe'] = params['velChar']*params['r1']*2E-6/diff
             params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
             params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
-        if binVel:
+        if binProp:
+            if recircDefinedRegion:
+                recircX = [250, params['recircCenter'][0]]
+                recircY = [-450+(params['r1']+params['d']/2),
+                           -450-(params['r2']+params['d']/2)]
+                data=subSelectData(data, xRange=recircX, yRange=recircY)
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,

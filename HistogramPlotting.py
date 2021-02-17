@@ -42,7 +42,7 @@ def extractParams(fileName, metaData=None):
     # Produces a dictionary of experimental parameters based on the file name
     # Now also will attempt to extract those params from the existing file
     # Need to update this to capture c and k values
-    # Really need to up date this to pull the correct file from the metaData file if available
+    # Really need to update this to pull the correct file from the metaData file if available
     if not metaData.empty:
         # This will break if you are not outputting the metaData file from VelocityBinning.py
         origFileName = fileName.replace('_histogram.csv', '.txt')
@@ -101,6 +101,7 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
     # In this case, key refers to the filename for the given data set
     workingDirParams = importParams()
     for key in dataSets:
+        print(key)
         data = dataSets[key]
         params = extractParams(key, workingDirParams)
         dataMean, dataVar = pdfStats(data)
@@ -169,9 +170,11 @@ def metaPlot(metaData, prop='Re', flowCond='NS'):
                  yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
                  capsize=2, label=flowCond+" "+prop)
     ax4.set_xlabel(prop)
-    ax6.errorbar(subData.loc[:, prop], subData.loc[:, 'RePil'],
+    ax6.errorbar(subData.loc[:, prop], subData.loc[:, 'Re'],
                  yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
                  capsize=2, label=flowCond+" "+prop)
+    ax6.set_xlabel(prop)
+    ax6.set_ylabel('Re')
     return
 
 
@@ -194,22 +197,24 @@ def genPMF(data):
     return PMF, xVal
 
 
+quickVol = {0.1: 1.48E-13, 1: 6.02E-14, 10:5.85E-14, 50:4.58E-13}
+
 window = 10
 smooth = True
 fitRange = np.array([85, 90])
 prop = 'reactorConserv'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
 # fitRange = np.array([65, 85])
 #workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\Pillar gap-angle-180 linear bins\\"
-# workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap -angle- 180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-cProduct-100 linear bins\\"
+#workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
 # workingDir = "."
-caseNameA = "TwoInletsTwoColumns_v5.2_ExF_"
-caseExtA = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
+caseNameA = "TwoInletsTwoColumns_v5.2_ExF_1c_k500"
+caseExtA = "_r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-cProduct-100 linear bins\\"
-caseNameB = "TwoInletsTwoColumns_v5.2_ExF_"
-caseExtB = "r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
+workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\Pillar gap-dCdt-100 linear bins\\"
+caseNameB = "TwoInletsTwoColumns_v5.2_ExF_1c_k500"
+caseExtB = "_r1_100_r2_100_d100_Re\d*\.chemdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))

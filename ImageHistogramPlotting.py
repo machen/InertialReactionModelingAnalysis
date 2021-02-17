@@ -7,13 +7,21 @@ import scipy.stats as stats
 # import seaborn as sns
 
 
+def flowRateConversion(q, width, height, charLen, nu=0.45):
+    # Base nu is in mm2/s, so you should report this in mm and seconds as units
+    reyn = q/width/height*charLen/nu
+    return reyn
+
+
 def extractParams(fileName):
     # Produces a dictionary of experimental parameters
     qPat = re.compile('(\d*\.?\d*)q')
-    repPat = re.compile('(\d{0,3})_dark_hist.csv')
-    qVal = re.search(qPat, fileName)
-    repVal = re.search(repPat, fileName)
-    res = {'q': float(qVal.group(1)), 'replicate': repVal.group(1)}
+    repPat = re.compile('(\d{0,3}).nd2')
+    qVal = re.search(qPat, fileName).group(1)
+    repVal = re.search(repPat, fileName).group(1)
+    if not repVal:
+        repVal = 0
+    res = {'q': int(qVal), 'replicate': int(repVal)}
     return res
 
 
@@ -41,15 +49,16 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
         data = dataSets[key]
         params = extractParams(key)
         dataMean, dataVar = pdfStats(data)
+        params['fileName'] = key
         params['PDFmean'] = dataMean
         params['PDFstd'] = np.sqrt(dataVar)
         metaData = metaData.append(params, ignore_index=True)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
-        ax1.plot([dataMean, dataMean],
-                 [np.min(data.normFreq), np.max(data.normFreq)],
-                 ls='-', color='k')
+        # ax1.plot([dataMean, dataMean],
+        #          [np.min(data.normFreq), np.max(data.normFreq)],
+        #          ls='-', color='k')
         # ax1.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
         #          [dataMid, dataMid], ls='--', color=c)
 
@@ -57,9 +66,9 @@ def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
                       data.normFreq, label=key+'smooth {}'.format(smooth),
                       ls=linestyle)
         c = a2[0].get_color()
-        ax2.plot([dataMean, dataMean],
-                 [np.min(data.normFreq), np.max(data.normFreq)],
-                 ls='-', color='k')
+        # ax2.plot([dataMean, dataMean],
+        #          [np.min(data.normFreq), np.max(data.normFreq)],
+        #          ls='-', color='k')
         # ax2.plot([dataMean-np.sqrt(dataVar), dataMean+np.sqrt(dataVar)],
         #          [dataMid, dataMid], ls='--', color=c)
         diffPDF = np.diff(data.normFreq)/np.diff(data.valMean)
@@ -88,23 +97,31 @@ def genGaussian(mu, variance):
 
 def metaPlot(metaData, prop='q'):
     # Change me to work with the image histograms and metadata
+    if prop == 'Re':
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 500E-3)
+    elif prop == 'ReP':
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 200E-3)
     metaData.sort_values(by=prop)
     ax4.errorbar(metaData.loc[:, prop], metaData.loc[:, 'PDFmean'],
                  yerr=metaData.loc[:, 'PDFstd'], ls='none', marker='o',
                  capsize=2)
+    ax4.set_xlabel(prop)
+    ax4.set_ylabel('Mean of PDF')
+    ax4.legend(loc=0)
     return
 
 
 plt.rcParams['svg.fonttype'] = 'none'
-smooth = False
-window = 5
+smooth = True
+window = 10
 
+# Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\Result denoise max norm 100 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\Pillar Gap max norm 100 bins\\"
 os.chdir(workingDirA)
-caseNameA = '81q_Pillars\d*'
+caseNameA = '\d*q_Pillars\d*.nd2'
 
-caseExtA = ".*dark_hist\.csv"
+caseExtA = ".*_dark_hist\.csv"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -114,7 +131,7 @@ f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaData = dataSetPlot(dataSetA, metaData, smooth=window)
-metaPlot(metaData)
+metaPlot(metaData, prop='ReP')
 # dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 # metaData = dataSetPlot(dataSetB, metaData, smooth=window)
 
@@ -129,10 +146,8 @@ ax1.legend(loc=0)
 ax1.set_yscale('log')
 ax2.legend(loc=0)
 ax3.legend(loc=0)
-ax4.set_xlabel('q')
-ax4.set_ylabel('Mean of PDF')
+
 # ax3.set_yscale('log')
 # plt.xscale('log')
-ax4.legend(loc=0)
 plt.ion()
 plt.show()

@@ -90,7 +90,7 @@ def producePDF(file, imageDict, outFile, maxNorm, bg=None, bins=100,
         dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
                     'leftBin': dataLeft, 'rightBin': dataRight}
         dataDF = pd.DataFrame(dataDict)
-        dataDF.to_csv(outFile+file[:-4]+'_{}_hist.csv'.format(key))
+        dataDF.to_csv(outFile+file[:-4]+'.{}_hist.csv'.format(key))
         if maxNorm:
             # To get the image output values right you have to un-normalize them
             # HEY DON'T USE THOSE IMAGES IT'S JUST FOR REFERENCE
@@ -128,8 +128,8 @@ workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 100
-xRange = [830, 1155]  # Should be matrix indices for the given image
-yRange = [900, 1350]  # Should be matrix indices for the given image
+xRange = [800, 1200]  # Should be matrix indices for the given image
+yRange = [890, 1400]  # Should be matrix indices for the given image
 maxNorm = True
 bgFile = 'NoDevice.tif'
 
@@ -137,7 +137,7 @@ fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
-                                   regionName='Result denoise',
+                                   regionName='Pillar Gap',
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
 
