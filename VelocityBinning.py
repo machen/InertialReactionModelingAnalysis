@@ -362,7 +362,7 @@ def estimateFluxes(data, planeWidth=1):
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoInletsTwoColumns_"
 caseExt = "\.chemdata.txt$"
@@ -381,7 +381,7 @@ regionName = 'RecircVol'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'cProduct'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'constC'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = True
 
 # Chemistry props
@@ -439,7 +439,7 @@ for fileName in fileList:
             dCdtMaxNorm = data.h2o2.values*data.tcpo.values/np.max(data.h2o2.values*data.tcpo.values)
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
-            params['conservative'] = np.sum(data.cProduct.values*data.eleVol.values)
+            params['conservative'] = np.sum(data.constC.values*data.eleVol.values)
             params['DH2O2'] = diff
             params['nu'] = nu
             params['velChar'] = params['Re']*nu/500E-6  #Assume 500 um channel width
