@@ -330,7 +330,7 @@ def estimateFluxes(data, planeWidth=1):
     FIX YOUR RECIRC VOL CALCULATION BY ESTIMATING THE TRAPEZOID AND SUBTRACTING THE
     AREA WHERE THE TRAPEZOID INTERSECTS THE PILLARS
     """
-    data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel
+    data = subSelectData(data, xRange=[250, 500], yRange=[-450, -350])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
     midPlane = subSelectData(data, zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
@@ -360,7 +360,7 @@ def estimateFluxes(data, planeWidth=1):
 # Read through files in a directory
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
+#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
@@ -376,13 +376,13 @@ print(workingDir)
 
 binProp = True  # True to bin velocties, false to skip
 dataRegionX = [250, 500]
-dataRegionY = [-550, -250]  # [-5000, 250]
-regionName = 'RecircVol'
+dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
+regionName = 'Pillar Gap'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
-binProp = 'constC'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = True
+binProp = 'dCdtNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+recircDefinedRegion = False
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
@@ -435,7 +435,8 @@ for fileName in fileList:
             params['dilutionTCPO'], params['reactorTCPO'] = calcDilutionIndex(data, 'tcpo')
             data.loc[:, 'constC'] = data.tcpo.values+data.cProduct.values # Conservative component
             params['dilutionConserv'], params['reactorConserv'] = calcDilutionIndex(data, 'constC')
-            dCdtNorm = data.h2o2.values*data.tcpo.values/(1.0**2)  # Max rate is ca*cb/c0a/c0b
+            dCdtNorm = data.h2o2.values*data.tcpo.values/(params['c']**2)  # Max rate is ca*cb/c0a/c0b
+            data.loc[:, 'dCdtNorm'] = dCdtNorm
             dCdtMaxNorm = data.h2o2.values*data.tcpo.values/np.max(data.h2o2.values*data.tcpo.values)
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
@@ -451,7 +452,9 @@ for fileName in fileList:
                 recircX = [250, params['recircCenter'][0]]
                 recircY = [-450+(params['r1']+params['d']/2),
                            -450-(params['r2']+params['d']/2)]
-                data=subSelectData(data, xRange=recircX, yRange=recircY)
+                print('recircX: {}'.format(recircX))
+                print('recircY: {}'.format(recircY))
+                data = subSelectData(data, xRange=recircX, yRange=recircY)
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,
