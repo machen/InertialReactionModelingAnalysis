@@ -14,6 +14,10 @@ Things I need to do:
 -To prep for analysis, I need to also do the statistical calculations I
 used in the sim analysis suite
 -The images have noticeable noise, I should provide ameans to do do background subtraction
+-I should consider setting a threshold value which represents "non channel" space.
+Any value less than that should get thrown out for the PDF analysis. Would be nice to show it as well
+
+-If I'm feeling really fancy I could use the tracer to give me the indicies for areas that are 0
 
 """
 
@@ -68,7 +72,7 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
     return outputPath
 
 
-def producePDF(file, imageDict, outFile, maxNorm, bg=None, bins=100,
+def producePDF(file, imageDict, outFile, maxNorm, maxVal=None,bg=None, bins=100,
                xRange=None, yRange=None):
     # This version assumes all images are stacked into 1 file, where imageDict refers index of each channel
     img = Image.open(file)
@@ -84,7 +88,10 @@ def producePDF(file, imageDict, outFile, maxNorm, bg=None, bins=100,
             bgData = np.array(bgImg)
             data -= bgData
         if maxNorm:  # If using maximum normalization, all values scaled to largest value
-            data = data/np.max(data)
+            if maxVal:
+                data = data/maxVal
+            else:
+                data = data/np.max(data)
         data = subSelectData(data, xRange=xRange, yRange=yRange)
         dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
         dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
@@ -102,7 +109,7 @@ def producePDF(file, imageDict, outFile, maxNorm, bg=None, bins=100,
     return
 
 
-def produceSinglePDF(file, imageDict, outFile, maxNorm, bins=100,
+def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                      xRange=None, yRange=None):
     # Single image. No background subtraction for the moment.
     img = Image.open(file)
@@ -111,8 +118,11 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, bins=100,
     channel = int(re.search(channelPat, file).group(1))
     channelName = imageDictInv[channel]
     data = np.array(img)
-    if maxNorm:
-        data = data/np.max(data)
+    if maxNorm:  # If using maximum normalization, all values scaled to largest value
+        if maxVal:
+            data = data/maxVal
+        else:
+            data = data/np.max(data)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
     dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
@@ -124,27 +134,29 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, bins=100,
     return
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\DataProcessingDenoise\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\BackgroundSub\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
-bins = 100
-xRange = [800, 1200]  # Should be matrix indices for the given image
-yRange = [890, 1400]  # Should be matrix indices for the given image
-maxNorm = True
+bins = 50
+xRange = None  # [800, 1300]  # Should be matrix indices for the given image, you must update this
+yRange = None  # [900, 1500]  # Should be matrix indices for the given image
+maxNorm = False
+maxVal = 1748.3  # Set to none to use max observed in image. Value will depend on specific days mix
+regionName = "Whole image"
 bgFile = 'NoDevice.tif'
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
-                                   regionName='Pillar Gap',
+                                   regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
 
 for file in os.listdir():
     if re.match(filePat, file):
         print(file)
-        produceSinglePDF(file, imageDict, outFile, maxNorm,
+        produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
                          bins=100, xRange=xRange, yRange=yRange)
         # img = Image.open(file)
         # img.seek(0)

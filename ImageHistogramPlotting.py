@@ -21,7 +21,7 @@ def extractParams(fileName):
     repVal = re.search(repPat, fileName).group(1)
     if not repVal:
         repVal = 0
-    res = {'q': int(qVal), 'replicate': int(repVal)}
+    res = {'q': float(qVal), 'replicate': int(repVal)}
     return res
 
 
@@ -44,11 +44,12 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     return dataSets
 
 
-def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
+def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0, fit=True):
     for key in dataSets:
         data = dataSets[key]
         params = extractParams(key)
         dataMean, dataVar = pdfStats(data)
+        params['d'] = d
         params['fileName'] = key
         params['PDFmean'] = dataMean
         params['PDFstd'] = np.sqrt(dataVar)
@@ -102,35 +103,52 @@ def metaPlot(metaData, prop='q'):
     elif prop == 'ReP':
         metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 200E-3)
     metaData.sort_values(by=prop)
-    ax4.errorbar(metaData.loc[:, prop], metaData.loc[:, 'PDFmean'],
-                 yerr=metaData.loc[:, 'PDFstd'], ls='none', marker='o',
-                 capsize=2)
+    traceList = metaData.d.unique()
+    for val in traceList:
+        subData = metaData.loc[metaData.d == val, :]
+        ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
+                     yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
+                     capsize=2, label=val)
+        ax5.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
+                ls='none', marker='o', label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
+    ax5.set_xlabel(prop)
+    ax5.set_ylabel('Mean of PDF')
+    ax5.legend(loc=0)
     return
 
 
 plt.rcParams['svg.fonttype'] = 'none'
-smooth = True
+smooth = False
 window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2PillarD-1_P2_A2\\Pillar Gap max norm 100 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P3_B1 - 50 um gap\\Whole image max norm 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P3_A2 - 25 um gap\\Whole image max norm 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\Whole image max norm 50 bins\\"
 os.chdir(workingDirA)
-caseNameA = '\d*q_Pillars\d*.nd2'
-
+caseNameA = '.*.nd2'
 caseExtA = ".*_dark_hist\.csv"
+dA = 50
+dB = 25
+dC = 100
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f5, ax5 = plt.subplots (1,1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-metaData = dataSetPlot(dataSetA, metaData, smooth=window)
+dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
+metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
+metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
 metaPlot(metaData, prop='ReP')
 # dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 # metaData = dataSetPlot(dataSetB, metaData, smooth=window)
