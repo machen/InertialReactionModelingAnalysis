@@ -72,43 +72,6 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
     return outputPath
 
 
-def producePDF(file, imageDict, outFile, maxNorm, maxVal=None,bg=None, bins=100,
-               xRange=None, yRange=None):
-    # This version assumes all images are stacked into 1 file, where imageDict refers index of each channel
-    img = Image.open(file)
-    if bg:
-        bgImg = Image.open(bg)
-    imgList = []
-    for key in imageDict:
-        img.seek(imageDict[key])
-        data = np.array(img)
-        if bg:
-            # If supplied a background image, will do a background subtraction
-            bgImg.seek(imageDict[key])
-            bgData = np.array(bgImg)
-            data -= bgData
-        if maxNorm:  # If using maximum normalization, all values scaled to largest value
-            if maxVal:
-                data = data/maxVal
-            else:
-                data = data/np.max(data)
-        data = subSelectData(data, xRange=xRange, yRange=yRange)
-        dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
-        dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
-                    'leftBin': dataLeft, 'rightBin': dataRight}
-        dataDF = pd.DataFrame(dataDict)
-        dataDF.to_csv(outFile+file[:-4]+'.{}_hist.csv'.format(key))
-        if maxNorm:
-            # To get the image output values right you have to un-normalize them
-            # HEY DON'T USE THOSE IMAGES IT'S JUST FOR REFERENCE
-            imgList.append(Image.fromarray(np.uint16(data*(2**16-1))))
-        else:
-            imgList.append(Image.fromarray(data))
-    imgList[0].save(outFile+file[:-4]+'.tiff', compression='tiff_deflate',
-                    save_all=True, append_images=imgList[1:])
-    return
-
-
 def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                      xRange=None, yRange=None):
     # Single image. No background subtraction for the moment.
@@ -138,11 +101,11 @@ workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = None  # [800, 1300]  # Should be matrix indices for the given image, you must update this
-yRange = None  # [900, 1500]  # Should be matrix indices for the given image
+xRange = [800, 1140]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
+yRange = [920, 1070]  # [900, 1500]  # Should be matrix indices for the given image
 maxNorm = False
 maxVal = 1748.3  # Set to none to use max observed in image. Value will depend on specific days mix
-regionName = "Whole image"
+regionName = "Pillar gap"
 bgFile = 'NoDevice.tif'
 
 fileList = os.listdir()
