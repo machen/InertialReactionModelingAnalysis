@@ -10,13 +10,11 @@ but will also serve as a means of doing general data import from comsol.
 
 %TODO:
 
--Can I natively capture the column names? -> (\w+? \(.+?\)|\w+?) @ \d+?: will
-capture the header name, but it will not capture the resultant parameter info.
-Likely that info is not worth it, and should be kept in the file name.
-BUT SHOULD I? No. I should format my data consistently
--This should report the left and right bin boundaries,
-rather than doing interpolation of the values for the velocity of a given bin
-Or one bin side and the corresponding bin size.
+-Develop a function that can use the extracted parameters to exactly calculate
+where the pillar gap is
+-Further, you should likely export depth averaged data, and, barring that, depth average
+the data you have yourself, likely by coarsening the data.
+-Perhaps also output a 2D map of the area considered?
 
 
 FORMAT IS:
@@ -48,6 +46,29 @@ associated flux.
 Comparing against the flux in the channel however, the error seems low.
 It's easy enough to pull the total flux to see what the rough error is.
 """
+
+
+def pillarGapCalculation(r1, r2, d):
+    """ Use this to properly calculate the true "pillar gap" area depending on
+    the available parameters of the model. This calculation will directly assume:
+    1) That the edge of the most upstream pillar is at y = 0
+    2) That there are only two pillars
+    3) Positive y is upstream, negative y is downstream
+    4) The simulation base unit is microns
+
+    The gap is defined by the edges of the pillars along the channel length
+    and the width of the largest pillar
+    """
+    if not r2:
+        r2 = r1
+    xPil = 250
+    yPil = -(2*r1+d/2)
+    x1 = xPil-max(r1, r2)
+    x2 = xPil+max(r1, r2)
+    y1 = yPil+d/2
+    y2 = yPil-d/2
+
+    return [x1, x2], [y1, y2]
 
 
 def dataLoader(filename, type='flowdata.txt'):
@@ -250,7 +271,7 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
                              binProp, regionName='Result', recircCenter=False,
                              dataRegionX=None, dataRegionY=None,
-                             dataRegionZ=None):
+                             dataRegionZ=None, autoRegion=False):
     if logBins:
         binType = 'log'
     else:
@@ -271,6 +292,7 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
         outFile.write("Region defined by recirc center: {}\n".format(recircCenter))
+        outFile.write("Region defined by geometry: {}\n".format(autoRegion))
     return outputPath
 
 
@@ -377,12 +399,13 @@ print(workingDir)
 binProp = True  # True to bin velocties, false to skip
 dataRegionX = [250, 500]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Pillar Gap'
+regionName = 'Pillar Gap Exact'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 2  # Number of pillars in file specification
 binProp = 'dCdtNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False
+autoRegion = True
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
@@ -404,15 +427,18 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    regionName=regionName,
                                    dataRegionX=dataRegionX,
                                    dataRegionY=dataRegionY,
-                                   recircCenter=recircDefinedRegion)
+                                   recircCenter=recircDefinedRegion,
+                                   autoRegion=autoRegion)
 print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
         # Check for fileName already in metaData, skip if so
         data = dataLoader(fileName, type=caseExt[2:-1])
-        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
+        if autoRegion:
+            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'])
+        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'] = estimateFluxes(data, 1)
         params['posMRT'] = params['recircVol']/params['posFlux']
@@ -435,7 +461,7 @@ for fileName in fileList:
             params['dilutionTCPO'], params['reactorTCPO'] = calcDilutionIndex(data, 'tcpo')
             data.loc[:, 'constC'] = data.tcpo.values+data.cProduct.values # Conservative component
             params['dilutionConserv'], params['reactorConserv'] = calcDilutionIndex(data, 'constC')
-            dCdtNorm = data.h2o2.values*data.tcpo.values/(params['c']**2)  # Max rate is ca*cb/c0a/c0b
+            dCdtNorm = data.h2o2.values*data.tcpo.values/((params['c']/2)**2)  # Max rate is defined by well mixed, which is going to be cA*cB/(c0/2)**2
             data.loc[:, 'dCdtNorm'] = dCdtNorm
             dCdtMaxNorm = data.h2o2.values*data.tcpo.values/np.max(data.h2o2.values*data.tcpo.values)
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
