@@ -126,9 +126,9 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P3_B1 - 50 um gap\\Whole image max norm 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P3_A2 - 25 um gap\\Whole image max norm 50 bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\Whole image max norm 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P2_B1 - 50 um gap\\Pillar gap max norm 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P2_A2 - 25 um gap\\Pillar gap max norm 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\Pillar gap max norm 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = '.*.nd2'
 caseExtA = ".*_dark_hist\.csv"
@@ -140,7 +140,7 @@ f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-f5, ax5 = plt.subplots (1,1, sharex='col', figsize=(12, 10))
+f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)

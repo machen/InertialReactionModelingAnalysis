@@ -10,8 +10,6 @@ but will also serve as a means of doing general data import from comsol.
 
 %TODO:
 
--Develop a function that can use the extracted parameters to exactly calculate
-where the pillar gap is
 -Further, you should likely export depth averaged data, and, barring that, depth average
 the data you have yourself, likely by coarsening the data.
 -Perhaps also output a 2D map of the area considered?
@@ -199,7 +197,7 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
     rePat = re.compile('Re(.*?).'+caseExt)
     dPat = re.compile('d(\d+?)_')
-    cPat = re.compile('(\d+?)c')
+    cPat = re.compile('c(\d+?)')
     kPat = re.compile('k(\d+?)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
@@ -352,7 +350,7 @@ def estimateFluxes(data, planeWidth=1):
     FIX YOUR RECIRC VOL CALCULATION BY ESTIMATING THE TRAPEZOID AND SUBTRACTING THE
     AREA WHERE THE TRAPEZOID INTERSECTS THE PILLARS
     """
-    data = subSelectData(data, xRange=[250, 500], yRange=[-450, -350])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
+    data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
     midPlane = subSelectData(data, zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
@@ -382,14 +380,14 @@ def estimateFluxes(data, planeWidth=1):
 # Read through files in a directory
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
-#workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\FlowData\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoInletsTwoColumns_"
+caseName = "TwoPillar_v6"
 caseExt = "\.chemdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-vortAng = False # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
 calcChem = True  # Do calculations for PDF from chemistry
 
 print(workingDir)
@@ -402,14 +400,14 @@ dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 regionName = 'Pillar Gap Exact'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
-nPil = 2  # Number of pillars in file specification
+nPil = 1  # Number of pillars in file specification
 binProp = 'dCdtNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = False
-autoRegion = True
+recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
+autoRegion = True  # Will automatically determine the region by the geometry
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
-nu = 1.6E-6  #m^2/s Acetnonitrile kinematic viscosity
+nu = 4.3E-7  #m^2/s Acetnonitrile kinematic viscosity
 
 # Scipt start
 
