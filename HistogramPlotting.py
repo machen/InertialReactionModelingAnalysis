@@ -50,11 +50,11 @@ def extractParams(fileName, metaData):
         res = entry.to_dict('records')[0]
     else:
         # Since the bining script ALWAYS outputs metadata this should not ever be called
-        r1Pat = re.compile('r1_(\d+?)_')
-        r2Pat = re.compile('r2_(\d+?)_')
+        r1Pat = re.compile('r1_(\d+\.?\d*)_')
+        r2Pat = re.compile('r2_(\d+\.?\d*)_')
         rePat = re.compile('Re(\d+\.?\d*)\.(chem|flow)data')
-        dPat = re.compile('d(\d+?)_')
-        cPat = re.compile('c(\d+?)')
+        dPat = re.compile('d(\d+\.?\d*)_')
+        cPat = re.compile('c(\d+\.?\d*)')
         kPat = re.compile('k(\d+\.?\d*)_')
         r1Val = float(re.search(r1Pat, fileName).group(1))
         r2Val = float(re.search(r2Pat, fileName).group(1))

@@ -340,7 +340,7 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
                     float(centerPointRow.z.values)]
-    xEdge = max(data.loc[data.loc[:, 'v'] < 0, 'x'])
+    xEdge = max(data.loc[data.loc[:, 'v'] > 0, 'x'])  # serach for farthest point where flow goes against mean direction
     # This is essentially the defined recirculation zone.
     recircData = subSelectData(data, xRange=[250, xEdge])
     # If we're feeling motivated we should probably ID where flux enters/leaves
