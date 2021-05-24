@@ -52,10 +52,10 @@ def extractParams(fileName, metaData):
         # Since the bining script ALWAYS outputs metadata this should not ever be called
         r1Pat = re.compile('r1_(\d+?)_')
         r2Pat = re.compile('r2_(\d+?)_')
-        rePat = re.compile('Re(.*?)\.(chem|flow)data')
+        rePat = re.compile('Re(\d+\.?\d*)\.(chem|flow)data')
         dPat = re.compile('d(\d+?)_')
         cPat = re.compile('c(\d+?)')
-        kPat = re.compile('k(\d+?)_')
+        kPat = re.compile('k(\d+\.?\d*)_')
         r1Val = float(re.search(r1Pat, fileName).group(1))
         r2Val = float(re.search(r2Pat, fileName).group(1))
         dVal = float(re.search(dPat, fileName).group(1))
@@ -203,19 +203,19 @@ quickVol = {0.1: 1.48E-13, 1: 6.02E-14, 10: 5.85E-14, 50: 4.58E-13}
 window = 5
 smooth = False
 fitRange = np.array([85, 90])
-prop = 'RePil'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
+prop = 'k'  # Options: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
 # fitRange = np.array([65, 85])
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact-angle-180 linear bins\\"
+#workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-#workingDirA = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\Pillar Gap-dCdtNorm-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact-dCdtNorm-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6"
-caseExtA = "d100_Re.*\.flowdata_histogram\.csv"
+caseExtA = "d100_Re100\.chemdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact-angle-180 linear bins\\"
+workingDirB = "..\\"
 caseNameB = "TwoPillar_v6"
-caseExtB = "THING\.flowdata_histogram\.csv"
+caseExtB = "\.flowdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))

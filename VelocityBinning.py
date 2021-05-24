@@ -75,11 +75,14 @@ def dataLoader(filename, type='flowdata.txt'):
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'vortX', 'vortY', 'vortZ', 'vortMag'])
+
     if type == 'chemdata.txt':
         data = pd.read_table(fileName, header=10, sep='\s+',
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
+        # Drop lines where concentration values are less than 0, which break calculations
+        data = data.drop(data.loc[(data.h2o2 <=0) | (data.tcpo <= 0) | (data.cProduct <= 0)].index)
     return data
 
 
@@ -195,10 +198,10 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
 
 def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
-    rePat = re.compile('Re(.*?).'+caseExt)
-    dPat = re.compile('d(\d+?)_')
-    cPat = re.compile('c(\d+?)')
-    kPat = re.compile('k(\d+?)_')
+    rePat = re.compile('Re(\d+\.?\d*).'+caseExt)
+    dPat = re.compile('d(\d+\.?\d*)_')
+    cPat = re.compile('c(\d+\.?\d*)')
+    kPat = re.compile('k(\d+\.?\d*)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
     if caseExt == 'chemdata.txt':
@@ -308,50 +311,31 @@ def calcDilutionIndex(data, prop):
     return e, e/eMax
 
 
-def recircVolCalc(data, centerCoords, r1, r2, d):
-    """
-    Calculate the recirculation volume by defining it as a trapezoid contained
-    defined by the following points in order:
-    -1 and 2 the center of each pillar
-    -3 and 4, the intersection of a line passing through the recirculation zone
-    center line and the edge of the pillar
-
-      4   3
-    1      2
-    Trapezoid area therefore is: (abs(x4-x3)+abs(x1-x2))/2*(abs(y_recircCenter-yCenter=250))
-    Area of pillar in trapezoid is calculated from the wedge of the circle
-    The angle of the trapezoid corner is given by
-    cos(theta_2) = abs(x3-x2)/r_2 and cos(theta_1) = abs(x4-x1)/r1
-    Subtracted wedge area is then: pi*r_i^2*theta_i/2*pi
-
-    This may actually be unnecessary, since COMSOL doesn't resolve the grid in
-    the space that comprises the pillars, so if I define a rectangle that
-    runs through the pillar centers and the recirculation center.
-
-    I still need to calculate the recirculation center, which is easy enough to
-    figure out if I just sub-select my data to a rough box defined by:
-
-    (xPil1,250), (xPil2, 250), (xPil1,250+r1), (xPil2, 250+r2)
-    """
-    recircVol = 0
-    return recircVol
-
-
-def estimateFluxes(data, planeWidth=1):
+def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     """# Estimate the mean residence time given:
     data: comsol output, preferrably already pre cut to contain the rough zone of recirculation
     planeWidth: how wide are the planes, which are defined off of coord+/- plane width
+    r1: the first pillar radius in microns
+    r2: the second pillar radius in microns
+    r3: the gap distance, in microns
     # data should be data that is already pre-selected for the region of interest
     # Break this up into separate functions for calculating:
     center coords
     recircVol -> You should check this against the sum of the eleVol data in the
     recirculation plane, it could easily be that it's just captured
 
-    FIX YOUR RECIRC VOL CALCULATION BY ESTIMATING THE TRAPEZOID AND SUBTRACTING THE
-    AREA WHERE THE TRAPEZOID INTERSECTS THE PILLARS
+    An issue with this is that it will too easily try to capture values right near
+    the midline, or right against the pillars. The easy solution is to just... back off of those a little.
+
+    We can use the pillarGapCalculation to generate the exact flux coordinates, even
+    if we choose to use a larger area for the actual PDF
     """
     data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
-    midPlane = subSelectData(data, zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
+    xGap, yGap = pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
+    xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
+    yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
+    midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+                             zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
@@ -382,7 +366,7 @@ def estimateFluxes(data, planeWidth=1):
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version5\\ExF\\ChemData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoPillar_v6"
 caseExt = "\.chemdata.txt$"
@@ -395,7 +379,7 @@ print(workingDir)
 #PDF Properties
 
 binProp = True  # True to bin velocties, false to skip
-dataRegionX = [250, 500]
+dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 regionName = 'Pillar Gap Exact'
 nBins = 100
@@ -438,7 +422,7 @@ for fileName in fileList:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'] = estimateFluxes(data, 1)
+        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
         params['posMRT'] = params['recircVol']/params['posFlux']
         params['negMRT'] = params['recircVol']/abs(params['negFlux'])
         params['fileName'] = fileName
