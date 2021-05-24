@@ -298,15 +298,15 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 
 
 def calcDilutionIndex(data, prop):
-    # The values coming out are fine... probably, but we need an appropriate thing to normalize to
+    # Calculates the dilution index following Kitidanis, 1994. Note that we use the discrete case, not the continuous.
+    # Notably, the continuous case has a thorny issue where the units don't match that of the discrete case.
     dV = data.eleVol.values
     c = data.loc[:, prop].values
     mTot = np.sum(c*dV)
-    mTotMax = np.sum(0.5*dV)
+    mTotMax = np.sum(dV)  # If we define well mixed as the concentration is the same everywhere, the contribution of the "c" term will normalize out
     p = c*dV/mTot
-    pMax = 0.5*dV/mTotMax
+    pMax = dV/mTotMax  # Again, we can normalize out the concentration since we assume the well mixed case is that the concentration is the same everywhere
     e = np.exp(-np.sum(p*np.log(p)))*np.mean(dV)
-    vTot = np.sum(dV)
     eMax = np.exp(-np.sum(np.log(pMax)*pMax))*np.mean(dV)
     return e, e/eMax
 
@@ -314,7 +314,7 @@ def calcDilutionIndex(data, prop):
 def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     """# Estimate the mean residence time given:
     data: comsol output, preferrably already pre cut to contain the rough zone of recirculation
-    planeWidth: how wide are the planes, which are defined off of coord+/- plane width
+    planeWidth: how wide are the planes, which are defined off of coord+/- plane 0.5*width
     r1: the first pillar radius in microns
     r2: the second pillar radius in microns
     r3: the gap distance, in microns
@@ -327,39 +327,38 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     An issue with this is that it will too easily try to capture values right near
     the midline, or right against the pillars. The easy solution is to just... back off of those a little.
 
-    We can use the pillarGapCalculation to generate the exact flux coordinates, even
-    if we choose to use a larger area for the actual PDF
+    We can use the pillarGapCalculation to generate the exact space between the pillars
     """
     data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
     xGap, yGap = pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
     midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
-                             zRange=[50-planeWidth, 50+planeWidth])  # Use the middle plane
+                             zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])  # Use the middle plane
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
                     float(centerPointRow.z.values)]
+    xEdge = max(data.loc[data.loc[:, 'v'] < 0, 'x'])
     # This is essentially the defined recirculation zone.
-    recircData = subSelectData(data, xRange=[250, centerCoords[0]])
+    recircData = subSelectData(data, xRange=[250, xEdge])
     # If we're feeling motivated we should probably ID where flux enters/leaves
     recircVol = recircData.eleVol.sum()  # Native units.
     # This is a cut plane, the total flux through the plane should be 0
-    recircPlane = subSelectData(data, xRange=[centerCoords[0]-planeWidth,
-                                              centerCoords[0]+planeWidth])
+    recircPlane = subSelectData(data, xRange=[centerCoords[0]-planeWidth*0.5,
+                                              centerCoords[0]+planeWidth*0.5])
     """Scale the flux off of each elements volume, but assume a constant depth
     sum(velocity*dV/estimated width (constant)) = sum(u*eleVol)/estimatedWidth
     The most accurate would be to determine the actual cross sectional surface
     area of each grid element but that doesn't really seem worth it."""
 
-    # DON'T FORGET XYZ COORDINATES ARE IN um BUT YOU NEED IT IN m!!!!
-    # Constant depth
-    totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(2E-6))
+    # Assumes the plane is uniform width, thus scaling eleVol by the width will give the surface area for flux
+    totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(planeWidth*1E-6))
     posRecircPlane = recircPlane.loc[recircPlane.u > 0, :]
-    posFlux = np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(2E-6))
+    posFlux = np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(planeWidth*1E-6))
     negFlux = totalRecircFlux-posFlux  # Find the opposing flux as well to check accuracy
-    return centerCoords, totalRecircFlux, posFlux, negFlux, recircVol
+    return centerCoords, totalRecircFlux, posFlux, negFlux, recircVol, xEdge
 
 # Read through files in a directory
 
@@ -381,7 +380,7 @@ print(workingDir)
 binProp = True  # True to bin velocties, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Pillar Gap Exact'
+regionName = 'Pillar Gap Exact Test'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
@@ -422,7 +421,7 @@ for fileName in fileList:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
+        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'], params['xEdge'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
         params['posMRT'] = params['recircVol']/params['posFlux']
         params['negMRT'] = params['recircVol']/abs(params['negFlux'])
         params['fileName'] = fileName
