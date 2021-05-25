@@ -4,7 +4,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 import scipy.stats as stats
-# import seaborn as sns
+import seaborn as sns
 
 
 def flowRateConversion(q, width, height, charLen, nu=0.45):
@@ -110,7 +110,7 @@ def metaPlot(metaData, prop='q'):
                      yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                ls='none', marker='o', label=val)
+                 ls='none', marker='o', label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -119,21 +119,23 @@ def metaPlot(metaData, prop='q'):
     ax5.legend(loc=0)
     return
 
-
+sns.set_context('talk')
 plt.rcParams['svg.fonttype'] = 'none'
 smooth = False
 window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P2_B1 - 50 um gap\\Pillar gap max norm 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P2_A2 - 25 um gap\\Pillar gap max norm 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum\\ExptImages\\Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Modeling\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact-dCdtNorm-100 linear bins\\"
 workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\Pillar gap max norm 50 bins\\"
 os.chdir(workingDirA)
-caseNameA = '.*.nd2'
+caseNameA = '2PD-1_P4_A3_3c'
 caseExtA = ".*_dark_hist\.csv"
-dA = 50
-dB = 25
+caseNameB = 'TwoPillar_v6'
+caseExtB = "\.flowdata_histogram\.csv"
+dA = 100
+dB = 100
 dC = 100
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -144,11 +146,11 @@ f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+# dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
 metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
-metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
+# metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
 metaPlot(metaData, prop='ReP')
 # dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 # metaData = dataSetPlot(dataSetB, metaData, smooth=window)
@@ -164,6 +166,12 @@ ax1.legend(loc=0)
 ax1.set_yscale('log')
 ax2.legend(loc=0)
 ax3.legend(loc=0)
+
+sns.despine(f1)
+sns.despine(f2)
+sns.despine(f3)
+sns.despine(f4)
+sns.despine(f5)
 
 # ax3.set_yscale('log')
 # plt.xscale('log')

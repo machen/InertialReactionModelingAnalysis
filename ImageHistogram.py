@@ -4,7 +4,7 @@ import pandas as pd
 from matplotlib import pyplot as plt
 import os
 import re
-
+import seaborn as sns
 """ Should read in images (which should be in the order brightfield, dark, GFP)
 and then produce a PDF of that image.
 
@@ -20,6 +20,8 @@ Any value less than that should get thrown out for the PDF analysis. Would be ni
 -If I'm feeling really fancy I could use the tracer to give me the indicies for areas that are 0
 
 """
+plt.rcParams['svg.fonttype'] = 'none'
+sns.set_context('talk')
 
 
 def genPDF(image, bins):
@@ -97,14 +99,14 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-3_P2_B1 - 50 um gap\\BackgroundSub\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum\\ExptImages\\BkgdSub\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [760, 1100]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
-yRange = [1190, 1270]  # [900, 1500]  # Should be matrix indices for the given image
+xRange = [700, 1050]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
+yRange = [1000, 1150]  # [900, 1500]  # Should be matrix indices for the given image
 maxNorm = False
-maxVal = 1748.3  # Set to none to use max observed in image. Value will depend on specific days mix
+maxVal = 541  # Set to none to use max observed in image. Value will depend on specific days mix
 regionName = "Pillar Gap"
 bgFile = 'NoDevice.tif'
 
