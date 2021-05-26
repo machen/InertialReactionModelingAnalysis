@@ -104,9 +104,11 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
         else:
             data = data/np.max(data)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
+    params['fileName'] = file
     params['maxInt'] = np.max(data)
     params['meanInt'] = np.mean(data)
     params['stdInt'] = np.std(data)
+    params['channel'] = channelName
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
     dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
                 'leftBin': dataLeft, 'rightBin': dataRight}
@@ -135,10 +137,10 @@ outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
                                    regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
+metaData = pd.DataFrame([], columns=['fileName', 'c', 'q'])
 
 for file in os.listdir():
     if re.match(filePat, file):
-        metaData = pd.DataFrame([], columns=['fileName', 'c', 'q'])
         print(file)
         params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
                                   bins=100, xRange=xRange, yRange=yRange)
