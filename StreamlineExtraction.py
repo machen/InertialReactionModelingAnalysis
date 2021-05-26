@@ -13,9 +13,49 @@ from the first point and taking the derivative.
 UPDATE ME TO TAKE AN ARBITRARY GLOBAL DIRECTION.
 
 Ideas:
--Extract backward streamlines of a certain length or larger
+-Develop reactive streamlines, determine fraction that is in recirculation pillar zone
+
+To do: Read in and compare H2O2 streamlines with TCPO streamlines (perhaps we hash it or something to compare?)
+
+1) Read in streamlines for the same file name as two separate data sets, determine using file extension
+2) Streamline comparison-> does a given streamline ID correspond to the same set of coordinates to within some error?
+3) Subselect streamline data to focus on pillar region
+4) Select streamlines where Conc A AND Conc B exceeds 1% of initial
+5) Discriminate selected streamlines between those experiencing any kind of recirculation, and those which do not
+6) Calculate the fraction of streamlines which are in the vortex, plot vs the extracted Re number
+7) Output: processing data is expensive, try to save yourself by outputting metadata file
+
 
 """
+
+
+def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
+    # Produces a dictionary of experimental parameters
+    rePat = re.compile('Re(\d+\.?\d*).'+caseExt)
+    dPat = re.compile('d(\d+\.?\d*)_')
+    cPat = re.compile('c(\d+\.?\d*)')
+    kPat = re.compile('k(\d+\.?\d*)_')
+    dVal = re.search(dPat, fileName).group(1)
+    reVal = re.search(rePat, fileName).group(1)
+    if caseExt == 'chemdata.txt':
+        cVal = re.search(cPat, fileName).group(1)
+        kVal = re.search(kPat, fileName).group(1)
+    else:
+        cVal = 0
+        kVal = 0
+    if nPil == 2:
+        r1Pat = re.compile('r1_(\d+?)_')
+        r2Pat = re.compile('r2_(\d+?)_')
+        r1Val = re.search(r1Pat, fileName).group(1)
+        r2Val = re.search(r2Pat, fileName).group(1)
+        res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
+               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
+    if nPil == 1:
+        rPat = re.compile('r(\d+?)_')
+        rVal = re.search(rPat, fileName).group(1)
+        res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
+               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
+    return res
 
 
 def extractStreamlines(data, minLen=1):
@@ -51,6 +91,8 @@ plt.ion()  # Keep interactive mode on
 workingDir = "..\\Comsol5.3\\Two Pillar Studies\\CoarseResults\\v1Results\\"  # Directory you want to scan through
 caseName = "TwoInletsTwoColumns_coarse"
 tgtExt = ".txt"
+extA = "H2O2stream.txt"
+extB = "TCPOstream.txt"
 plotData = True
 saveData = False
 
