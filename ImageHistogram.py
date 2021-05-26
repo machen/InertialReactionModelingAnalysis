@@ -24,6 +24,20 @@ plt.rcParams['svg.fonttype'] = 'none'
 sns.set_context('talk')
 
 
+def extractParams(fileName):
+    # Produces a dictionary of experimental parameters
+    cPat = re.compile('(\d+\.?\d*)c')
+    qPat = re.compile('(\d*\.?\d*)q')
+    repPat = re.compile('(\d{0,3}).nd2')
+    qVal = re.search(qPat, fileName).group(1)
+    repVal = re.search(repPat, fileName).group(1)
+    cVal = re.search(cPat, fileName).group(1)
+    if not repVal:
+        repVal = 0
+    res = {'q': float(qVal), 'replicate': int(repVal), 'c': float(cVal)}
+    return res
+
+
 def genPDF(image, bins):
     pdf, edges = np.histogram(image, density=True, bins=bins)
     edgeVal = (edges[:-1]+edges[1:])/2
@@ -77,6 +91,7 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
 def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                      xRange=None, yRange=None):
     # Single image. No background subtraction for the moment.
+    params = extractParams(file)
     img = Image.open(file)
     imageDictInv = {v: k for k, v in imageDict.items()}
     channelPat = re.compile('C=(\d)')
@@ -89,6 +104,9 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
         else:
             data = data/np.max(data)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
+    params['maxInt'] = np.max(data)
+    params['meanInt'] = np.mean(data)
+    params['stdInt'] = np.std(data)
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
     dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
                 'leftBin': dataLeft, 'rightBin': dataRight}
@@ -96,10 +114,10 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     dataDF.to_csv(outFile+file[:-4]+'_{}_hist.csv'.format(channelName))
     dataImage = Image.fromarray(data)
     dataImage.save(outFile+file[:-4]+'.tiff')
-    return
+    return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum\\ExptImages\\BkgdSub\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\BkgdSub\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
@@ -120,9 +138,11 @@ outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
 
 for file in os.listdir():
     if re.match(filePat, file):
+        metaData = pd.DataFrame([], columns=['fileName', 'c', 'q'])
         print(file)
-        produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
-                         bins=100, xRange=xRange, yRange=yRange)
+        params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
+                                  bins=100, xRange=xRange, yRange=yRange)
+        metaData = metaData.append(params, ignore_index=True)
         # img = Image.open(file)
         # img.seek(0)
         # bright = np.array(img)
@@ -145,3 +165,5 @@ for file in os.listdir():
         #              'leftBin': fluorLeft, 'rightBin': fluorRight}
         # fluorDF = pd.DataFrame(fluorDict)
         # fluorDF.to_csv(workingDir+file[:-4]+'_fluorescence_histogram.csv')
+
+metaData.to_csv(outFile+"_meta.csv")

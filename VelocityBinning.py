@@ -380,13 +380,14 @@ print(workingDir)
 binProp = True  # True to bin velocties, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Pillar Gap Exact Test'
+regionName = 'Pillar Gap Exact'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdtNorm'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
 autoRegion = True  # Will automatically determine the region by the geometry
+maxValue = 1  #  User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
@@ -439,12 +440,14 @@ for fileName in fileList:
             params['totalH2O2'] = np.sum(np.multiply(data.h2o2.values, elementVol))
             params['dCdtAvg'] = np.mean(dCdt)
             params['dCdtStd'] = np.std(dCdt)
+            params['dCdtMax'] = np.max(dCdt)
+            params['dCdtSum'] = np.sum(dCdt)
             params['dilutionTCPO'], params['reactorTCPO'] = calcDilutionIndex(data, 'tcpo')
             data.loc[:, 'constC'] = data.tcpo.values+data.cProduct.values # Conservative component
             params['dilutionConserv'], params['reactorConserv'] = calcDilutionIndex(data, 'constC')
             dCdtNorm = data.h2o2.values*data.tcpo.values/((params['c']/2)**2)  # Max rate is defined by well mixed, which is going to be cA*cB/(c0/2)**2
             data.loc[:, 'dCdtNorm'] = dCdtNorm
-            dCdtMaxNorm = data.h2o2.values*data.tcpo.values/np.max(data.h2o2.values*data.tcpo.values)
+            dCdtMaxNorm = data.h2o2.values*data.tcpo.values/maxValue
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
             params['conservative'] = np.sum(data.constC.values*data.eleVol.values)
