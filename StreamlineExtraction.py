@@ -29,6 +29,19 @@ To do: Read in and compare H2O2 streamlines with TCPO streamlines (perhaps we ha
 """
 
 
+def subSelectData(data, xRange=None, yRange=None, zRange=None):
+    """Assumes that each of the inputs to the function is a tuple containing
+     max and min values of x, y, and z that we wish to include. Use for rough
+     chopping of the data to exclude main channel flows"""
+    if xRange:
+        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
+    if yRange:
+        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
+    if zRange:
+        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
+    return data
+
+
 def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
     rePat = re.compile('Re(\d+\.?\d*).'+caseExt)
@@ -59,7 +72,7 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
 
 
 def extractStreamlines(data, minLen=1):
-    # data = data with x, y, z, sID
+    # data = data with x, y, z, sID, value
     # minLen = minimum length of streamline
     dData = data.diff()
     # Select for data where the y value reverses direction
@@ -87,26 +100,93 @@ def extractStreamlines(data, minLen=1):
     return tgt_sID, tgt_data, startPoints
 
 
+def reactiveStreamlineExtraction(dataA, dataB, thresh,
+                                 regionX=None, regionY=None, regionZ=None):
+    """
+    Outputs the streamline IDs which are reactive and the IDs which are within vortices
+    """
+    # Compare the streamlines in the two data sets
+    # Subselect data to focus only on pillar region
+    subDataA = subSelectData(dataA, regionX, regionY, regionZ)
+    # Selects streamlines where both data sets meet the threshold value criteria
+    subDataA['thresh'] = False
+    subDataA.loc[subDataA.loc[:, 'val'] > thresh, 'thresh'] = True
+    subDataB = subSelectData(dataB, regionX, regionY, regionZ)
+    subDataB['thresh'] = False
+    subDataB.loc[subDataA.loc[:, 'val'] > thresh, 'thresh'] = True
+    reactiveID = subDataA.loc[(subDataA.val >= thresh) & (subDataB.val >= thresh), 'sID'].unique()
+    dDataA = dataA.diff()
+    # Select for data where the y value reverses direction
+    # Uses the first row to determine predominant flow direction
+    if dDataA.loc[1, 'y'] > 0:
+        subData = dataA.loc[dDataA.y < 0, :]
+        # Filter out entries not on the same streamline
+        subData = subData.loc[dDataA.sID == 0, :]
+        # Pick entries that go beyond a certain Y value
+    elif dDataA.loc[1, 'y'] < 0:
+        subData = dataA.loc[dDataA.y > 0, :]
+        subData = subData.loc[dDataA.sID == 0, :]
+    vortIDA = np.array(subData.sID.unique())
+
+    dDataB = dataB.diff()
+    if dDataB.loc[1, 'y'] > 0:
+        subData = dataB.loc[dDataB.y < 0, :]
+        # Filter out entries not on the same streamline
+        subData = subData.loc[dDataB.sID == 0, :]
+        # Pick entries that go beyond a certain Y value
+    elif dDataB.loc[1, 'y'] < 0:
+        subData = dataB.loc[dDataB.y > 0, :]
+        subData = subData.loc[dDataB.sID == 0, :]
+    vortIDB = np.array(subData.sID.unique())
+
+    return reactiveID, vortIDA, vortIDB
+
+
+def pillarGapCalculation(r1, r2, d):
+    """ Use this to properly calculate the true "pillar gap" area depending on
+    the available parameters of the model. This calculation will directly assume:
+    1) That the edge of the most upstream pillar is at y = 0
+    2) That there are only two pillars
+    3) Positive y is upstream, negative y is downstream
+    4) The simulation base unit is microns
+
+    The gap is defined by the edges of the pillars along the channel length
+    and the width of the largest pillar
+    """
+    if not r2:
+        r2 = r1
+    xPil = 250
+    yPil = -(2*r1+d/2)
+    x1 = xPil-max(r1, r2)
+    x2 = xPil+max(r1, r2)
+    y1 = yPil+d/2
+    y2 = yPil-d/2
+
+    return [x1, x2], [y1, y2]
+
+
 plt.ion()  # Keep interactive mode on
-workingDir = "..\\Comsol5.3\\Two Pillar Studies\\CoarseResults\\v1Results\\"  # Directory you want to scan through
-caseName = "TwoInletsTwoColumns_coarse"
-tgtExt = ".txt"
-extA = "H2O2stream.txt"
-extB = "TCPOstream.txt"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemStreamlines\\RawData\\"  # Directory you want to scan through
+caseName = ""
+extA = "\.H2O2stream\.txt"
+extB = "\.TCPOstream\.txt"
 plotData = True
 saveData = False
 
-# FILE READER VERSION, NO PLOTTING
-
 os.chdir(workingDir)
-filePat = re.compile('streamlines_'+caseName+'\w*'+tgtExt)
+filePat = re.compile('(.*)('+extA+')')
 fileList = os.listdir('.')
 for f in fileList:
     if re.match(filePat, f):
         print(f)
-        data = pd.read_table(f, sep='\s+', skiprows=8,
-                             names=['x', 'y', 'z', 'sID', 'val'])
-        tgt_sID, tgt_data, startPoints = extractStreamlines(data, 100)
+        # Need to think through loading in a file then finding its "partner"
+        dataA = pd.read_table(f, sep='\s+', skiprows=8,
+                              names=['x', 'y', 'z', 'sID', 'val'])
+        fAlt = re.match(filePat, f).group(1)+extB
+        dataB = pd.read_table(fAlt, sep='\s+', skiprows=8,
+                              names=['x', 'y', 'z', 'sID', 'val'])
+        # Need to ID params
+        reactiveIDs, vortA, vortB = reactiveStreamlineExtraction(dataA, dataB, 0.03)
         if saveData:
             startPoints.to_csv(f[:-4]+"_startPoints.csv")
         if plotData:
