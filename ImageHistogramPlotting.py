@@ -126,16 +126,15 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum\\ExptImages\\Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Modeling\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact-dCdtNorm-100 linear bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Mar22_2021-Chemilum\\2PD-1_P4_A1 - 100 um gap\\Pillar gap max norm 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
-caseNameA = '2PD-1_P4_A3_3c'
+caseNameA = '2PD-2_P3_A4_3c'
 caseExtA = ".*_dark_hist\.csv"
-caseNameB = 'TwoPillar_v6'
-caseExtB = "\.flowdata_histogram\.csv"
-dA = 100
-dB = 100
+caseNameB = '2PD-2_P3_A4_3c'
+caseExtB = ".*_dark_hist\.csv"
+dA = 25
+dB = 25
 dC = 100
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))

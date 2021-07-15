@@ -119,15 +119,15 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\BkgdSub\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\SplitImgs\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [700, 1050]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
-yRange = [1000, 1150]  # [900, 1500]  # Should be matrix indices for the given image
+xRange = [825, 1145]  # [700, 1050]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
+yRange = [1200, 1250]  # [1000, 1150]  # [900, 1500]  # Should be matrix indices for the given image
 maxNorm = False
-maxVal = 541  # Set to none to use max observed in image. Value will depend on specific days mix
-regionName = "Pillar Gap"
+maxVal = 1063  # Set to none to use max observed in image. Value will depend on specific days mix
+regionName = "Raw Image Pillar Gap"
 bgFile = 'NoDevice.tif'
 
 fileList = os.listdir()
