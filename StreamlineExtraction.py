@@ -44,7 +44,7 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
 
 def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
-    rePat = re.compile('Re(\d+\.?\d*).'+caseExt)
+    rePat = re.compile('Re(\d+\.?\d*).')
     dPat = re.compile('d(\d+\.?\d*)_')
     cPat = re.compile('c(\d+\.?\d*)')
     kPat = re.compile('k(\d+\.?\d*)_')
@@ -116,27 +116,29 @@ def reactiveStreamlineExtraction(dataA, dataB, thresh,
     subDataB.loc[subDataA.loc[:, 'val'] > thresh, 'thresh'] = True
     reactiveID = subDataA.loc[(subDataA.val >= thresh) & (subDataB.val >= thresh), 'sID'].unique()
     dDataA = dataA.diff()
+    dSubDataA = subDataA.diff()
     # Select for data where the y value reverses direction
     # Uses the first row to determine predominant flow direction
     if dDataA.loc[1, 'y'] > 0:
-        subData = dataA.loc[dDataA.y < 0, :]
+        subData = subDataA.loc[dSubDataA.y < 0, :]
         # Filter out entries not on the same streamline
-        subData = subData.loc[dDataA.sID == 0, :]
+        subData = subData.loc[dSubDataA.sID == 0, :]
         # Pick entries that go beyond a certain Y value
     elif dDataA.loc[1, 'y'] < 0:
-        subData = dataA.loc[dDataA.y > 0, :]
-        subData = subData.loc[dDataA.sID == 0, :]
+        subData = subDataA.loc[dSubDataA.y > 0, :]
+        subData = subData.loc[dSubDataA.sID == 0, :]
     vortIDA = np.array(subData.sID.unique())
 
     dDataB = dataB.diff()
+    dSubDataB = subDataB.diff()
     if dDataB.loc[1, 'y'] > 0:
-        subData = dataB.loc[dDataB.y < 0, :]
+        subData = subDataB.loc[dSubDataB.y < 0, :]
         # Filter out entries not on the same streamline
-        subData = subData.loc[dDataB.sID == 0, :]
+        subData = subData.loc[dSubDataB.sID == 0, :]
         # Pick entries that go beyond a certain Y value
     elif dDataB.loc[1, 'y'] < 0:
-        subData = dataB.loc[dDataB.y > 0, :]
-        subData = subData.loc[dDataB.sID == 0, :]
+        subData = subDataB.loc[dSubDataB.y > 0, :]
+        subData = subData.loc[dSubDataB.sID == 0, :]
     vortIDB = np.array(subData.sID.unique())
 
     return reactiveID, vortIDA, vortIDB
@@ -165,20 +167,24 @@ def pillarGapCalculation(r1, r2, d):
     return [x1, x2], [y1, y2]
 
 
-plt.ion()  # Keep interactive mode on
+# plt.ion()  # Keep interactive mode on
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemStreamlines\\RawData\\"  # Directory you want to scan through
 caseName = ""
-extA = "\.H2O2stream\.txt"
-extB = "\.TCPOstream\.txt"
+extA = ".H2O2stream.txt"
+extB = ".TCPOstream.txt"
 plotData = True
 saveData = False
+exactGap = True
 
 os.chdir(workingDir)
 filePat = re.compile('(.*)('+extA+')')
 fileList = os.listdir('.')
+metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2', 'd', 'Re', 'k', 'c'])
 for f in fileList:
     if re.match(filePat, f):
         print(f)
+        params = extractParams(f, nPil=1, caseExt='chemdata.txt')
+        params['fileName'] = f
         # Need to think through loading in a file then finding its "partner"
         dataA = pd.read_table(f, sep='\s+', skiprows=8,
                               names=['x', 'y', 'z', 'sID', 'val'])
@@ -186,20 +192,69 @@ for f in fileList:
         dataB = pd.read_table(fAlt, sep='\s+', skiprows=8,
                               names=['x', 'y', 'z', 'sID', 'val'])
         # Need to ID params
-        reactiveIDs, vortA, vortB = reactiveStreamlineExtraction(dataA, dataB, 0.03)
-        if saveData:
-            startPoints.to_csv(f[:-4]+"_startPoints.csv")
+        totalStreams = len(dataA.sID.unique())
+        if exactGap:
+            xRange, yRange = pillarGapCalculation(params['r1'], params['r2'], params['d'])
+            outName = 'Exact Gap StreamlineMetaResults.csv'
+        else:
+            xRange = None
+            yRange = None
+            outName = 'Whole StreamlineMetaResults.csv'
+        reactiveIDs, vortA, vortB = reactiveStreamlineExtraction(dataA, dataB, params['c']/100, regionX=xRange, regionY=yRange)
+        """ # Okay, so we've gotten the IDs for reactive streamlines and the streamlines in vortices
+        # We have to sub select the data that meets both.
+
+        What am I outputting from this script?
+        - Percentage of streamlines that are in vortex
+        - Percentage of streamlines that are reactive
+        - Percentage that are both?
+
+        I also then want to plot them, perhaps in 2D?
+        """
+        vortData = dataA.loc[dataA.sID.isin(vortA), :]
+        reacData = dataA.loc[dataA.sID.isin(reactiveIDs), :]
+        reacVortData = reacData.loc[reacData.sID.isin(vortA), :]
+        params['vortStream'] = len(vortData.sID.unique())
+        params['reacStream'] = len(reacData.sID.unique())
+        params['reacVortStream'] = len(reacVortData.sID.unique())
+        params['totalStream'] = len(dataA.sID.unique())
+
+        metaData = metaData.append(params, ignore_index=True)
+        # if saveData:
+        #     startPoints.to_csv(f[:-4]+"_startPoints.csv")
+        if plotData:
+            if params['Re'] != 100:
+                continue
+            if params['k'] != 2000:
+                continue
         if plotData:
             fig = plt.figure()
-            ax = fig.add_subplot(111, projection='3d')
+            #ax = fig.add_subplot(111, projection='3d')
+            ax = fig.add_subplot(111)
             plt.title(f)
-            for ID in tgt_sID:
+            for ID in dataA.sID:
                 # Plot the streamline in 3D space, color by streamline
-                subData = tgt_data.loc[tgt_data.sID == ID, :]
-                ax.plot(subData.x, subData.y, subData.z, label=ID)
-                ax.set_zlim([0, 100])
-                ax.set_ylim([-5000, 2000])
-                ax.set_xlim([-2000, 2000])
-                ax.set_xlabel('x')
-                ax.set_ylabel('y')
-                ax.set_zlabel('z')
+                if ID not in reactiveIDs:
+                    continue
+                else:
+                    if ID in vortA:
+                        color = 'r'
+                    else:
+                        color = 'b'
+                subData = dataA.loc[dataA.sID == ID, :]
+                # ax.plot(dataA.loc[dataA.sID == ID, 'x'],
+                #         dataA.loc[dataA.sID == ID, 'y'],
+                #         dataA.loc[dataA.sID == ID, 'z'],
+                #         color=color, ls='-')
+                ax.plot(subData.x,
+                        subData.y,
+                        color=color, ls='-')
+            ax.set_aspect('equal')
+            ax.set_zlim([0, 100])
+            ax.set_ylim([-550, -250])
+            ax.set_xlim([150, 350])
+            ax.set_xlabel('x')
+            ax.set_ylabel('y')
+            ax.set_zlabel('z')
+if saveData:
+    metaData.to_csv(outName)
