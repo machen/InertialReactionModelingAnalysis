@@ -106,11 +106,14 @@ def metaPlot(metaData, prop='q'):
     traceList = metaData.d.unique()
     for val in traceList:
         subData = metaData.loc[metaData.d == val, :]
+        meanData = subData.groupby(prop).mean()
+        stdData = subData.groupby(prop).std()
         ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
                      yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
                  ls='none', marker='o', label=val)
+        ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'], yerr=stdData.loc[:,'PDFmean'], ls='none', marker='o', capsize=2, label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -126,15 +129,16 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = '2PD-2_P3_A4_3c'
 caseExtA = ".*_dark_hist\.csv"
-caseNameB = '2PD-2_P3_A4_3c'
+caseNameB = '2PD-1_P4_A3_3c'
 caseExtB = ".*_dark_hist\.csv"
+# You must set these to the correct pillar gaps of the experiment
 dA = 25
-dB = 25
+dB = 100
 dC = 100
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -142,6 +146,7 @@ f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f6, ax6 = plt.subplots(1,1, sharex='col', figsize=(12,10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
