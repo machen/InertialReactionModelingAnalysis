@@ -364,14 +364,15 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoPillar_v6"
-caseExt = "\.chemdata.txt$"
-calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = True  # Do calculations for PDF from chemistry
+#caseExt = "\.chemdata.txt$"
+caseExt = "\.flowdata.txt$"
+calcFlow = True  # Do Pressure/Flow rate fitting? Only valid with flow
+vortAng = True  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = False  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
@@ -381,13 +382,13 @@ binProp = True  # True to bin velocties, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 regionName = 'Pillar Gap Exact'
-nBins = 100
+nBins = 180
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'angle'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
 autoRegion = True  # Will automatically determine the region by the geometry
-maxValue = 1  #  User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
+maxValue = 4.39  #  4.39 for dC/dt sim. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
@@ -425,6 +426,7 @@ for fileName in fileList:
         params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'], params['xEdge'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
         params['posMRT'] = params['recircVol']/params['posFlux']
         params['negMRT'] = params['recircVol']/abs(params['negFlux'])
+        params['estRT'] = params['d']*10**-6/data.velMag.mean()
         params['fileName'] = fileName
         if vortAng:
             data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
@@ -447,6 +449,7 @@ for fileName in fileList:
             params['dilutionConserv'], params['reactorConserv'] = calcDilutionIndex(data, 'constC')
             dCdtNorm = data.h2o2.values*data.tcpo.values/((params['c']/2)**2)  # Max rate is defined by well mixed, which is going to be cA*cB/(c0/2)**2
             data.loc[:, 'dCdtNorm'] = dCdtNorm
+            params['maxRef'] = maxValue
             dCdtMaxNorm = data.h2o2.values*data.tcpo.values/maxValue
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
 
