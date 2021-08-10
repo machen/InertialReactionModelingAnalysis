@@ -178,6 +178,16 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None):
              label=label)
     ax6.set_ylabel(prop)
     ax6.set_xlabel('Re')
+    maxVal = subData.loc[:, 'PDFmean'].max()
+    ax7.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean']/maxVal,
+                 ls='none', marker='o',
+                 label=label+' Max val: {}'.format(maxVal))
+    ax7.set_xlabel(prop)
+    ax7.set_ylabel('Max normalized')
+    ax7.set_title('Watch out for what the max means')
+    ax7.legend(loc=0)
+    ax7.set_ylim([-0.1, 1.1])
+    ax7.set_xlim([-1, 105])
     return
 
 
@@ -206,19 +216,19 @@ window = 5
 smooth = False
 fitRange = np.array([85, 90])
 prop = 'posMRT'  # Options include: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
-prop2 = None # Lets you plot multiple properties vs Re, beware axis scaling
+prop2 = 'estRT' #'posMRT' # Lets you plot multiple properties vs Re, beware axis scaling
 # fitRange = np.array([65, 85])
 #workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact-velMag-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\Pillar Gap Exact v2-velMag-100 linear bins\\"
 # workingDir = "."
-caseNameA = "TwoPillar_v6_ExF"
+caseNameA = "TwoPillar_v6_ExF_"
 caseExtA = "d100_Re.*\.flowdata_histogram\.csv"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "."
-caseNameB = "TwoPillar_v6"
-caseExtB = "d25_Re.*\.flowdata_histogram\.csv"
+workingDirB = "..\\Pillar Gap Exact-velMag-100 linear bins\\"
+caseNameB = "TwoPillar_v6_ExF_"
+caseExtB = "d100_Re.*\.flowdata_histogram\.csv"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -227,38 +237,20 @@ f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f7, ax7 = plt.subplots(1,1, sharex='col', figsize=(12,10))
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
-# for key in dataSetA:
-#     fit, xVal, yRes = semilogYFitting(dataSetA[key], 'valMean',
-#                                       'normFreq', np.array([87, 91]))
-#     ax1.plot(xVal, yRes, ls='-', color='k', label='A'+str(fit))
-#     ax2.plot(xVal, yRes, ls='-', color='k', label='A'+str(fit))
-#     fit, xVal, yRes = semilogYFitting(dataSetA[key], 'valMean',
-#                                       'normFreq', np.array([75, 87]))
-#     ax1.plot(xVal, yRes, ls='-', color='k', label='A'+str(fit))
-#     ax2.plot(xVal, yRes, ls='-', color='k', label='A'+str(fit))
-# for i in [2,4,5,10]:
-#     dataSetSmooth = dataExtraction('.', caseNameA, caseExtA, smooth=True, window=i)
-#     dataSetPlot(dataSetSmooth, smooth=i)
+
 dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='--')
-# for key in dataSetB:
-#     fit, xVal, yRes = semilogYFitting(dataSetB[key], 'valMean',
-#                                       'normFreq', np.array([75, 91]))
-#     ax1.plot(xVal, yRes, ls='--', color='k', label='B'+str(fit))
-#     ax2.plot(xVal, yRes, ls='--', color='k', label='B'+str(fit))
-# for i in range(10):
-#     xGauss, yGauss = genGaussian(90, i)
-#     ax1.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
-#     ax2.plot(xGauss, yGauss, ls='--', color='k', label='{} gaussian'.format(i))
 
-metaPlot(metaDataA, prop=prop, flowCond='NS', label="d100")
-metaPlot(metaDataB, prop=prop, flowCond='NS', label="d25")
+metaPlot(metaDataA, prop=prop, flowCond='NS', label="100 um-v2")
+metaPlot(metaDataB, prop=prop, flowCond='NS', label="100 um-v1")
 if prop2:
-    metaPlot(metaData, prop=prop2, flowCond='NS', label='d25')
+    metaPlot(metaDataA, prop=prop2, flowCond='NS', label='estRT, 100 um, v2')
+    metaPlot(metaDataB, prop=prop2, flowCond='NS', label="estRT, 100 um, v1")
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")

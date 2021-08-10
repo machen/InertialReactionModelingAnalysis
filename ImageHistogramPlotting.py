@@ -113,13 +113,32 @@ def metaPlot(metaData, prop='q'):
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
                  ls='none', marker='o', label=val)
-        ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'], yerr=stdData.loc[:,'PDFmean'], ls='none', marker='o', capsize=2, label=val)
+        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
+        ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
+                 yerr=stdData.loc[:,'PDFstd'], ls='none', marker='o',
+                 capsize=2,
+                 label= "{} max val q: {}".format(val,float(maxLoc)))
+        maxVal = meanData.PDFmean.max()
+        ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
+                 yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
+                 capsize=2,
+                 label= "{} max val: {}".format(val, maxVal))
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
     ax5.set_xlabel(prop)
     ax5.set_ylabel('Mean of PDF')
     ax5.legend(loc=0)
+    ax6.set_xlabel(prop)
+    ax6.set_ylabel('Mean of PDF')
+    ax6.set_title('Averaged Results')
+    ax6.legend(loc=0)
+    ax7.set_xlabel(prop)
+    ax7.set_ylabel('Mean of PDF')
+    ax7.set_title('Max normalized - check max val')
+    ax7.legend(loc=0)
+    ax7.set_ylim([-0.1, 1.1])
+    ax7.set_xlim([-1, 105])
     return
 
 sns.set_context('talk')
@@ -129,32 +148,39 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Pillar Gap 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\June14_2021-Chemilum-50_75um\\50 um pillars\\Pillar Gap 50 bins\\"
+workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\June14_2021-Chemilum-50_75um\\75 um pillars\\Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
-caseNameA = '2PD-2_P3_A4_3c'
+caseNameA = '2PD-1_P4_A3_3c'
 caseExtA = ".*_dark_hist\.csv"
-caseNameB = '2PD-1_P4_A3_3c'
-caseExtB = ".*_dark_hist\.csv"
+caseNameB = '2PD-2_P3_A4_3c'
+caseNameC = '2PD3_P4_B3_3c'
+caseNameD = '2PD3_P4_C4_3c'
 # You must set these to the correct pillar gaps of the experiment
-dA = 25
-dB = 100
-dC = 100
+dA = 100
+dB = 25
+dC = 50
+dD = 75
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-f6, ax6 = plt.subplots(1,1, sharex='col', figsize=(12,10))
+f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-# dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtA, smooth, window)
+# dataSetC = dataExtraction(workingDirC, caseNameC, caseExtA, smooth, window)
+# dataSetD = dataExtraction(workingDirD, caseNameD, caseExtA, smooth, window)
 metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
-metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
+# metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
 # metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
+# metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
 metaPlot(metaData, prop='ReP')
 # dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 # metaData = dataSetPlot(dataSetB, metaData, smooth=window)
@@ -176,6 +202,7 @@ sns.despine(f2)
 sns.despine(f3)
 sns.despine(f4)
 sns.despine(f5)
+sns.despine(f6)
 
 # ax3.set_yscale('log')
 # plt.xscale('log')
