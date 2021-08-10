@@ -91,13 +91,54 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
      max and min values of x, y, and z that we wish to include. Use for rough
      chopping of the data to exclude main channel flows"""
     if xRange:
-        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
+        # data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
+        data = data.drop((data.x < min(xRange) | data.x > max(xRange)))
     if yRange:
-        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
+        # data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
+        data = data.drop((data.y < min(yRange)) | (data.y > max(yRange)))
     if zRange:
-        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
+        # data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
+        data = data.drop((data.z < min(zRange)) | (data.z > max(zRange)))
+
     return data
 
+
+def selectRecircData(data, r1, r2, d, gridSize=100):
+    """ As opposed to subSelectData which is just a basic square cut, this
+    is supposed to very accurately delineate the recirculation zone by defining
+    the following boundaries:
+    1) The middle line of the device aligned with the flow axis (x=250)
+    2) The middle of the left pillar
+    3) The middle of the right pillar
+    4) A curve delineated by the points which have negative flow velocity that
+    are farthest from the line in 1)
+    4 is the most difficult part of the algorithm, since this is an actual curve
+    that depends on the actual system.digitize
+
+    Algorithm:
+    Divide the yRange into spots defined by grid resolution (numpy)
+    Find the point farthest from the centerline which still has negative velocity in  # noqa: E501
+    each subspot
+    Select or drop data outside of that range
+
+    The question is can I do this in a more...optimal way.
+
+    For example, could I pre bin the data based on the grid resolution and
+    then just get the min from that?
+    for example:
+    bins = np.linspace(data.y.min(),data.y.max(),num=gridSize)
+    data['Ybin'] = pd.cut(data.y,bins,label=bins[:-1])
+    grouped = data.groupby(by='Ybin')
+    xVals = grouped.v.min()
+    data['xLim'] = xVals # This doesn't map right, but this is the idea of what I want
+    # Criterion for retention is that y is in yrange and x < xVal[yRange]
+    data.drop(data.x >data.xVals)
+
+    """
+    xRange, yRange = pillarGapCalculation(r1, r2, d)  # Boundaries 2 and 3 covered by this
+    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
+    return data
 
 def crossings_nonzero_all(data):
     # Will calculate a zero crossing and return the indices where the crossing occurs
@@ -364,19 +405,21 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
+#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoPillar_v6"
-caseExt = "\.chemdata.txt$"
-#caseExt = "\.flowdata.txt$"
+#caseExt = "\.chemdata.txt$"
+caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = True  # Do calculations for PDF from chemistry
+vortAng = True  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+calcChem = False  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
 #PDF Properties
+
+testMode = False # Set to true to use only one file.
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
@@ -385,11 +428,12 @@ regionName = 'Pillar Gap Exact v2'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'angle'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
 autoRegion = True  # Will automatically determine the region by the geometry
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
-
+metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
+                                     'd', 'Re', 'dP', 'q', 'l'])
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
 nu = 4.3E-7  #m^2/s Acetnonitrile kinematic viscosity
@@ -403,8 +447,7 @@ fileList = os.listdir('.')
 # Check for existence of a metadata file which should be something like:
 # caseName+"_meta.csv"
 # Purpose of metadata file is to say what we've run already
-metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
-                                     'd', 'Re', 'dP', 'q', 'l'])
+
 outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    nBins, logBins, binProp,
                                    regionName=regionName,
@@ -485,6 +528,8 @@ for fileName in fileList:
             plt.savefig(outFile+fileName[:-4]+"_log.png")
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
+        if testMode:
+            break
 
 metaData.to_csv(outFile+caseName+"_meta.csv")
 
