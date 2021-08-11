@@ -91,19 +91,16 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
      max and min values of x, y, and z that we wish to include. Use for rough
      chopping of the data to exclude main channel flows"""
     if xRange:
-        # data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
-        data = data.drop((data.x < min(xRange) | data.x > max(xRange)))
+        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
     if yRange:
-        # data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
-        data = data.drop((data.y < min(yRange)) | (data.y > max(yRange)))
+        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
     if zRange:
-        # data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
-        data = data.drop((data.z < min(zRange)) | (data.z > max(zRange)))
+        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
 
     return data
 
 
-def selectRecircData(data, r1, r2, d, gridSize=100):
+def selectRecircData(data, r1, r2, d, gridSize=1):
     """ As opposed to subSelectData which is just a basic square cut, this
     is supposed to very accurately delineate the recirculation zone by defining
     the following boundaries:
@@ -138,6 +135,16 @@ def selectRecircData(data, r1, r2, d, gridSize=100):
     xRange, yRange = pillarGapCalculation(r1, r2, d)  # Boundaries 2 and 3 covered by this
     data = subSelectData(data, xRange=xRange, yRange=yRange)
     data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
+    bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
+    data['Ybin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
+    for leftBin in bins[:-1]:
+        subData = data.loc[data.Ybin==leftBin,:].copy() # Subselect the "grid" block
+        if not (subData.v>0).any():
+            data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
+            continue
+        maxX = max(subData.loc[subData.loc[:, 'v'] > 0, 'x'])
+        data.drop(data.loc[(data.Ybin == leftBin) & (data.x>maxX),:].index,
+        inplace=True) # Slice out data in the grid bock
     return data
 
 def crossings_nonzero_all(data):
@@ -412,23 +419,23 @@ caseName = "TwoPillar_v6"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
-vortAng = True  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
+vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
 calcChem = False  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
 #PDF Properties
 
-testMode = False # Set to true to use only one file.
+testMode = True # Set to true to use only one file.
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Pillar Gap Exact v2'
+regionName = 'Test'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'angle'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
 autoRegion = True  # Will automatically determine the region by the geometry
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
