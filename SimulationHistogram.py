@@ -382,7 +382,16 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
     midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
-                             zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])  # Use the middle plane
+                             zRange=[50-planeWidth*0.5, 50+planeWidth*0.5]) # Use the middle plane
+    if midPlane.empty:
+        planeWidthAdjust = planeWidth
+        while midPlane.empty:
+            planeWidthAdjust += planeWidth
+            print("Plane width too small, incrementing planeWidth")
+            midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+                                     zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
+            if planeWidth >= 100:
+                raise ValueError("Plane width too large.")
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
@@ -426,18 +435,18 @@ print(workingDir)
 
 #PDF Properties
 
-testMode = True # Set to true to use only one file.
+testMode = False # Set to true to use only one file.
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Test'
+regionName = 'RecircZone'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = False  # Will estimate the recirculation region and bin to that area
-autoRegion = True  # Will automatically determine the region by the geometry
+recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
+autoRegion = False  # Will automatically determine the region by the geometry
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
@@ -472,6 +481,10 @@ for fileName in fileList:
         if autoRegion:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'])
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        if recircDefinedRegion:
+            data = selectRecircData(data, params['r1'], params['r2'], params['d'])
+            if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
+                continue
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
         params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'], params['xEdge'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
         params['posMRT'] = params['recircVol']/params['posFlux']
@@ -511,13 +524,6 @@ for fileName in fileList:
             params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
             params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
         if binProp:
-            if recircDefinedRegion:
-                recircX = [250, params['recircCenter'][0]]
-                recircY = [-450+(params['r1']+params['d']/2),
-                           -450-(params['r2']+params['d']/2)]
-                print('recircX: {}'.format(recircX))
-                print('recircY: {}'.format(recircY))
-                data = subSelectData(data, xRange=recircX, yRange=recircY)
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,
