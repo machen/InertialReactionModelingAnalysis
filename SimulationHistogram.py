@@ -46,7 +46,7 @@ It's easy enough to pull the total flux to see what the rough error is.
 """
 
 
-def pillarGapCalculation(r1, r2, d):
+def pillarGapCalculation(r1, r2, d, includePillar=True):
     """ Use this to properly calculate the true "pillar gap" area depending on
     the available parameters of the model. This calculation will directly assume:
     1) That the edge of the most upstream pillar is at y = 0
@@ -63,9 +63,12 @@ def pillarGapCalculation(r1, r2, d):
     yPil = -(2*r1+d/2)
     x1 = xPil-max(r1, r2)
     x2 = xPil+max(r1, r2)
-    y1 = yPil+d/2+r1 # Includes the pillar itself, allowing the box to cover volume near the pillar far away from the centerline
-    y2 = yPil-d/2-r2
-
+    if includePillar:
+        y1 = yPil+d/2+r1 # Includes the pillar itself, allowing the box to cover volume near the pillar far away from the centerline
+        y2 = yPil-d/2-r2
+    else:
+        y1 = yPil+d/2
+        y2 = yPil-d/2
     return [x1, x2], [y1, y2]
 
 
@@ -99,53 +102,6 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
 
     return data
 
-
-def selectRecircData(data, r1, r2, d, gridSize=1):
-    """ As opposed to subSelectData which is just a basic square cut, this
-    is supposed to very accurately delineate the recirculation zone by defining
-    the following boundaries:
-    1) The middle line of the device aligned with the flow axis (x=250)
-    2) The middle of the left pillar
-    3) The middle of the right pillar
-    4) A curve delineated by the points which have negative flow velocity that
-    are farthest from the line in 1)
-    4 is the most difficult part of the algorithm, since this is an actual curve
-    that depends on the actual system.digitize
-
-    Algorithm:
-    Divide the yRange into spots defined by grid resolution (numpy)
-    Find the point farthest from the centerline which still has negative velocity in  # noqa: E501
-    each subspot
-    Select or drop data outside of that range
-
-    The question is can I do this in a more...optimal way.
-
-    For example, could I pre bin the data based on the grid resolution and
-    then just get the min from that?
-    for example:
-    bins = np.linspace(data.y.min(),data.y.max(),num=gridSize)
-    data['Ybin'] = pd.cut(data.y,bins,label=bins[:-1])
-    grouped = data.groupby(by='Ybin')
-    xVals = grouped.v.min()
-    data['xLim'] = xVals # This doesn't map right, but this is the idea of what I want
-    # Criterion for retention is that y is in yrange and x < xVal[yRange]
-    data.drop(data.x >data.xVals)
-
-    """
-    xRange, yRange = pillarGapCalculation(r1, r2, d)  # Boundaries 2 and 3 covered by this
-    data = subSelectData(data, xRange=xRange, yRange=yRange)
-    data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
-    bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
-    data['Ybin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
-    for leftBin in bins[:-1]:
-        subData = data.loc[data.Ybin==leftBin,:].copy() # Subselect the "grid" block
-        if not (subData.v>0).any():
-            data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
-            continue
-        maxX = max(subData.loc[subData.loc[:, 'v'] > 0, 'x'])
-        data.drop(data.loc[(data.Ybin == leftBin) & (data.x>maxX),:].index,
-        inplace=True) # Slice out data in the grid bock
-    return data
 
 def crossings_nonzero_all(data):
     # Will calculate a zero crossing and return the indices where the crossing occurs
@@ -359,8 +315,106 @@ def calcDilutionIndex(data, prop):
     return e, e/eMax
 
 
+def centerPointEstimation(data, planeWidth=1, r1=100, d=100):
+    """Given a dataset, should give the estimated centerpoint using the
+    point with the lowest velocity in the middle (z=50) plane of the channel.
+    """
+    midPlane = subSelectData(data, zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
+    if midPlane.empty:
+        planeWidthAdjust = planeWidth
+        while midPlane.empty:
+            planeWidthAdjust += planeWidth
+            print("Plane width too small, incrementing planeWidth")
+            midPlane = subSelectData(data, zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
+            if planeWidthAdjust >= 10*planeWidth:
+                print('WARNING: Planewidth too large, writing null')
+                return [0, 0, 0], 0, -1, -1, 0, 0
+    minU = midPlane.velMag.min()
+    centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
+    centerCoords = [float(centerPointRow.x.values),
+                    float(centerPointRow.y.values),
+                    float(centerPointRow.z.values)]
+    return centerCoords
+
+
+def estimateRecircFlux(recircData, centerCoords, recircVol, planeWidth=1):
+    """Given a set of data that contains a SINGLE recirculation zone
+    and the center coordinates for that zone, calculates the recirculation
+    flux through the zone by estimating the flux that cuts through the
+    centerplane """
+    recircPlane = subSelectData(recircData, xRange=[centerCoords[0]-planeWidth*0.5,
+                                centerCoords[0]+planeWidth*0.5])
+    totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(planeWidth*1E-6))
+    posRecircPlane = recircPlane.loc[recircPlane.u > 0, :]
+    posFlux = np.sum(posRecircPlane.u.values*posRecircPlane.eleVol.values/(planeWidth*1E-6))
+    negFlux = totalRecircFlux-posFlux  # Find the opposing flux as well to check accuracy
+    return totalRecircFlux, posFlux, negFlux
+
+
+def selectRecircZoneBasic(data, r1, r2, d):
+    """ Does a basic selection of recirculation zone, defining it by:
+    The pillar edges, the channel centerline, and the farthest point where a negative
+    x velocity still exists.
+    """
+    xEdge = max(data.loc[data.loc[:, 'v'] > 0, 'x'])
+    recircData = subSelectData(data, xRange=[250, xEdge])
+    xGap, yGap = pillarGapCalculation(r1, r2, d, False)
+    recircData = subSelectData(recircData, yRange=yGap)
+    return recircData, xEdge
+
+
+def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
+    """ As opposed to subSelectData which is just a basic square cut, this
+    is supposed to very accurately delineate the recirculation zone by defining
+    the following boundaries:
+    1) The middle line of the device aligned with the flow axis (x=250)
+    2) The middle of the left pillar
+    3) The middle of the right pillar
+    4) A curve delineated by the points which have negative flow velocity that
+    are farthest from the line in 1)
+    4 is the most difficult part of the algorithm, since this is an actual curve
+    that depends on the actual system.digitize
+
+    Algorithm:
+    Divide the yRange into spots defined by grid resolution (numpy)
+    Find the point farthest from the centerline which still has negative velocity in  # noqa: E501
+    each subspot
+    Select or drop data outside of that range
+
+    The question is can I do this in a more...optimal way.
+
+    For example, could I pre bin the data based on the grid resolution and
+    then just get the min from that?
+    for example:
+    bins = np.linspace(data.y.min(),data.y.max(),num=gridSize)
+    data['Ybin'] = pd.cut(data.y,bins,label=bins[:-1])
+    grouped = data.groupby(by='Ybin')
+    xVals = grouped.v.min()
+    data['xLim'] = xVals # This doesn't map right, but this is the idea of what I want
+    # Criterion for retention is that y is in yrange and x < xVal[yRange]
+    data.drop(data.x >data.xVals)
+
+    """
+    xRange, yRange = pillarGapCalculation(r1, r2, d)  # Boundaries 2 and 3 covered by this
+    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
+    bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
+    data['Ybin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
+    for leftBin in bins[:-1]:
+        subData = data.loc[data.Ybin==leftBin,:].copy() # Subselect the "grid" block
+        if not (subData.v>0).any():
+            data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
+            continue
+        maxX = max(subData.loc[subData.loc[:, 'v'] > 0, 'x'])
+        data.drop(data.loc[(data.Ybin == leftBin) & (data.x>maxX),:].index,
+        inplace=True) # Slice out data in the grid bock
+    return data
+
+
 def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
-    """# Estimate the mean residence time given:
+    """
+    DEFINITELY BREAK UP INTO SEPARATE FUNCTIONS.
+    # Estimate the mean residence time given:
     data: comsol output, preferrably already pre cut to contain the rough zone of recirculation
     planeWidth: how wide are the planes, which are defined off of coord+/- plane 0.5*width
     r1: the first pillar radius in microns
@@ -390,8 +444,9 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
             print("Plane width too small, incrementing planeWidth")
             midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
                                      zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
-            if planeWidth >= 100:
-                raise ValueError("Plane width too large.")
+            if planeWidthAdjust >= 10*planeWidth:
+                print('WARNING: Planewidth too large, writing null')
+                return [0, 0, 0], 0, -1, -1, 0, 0
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
@@ -435,18 +490,17 @@ print(workingDir)
 
 #PDF Properties
 
-testMode = False # Set to true to use only one file.
+testMode = False  # Set to true to use only one file.
 
 binProp = True  # True to bin values defined by binProp, false to skip
-dataRegionX = [150, 350]
-dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'RecircZone'
+dataRegionX = None #[150, 350]
+dataRegionY = None #[-550, -250]  # [-5000, 250] # Pillar center should be at -400
+regionName = 'Test'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
-autoRegion = False  # Will automatically determine the region by the geometry
+recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
@@ -469,8 +523,7 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    regionName=regionName,
                                    dataRegionX=dataRegionX,
                                    dataRegionY=dataRegionY,
-                                   recircCenter=recircDefinedRegion,
-                                   autoRegion=autoRegion)
+                                   recircCenter=recircDefinedRegion)
 print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
@@ -478,15 +531,18 @@ for fileName in fileList:
         # Check for fileName already in metaData, skip if so
         data = dataLoader(fileName, type=caseExt[2:-1])
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
-        if autoRegion:
-            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'])
-        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        # data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         if recircDefinedRegion:
-            data = selectRecircData(data, params['r1'], params['r2'], params['d'])
+            data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'])
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
+                print("EMPTY")
                 continue
+        else:
+            data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'])
+        params['recircVol'] = data.eleVol.sum()
+        params['recircCenter'] = centerPointEstimation(data)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['recircCenter'], params['totalRecircFlux'], params['posFlux'], params['negFlux'], params['recircVol'], params['xEdge'] = estimateFluxes(data, 1, params['r1'], params['r2'], params['d'])
+        params['totalRecircFlux'], params['posFlux'], params['negFlux'] = estimateRecircFlux(data, params['recircCenter'], params['recircVol'])
         params['posMRT'] = params['recircVol']/params['posFlux']
         params['negMRT'] = params['recircVol']/abs(params['negFlux'])
         params['estRT'] = params['d']*10**-6/data.velMag.mean()
@@ -541,8 +597,9 @@ for fileName in fileList:
             plt.savefig(outFile+fileName[:-4]+"_log.png")
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
-        if testMode:
-            break
+    if testMode:
+        print('BREAK')
+        break
 
 metaData.to_csv(outFile+caseName+"_meta.csv")
 
