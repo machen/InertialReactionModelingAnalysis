@@ -353,14 +353,14 @@ def estimateRecircFlux(recircData, centerCoords, recircVol, planeWidth=1):
     return totalRecircFlux, posFlux, negFlux
 
 
-def selectRecircZoneBasic(data, r1, r2, d):
+def selectRecircZoneBasic(data, r1, r2, d, includePillar):
     """ Does a basic selection of recirculation zone, defining it by:
     The pillar edges, the channel centerline, and the farthest point where a negative
     x velocity still exists.
     """
     xEdge = max(data.loc[data.loc[:, 'v'] > 0, 'x'])
     recircData = subSelectData(data, xRange=[250, xEdge])
-    xGap, yGap = pillarGapCalculation(r1, r2, d, False)
+    xGap, yGap = pillarGapCalculation(r1, r2, d, includePillar)
     recircData = subSelectData(recircData, yRange=yGap)
     return recircData, xEdge
 
@@ -557,7 +557,7 @@ for fileName in fileList:
                 print("EMPTY FILE")
                 continue
         else:
-            data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'])
+            data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'], includePillar)
         if testMode:
             plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
