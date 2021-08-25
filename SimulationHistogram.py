@@ -4,6 +4,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
+from mpl_toolkits.mplot3d import Axes3D
 
 """ Purpose of script is to import data for velocity analysis,
 but will also serve as a means of doing general data import from comsol.
@@ -276,7 +277,7 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
                              binProp, regionName='Result', recircCenter=False,
                              dataRegionX=None, dataRegionY=None,
-                             dataRegionZ=None, autoRegion=False):
+                             dataRegionZ=None, autoRegion=False, includePillar=False):
     if logBins:
         binType = 'log'
     else:
@@ -298,6 +299,7 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("Z Region: {}\n".format(dataRegionZ))
         outFile.write("Region defined by recirc center: {}\n".format(recircCenter))
         outFile.write("Region defined by geometry: {}\n".format(autoRegion))
+        outFile.write("Region includes pillars: {}\n".format(autoRegion))
     return outputPath
 
 
@@ -472,6 +474,15 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     negFlux = totalRecircFlux-posFlux  # Find the opposing flux as well to check accuracy
     return centerCoords, totalRecircFlux, posFlux, negFlux, recircVol, xEdge
 
+
+def plotDataSet(data, label):
+    # Plot the selected data.
+    fig = plt.figure(1)
+    ax1 = fig.add_subplot(111, projection='3d')
+    ax1.plot(data.X, data.Y, data.Z, label=label)
+    ax1.set_aspect('equal')
+    return
+
 # Read through files in a directory
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
@@ -479,7 +490,7 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoPillar_v6"
+caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -493,14 +504,16 @@ print(workingDir)
 testMode = False  # Set to true to use only one file.
 
 binProp = True  # True to bin values defined by binProp, false to skip
-dataRegionX = None #[150, 350]
-dataRegionY = None #[-550, -250]  # [-5000, 250] # Pillar center should be at -400
+dataRegionX = [150, 350]
+dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 regionName = 'Test'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
+autoRegion = True
+includePillar = True
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
@@ -523,7 +536,9 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    regionName=regionName,
                                    dataRegionX=dataRegionX,
                                    dataRegionY=dataRegionY,
-                                   recircCenter=recircDefinedRegion)
+                                   recircCenter=recircDefinedRegion,
+                                   autoRegion=autoRegion,
+                                   includePillar=includePillar)
 print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
@@ -531,18 +546,25 @@ for fileName in fileList:
         # Check for fileName already in metaData, skip if so
         data = dataLoader(fileName, type=caseExt[2:-1])
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
-        # data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        if autoRegion:
+            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],includePillar=includePillar)
+            data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        if testMode:
+            plotDataSet(data, "raw")
         if recircDefinedRegion:
             data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'])
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
-                print("EMPTY")
+                print("EMPTY FILE")
                 continue
         else:
             data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'])
+        if testMode:
+            plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
         params['recircCenter'] = centerPointEstimation(data)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['totalRecircFlux'], params['posFlux'], params['negFlux'] = estimateRecircFlux(data, params['recircCenter'], params['recircVol'])
+        params['totalRecircFlux'], params['posFlux'], params['negFlux'] = \
+            estimateRecircFlux(data, params['recircCenter'], params['recircVol'])
         params['posMRT'] = params['recircVol']/params['posFlux']
         params['negMRT'] = params['recircVol']/abs(params['negFlux'])
         params['estRT'] = params['d']*10**-6/data.velMag.mean()
