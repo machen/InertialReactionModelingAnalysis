@@ -397,13 +397,13 @@ def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
     data.drop(data.x >data.xVals)
 
     """
-    xRange, yRange = pillarGapCalculation(r1, r2, d)  # Boundaries 2 and 3 covered by this
+    xRange, yRange = pillarGapCalculation(r1, r2, d, True)  # Boundaries 2 and 3 covered by this
     data = subSelectData(data, xRange=xRange, yRange=yRange)
     data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
     bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
     data['Ybin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
     for leftBin in bins[:-1]:
-        subData = data.loc[data.Ybin==leftBin,:].copy() # Subselect the "grid" block
+        subData = data.loc[data.Ybin==leftBin,:] # Subselect the "grid" block
         if not (subData.v>0).any():
             data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
             continue
@@ -477,10 +477,13 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
 
 def plotDataSet(data, label):
     # Plot the selected data.
-    fig = plt.figure(1)
+    fig = plt.figure()
     ax1 = fig.add_subplot(111, projection='3d')
-    ax1.plot(data.X, data.Y, data.Z, label=label)
-    ax1.set_aspect('equal')
+    ax1.scatter(data.x, data.y, data.z,c=data.v, label=label, marker='.')
+    ax1.set_xlabel('x (Cross flow direction)')
+    ax1.set_ylabel('y (Mean flow direction)')
+    ax1.set_zlabel('z')
+    ax1.legend()
     return
 
 # Read through files in a directory
@@ -490,7 +493,7 @@ def plotDataSet(data, label):
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
+caseName = "TwoPillar_v6_ExF"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -502,16 +505,17 @@ print(workingDir)
 #PDF Properties
 
 testMode = False  # Set to true to use only one file.
+plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Test'
+regionName = 'Test-Adv'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
+recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
 autoRegion = True
 includePillar = True
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
@@ -549,16 +553,16 @@ for fileName in fileList:
         if autoRegion:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],includePillar=includePillar)
             data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
-        if testMode:
+        if testMode&plotData:
             plotDataSet(data, "raw")
         if recircDefinedRegion:
-            data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'])
+            data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'], gridSize=10)
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
                 print("EMPTY FILE")
                 continue
         else:
             data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'], includePillar)
-        if testMode:
+        if testMode&plotData:
             plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
         params['recircCenter'] = centerPointEstimation(data)
@@ -619,9 +623,9 @@ for fileName in fileList:
             plt.savefig(outFile+fileName[:-4]+"_log.png")
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
-    if testMode:
-        print('BREAK')
-        break
+        if testMode:
+            print('BREAK')
+            break
 
 metaData.to_csv(outFile+caseName+"_meta.csv")
 
