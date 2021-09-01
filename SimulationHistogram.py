@@ -1,10 +1,12 @@
 import pandas as pd
+#import modin.pandas as pd # Allows for multicore processing using pandas
 import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
 from mpl_toolkits.mplot3d import Axes3D
+
 
 """ Purpose of script is to import data for velocity analysis,
 but will also serve as a means of doing general data import from comsol.
@@ -14,6 +16,8 @@ but will also serve as a means of doing general data import from comsol.
 -Further, you should likely export depth averaged data, and, barring that, depth average
 the data you have yourself, likely by coarsening the data.
 -Perhaps also output a 2D map of the area considered?
+
+Is there a way to boost the speed of the readin?
 
 
 FORMAT IS:
@@ -317,10 +321,14 @@ def calcDilutionIndex(data, prop):
     return e, e/eMax
 
 
-def centerPointEstimation(data, planeWidth=1, r1=100, d=100):
+def centerPointEstimation(data, planeWidth=1, r1=100, r2=100, d=100):
     """Given a dataset, should give the estimated centerpoint using the
     point with the lowest velocity in the middle (z=50) plane of the channel.
     """
+    xGap, yGap = pillarGapCalculation(r1, r2, d,False)  # Calculate the exact space between the pillars
+    xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
+    yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
+    data = subSelectData(data, xRange=xGap, yRange=yGap)
     midPlane = subSelectData(data, zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
     if midPlane.empty:
         planeWidthAdjust = planeWidth
@@ -330,7 +338,7 @@ def centerPointEstimation(data, planeWidth=1, r1=100, d=100):
             midPlane = subSelectData(data, zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
             if planeWidthAdjust >= 10*planeWidth:
                 print('WARNING: Planewidth too large, writing null')
-                return [0, 0, 0], 0, -1, -1, 0, 0
+                return None
     minU = midPlane.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
@@ -407,7 +415,9 @@ def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
         if not (subData.v>0).any():
             data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
             continue
-        maxX = max(subData.loc[subData.loc[:, 'v'] > 0, 'x'])
+        # Apparently upgrading to 1.2.4 pandas broke this. FUN FUN FUN
+        # Seems like that there are "missing labels" in the subdataarg1, arg2
+        maxX = max(subData.loc[subData.v > 0, 'x'])
         data.drop(data.loc[(data.Ybin == leftBin) & (data.x>maxX),:].index,
         inplace=True) # Slice out data in the grid bock
     return data
@@ -478,12 +488,17 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
 def plotDataSet(data, label):
     # Plot the selected data.
     fig = plt.figure()
-    ax1 = fig.add_subplot(111, projection='3d')
-    ax1.scatter(data.x, data.y, data.z,c=data.v, label=label, marker='.')
-    ax1.set_xlabel('x (Cross flow direction)')
-    ax1.set_ylabel('y (Mean flow direction)')
-    ax1.set_zlabel('z')
-    ax1.legend()
+    ax = fig.add_subplot(111, projection='3d')
+    ax.scatter(data.x, data.y, data.z,c=data.v, label=label, marker='.')
+    ax.set_xlabel('x (Cross flow direction)')
+    ax.set_ylabel('y (Mean flow direction)')
+    ax.set_zlabel('z')
+    ax.legend()
+    return ax
+
+
+def plotPoints(ax, coords):
+    ax.scatter(coords[0], coords[1], coords[2], color='r')
     return
 
 # Read through files in a directory
@@ -493,7 +508,7 @@ def plotDataSet(data, label):
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoPillar_v6_ExF"
+caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d50_Re100"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -504,13 +519,13 @@ print(workingDir)
 
 #PDF Properties
 
-testMode = False  # Set to true to use only one file.
-plotData = False
+testMode = True  # Set to true to use only one file, which you have to specify
+plotData = True
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'Test-Adv'
+regionName = 'SingleMode'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
@@ -548,13 +563,16 @@ for fileName in fileList:
     if re.match(filePat, fileName):
         print(fileName)
         # Check for fileName already in metaData, skip if so
-        data = dataLoader(fileName, type=caseExt[2:-1])
+        if testMode: # Test mode requires you specify exactly which file you wish to test
+            data = dataLoader(caseName+caseExt, type=caseExt[2:-1])
+        else:
+            data = dataLoader(fileName, type=caseExt[2:-1])
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         if autoRegion:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],includePillar=includePillar)
             data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
-        if testMode&plotData:
-            plotDataSet(data, "raw")
+        if testMode & plotData:
+            ax1 = plotDataSet(data, "raw")
         if recircDefinedRegion:
             data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'], gridSize=10)
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
@@ -562,15 +580,24 @@ for fileName in fileList:
                 continue
         else:
             data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'], includePillar)
-        if testMode&plotData:
-            plotDataSet(data, "Subselected")
+        if testMode & plotData:
+            ax2 = plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
-        params['recircCenter'] = centerPointEstimation(data)
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['totalRecircFlux'], params['posFlux'], params['negFlux'] = \
-            estimateRecircFlux(data, params['recircCenter'], params['recircVol'])
-        params['posMRT'] = params['recircVol']/params['posFlux']
-        params['negMRT'] = params['recircVol']/abs(params['negFlux'])
+        params['recircCenter'] = centerPointEstimation(data, r1=params['r1'], r2=params['r2'], d=params['d'])
+        if testMode & plotData:
+            plotPoints(ax2, [params['recircCenter'][0], params['recircCenter'][1], 110])
+        if params['recircCenter']:
+            params['totalRecircFlux'], params['posFlux'], params['negFlux'] = \
+                estimateRecircFlux(data, params['recircCenter'], params['recircVol'])
+            params['posMRT'] = params['recircVol']/params['posFlux']
+            params['negMRT'] = params['recircVol']/abs(params['negFlux'])
+        else:
+            params['totalRecircFlux'] = 0
+            params['posFlux'] = 0
+            params['negFlux'] = 0
+            params['posMRT'] = 0
+            params['negMRT'] = 0
         params['estRT'] = params['d']*10**-6/data.velMag.mean()
         params['fileName'] = fileName
         if vortAng:
