@@ -321,26 +321,30 @@ def calcDilutionIndex(data, prop):
     return e, e/eMax
 
 
-def centerPointEstimation(data, planeWidth=1, r1=100, r2=100, d=100):
+def centerPointEstimation(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
     """Given a dataset, should give the estimated centerpoint using the
     point with the lowest velocity in the middle (z=50) plane of the channel.
     """
     xGap, yGap = pillarGapCalculation(r1, r2, d,False)  # Calculate the exact space between the pillars
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
-    data = subSelectData(data, xRange=xGap, yRange=yGap)
-    midPlane = subSelectData(data, zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
-    if midPlane.empty:
-        planeWidthAdjust = planeWidth
-        while midPlane.empty:
-            planeWidthAdjust += planeWidth
-            print("Plane width too small, incrementing planeWidth")
-            midPlane = subSelectData(data, zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
-            if planeWidthAdjust >= 10*planeWidth:
-                print('WARNING: Planewidth too large, writing null')
-                return None
-    minU = midPlane.velMag.min()
-    centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
+    data = subSelectData(data, xRange=xGap, yRange=yGap, zRange=[10,90])
+    if useMid:
+        midPlane = subSelectData(data, zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
+        if midPlane.empty:
+            planeWidthAdjust = planeWidth
+            while midPlane.empty:
+                planeWidthAdjust += planeWidth
+                print("Plane width too small, incrementing planeWidth")
+                midPlane = subSelectData(data, zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
+                if planeWidthAdjust >= 10*planeWidth:
+                    print('WARNING: Planewidth too large, writing null')
+                    return None
+        minU = midPlane.velMag.min()
+        centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
+    else:
+        minU = data.velMag.min()
+        centerPointRow = data.loc[data.velMag==minU,:]
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
                     float(centerPointRow.z.values)]
@@ -409,21 +413,62 @@ def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
     data = subSelectData(data, xRange=xRange, yRange=yRange)
     data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
     bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
-    data['Ybin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
+    data['yBin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
     for leftBin in bins[:-1]:
-        subData = data.loc[data.Ybin==leftBin,:] # Subselect the "grid" block
+        subData = data.loc[data.yBin==leftBin,:] # Subselect the "grid" block
         if not (subData.v>0).any():
-            data = data.loc[data.Ybin!=leftBin, :] # If data has no opposing velocities, remove and move on
+            data = data.loc[data.yBin!=leftBin, :] # If data has no opposing velocities, remove and move on
             continue
         # Apparently upgrading to 1.2.4 pandas broke this. FUN FUN FUN
         # Seems like that there are "missing labels" in the subdataarg1, arg2
         maxX = max(subData.loc[subData.v > 0, 'x'])
-        data.drop(data.loc[(data.Ybin == leftBin) & (data.x>maxX),:].index,
+        data.drop(data.loc[(data.yBin == leftBin) & (data.x>maxX),:].index,
         inplace=True) # Slice out data in the grid bock
     return data
 
 
-def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
+def fluxBasedRecircEdge(data, gridSize=1):
+    """ Strictly speaking we should be integrating in x from 250 to some point
+    rather than integrating from the top and the bottom because we "know" that the
+    separating surface should be roughly in the yz axis
+
+    This requires that you submit a data set which contains only a single
+    recirculation zone (i.e., running from 250 to 500 or 0 to 250)
+    """
+    recircData = data.copy()
+    # Define grid edges to rebin the data into
+    gridX = np.arange(recircData.x.min(), recircData.x.max(), step=gridSize)
+    gridY = np.arange(recircData.y.min(), recircData.y.max(), step=gridSize)
+    gridZ = np.arange(recircData.z.min(), recircData.z.max(), step=gridSize)
+    # ID Grid elements by the centerpoint of the bin
+    gridXCoords = (gridX[1:]+gridX[:-1])/2
+    gridYCoords = (gridY[1:]+gridY[:-1])/2
+    gridZCoords = (gridZ[1:]+gridZ[:-1])/2
+    recircData['xCoord'] = pd.cut(recircData.x, gridX, labels=gridXCoords)
+    recircData['yCoord'] = pd.cut(recircData.y, gridY, labels=gridYCoords)
+    recircData['zCoord'] = pd.cut(recircData.z, gridZ, labels=gridZCoords)
+    boundCoords = np.zeros((len(gridYCoords)*len(gridZCoords),3))
+    index = 0
+    # Raster over each grid block. Would nice to vectorize this.
+    for yCoord in gridYCoords:
+        for zCoord in gridZCoords:
+            # Pick the column of data corresponding to the y and z coords we're picking
+            subData = recircData.loc[(recircData.yBin == yCoord) & (recircData.zBin == zCoord), :]
+            # Sort the data from low to high (i.e. from 250 up, may need to smartly detect where it changes)
+            subData.sort(by='xCoord', ascending=True, inplace=True)
+            xCoords = subData.xCoords.values
+            u = subData.u.values
+            vol = subData.recircVol.values
+            flux = u*np.square(np.cbrt(vol))
+            cumFlux = np.cumsum(flux, axis=0)
+            indices = crossings_nonzero_all(cumFlux)
+            xCoord = xCoords[min(indices)]
+            boundCoords[index, :] = [xCoord, yCoord, zCoord]
+            index += 1
+
+    return recircData, boundCoords
+
+def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
     """
     DEFINITELY BREAK UP INTO SEPARATE FUNCTIONS.
     # Estimate the mean residence time given:
@@ -447,19 +492,22 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100):
     xGap, yGap = pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
-    midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
-                             zRange=[50-planeWidth*0.5, 50+planeWidth*0.5]) # Use the middle plane
-    if midPlane.empty:
-        planeWidthAdjust = planeWidth
-        while midPlane.empty:
-            planeWidthAdjust += planeWidth
-            print("Plane width too small, incrementing planeWidth")
-            midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
-                                     zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
-            if planeWidthAdjust >= 10*planeWidth:
-                print('WARNING: Planewidth too large, writing null')
-                return [0, 0, 0], 0, -1, -1, 0, 0
-    minU = midPlane.velMag.min()
+    if useMid:
+        midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+                                 zRange=[50-planeWidth*0.5, 50+planeWidth*0.5]) # Use the middle plane
+        if midPlane.empty:
+            planeWidthAdjust = planeWidth
+            while midPlane.empty:
+                planeWidthAdjust += planeWidth
+                print("Plane width too small, incrementing planeWidth")
+                midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+                                         zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
+                if planeWidthAdjust >= 10*planeWidth:
+                    print('WARNING: Planewidth too large, writing null')
+                    return [0, 0, 0], 0, -1, -1, 0, 0
+        minU = midPlane.velMag.min()
+    else:
+        midU = data.velMag.min()
     centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
@@ -508,7 +556,7 @@ def plotPoints(ax, coords):
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
-caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d50_Re100"
+caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -525,12 +573,13 @@ plotData = True
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-regionName = 'SingleMode'
+useMid = True # Use middle plane for calculating recirc center?
+regionName = 'TestBasic'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
+recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
 autoRegion = True
 includePillar = True
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
@@ -584,7 +633,7 @@ for fileName in fileList:
             ax2 = plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
         params['dP'], params['q'], params['l'] = calcFlowPress(data, params)
-        params['recircCenter'] = centerPointEstimation(data, r1=params['r1'], r2=params['r2'], d=params['d'])
+        params['recircCenter'] = centerPointEstimation(data, r1=params['r1'], r2=params['r2'], d=params['d'], useMid=useMid)
         if testMode & plotData:
             plotPoints(ax2, [params['recircCenter'][0], params['recircCenter'][1], 110])
         if params['recircCenter']:
