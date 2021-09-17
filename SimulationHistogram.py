@@ -377,7 +377,7 @@ def selectRecircZoneBasic(data, r1, r2, d, includePillar):
     return recircData, xEdge
 
 
-def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
+def selectRecircZoneNegVel(data, r1, r2, d, gridSize=1):
     """ As opposed to subSelectData which is just a basic square cut, this
     is supposed to very accurately delineate the recirculation zone by defining
     the following boundaries:
@@ -427,7 +427,7 @@ def selectRecircZoneAdvanced(data, r1, r2, d, gridSize=1):
     return data
 
 
-def fluxBasedRecircEdge(data, gridSize=1):
+def calcRecircBoundsFluxInt(data, gridSize=1):
     """ Strictly speaking we should be integrating in x from 250 to some point
     rather than integrating from the top and the bottom because we "know" that the
     separating surface should be roughly in the yz axis
@@ -437,32 +437,36 @@ def fluxBasedRecircEdge(data, gridSize=1):
     """
     recircData = data.copy()
     # Define grid edges to rebin the data into
-    gridX = np.arange(recircData.x.min(), recircData.x.max(), step=gridSize)
-    gridY = np.arange(recircData.y.min(), recircData.y.max(), step=gridSize)
-    gridZ = np.arange(recircData.z.min(), recircData.z.max(), step=gridSize)
+    gridX = np.arange(round(recircData.x.min()), round(recircData.x.max())+gridSize, step=gridSize)
+    gridY = np.arange(round(recircData.y.min()), round(recircData.y.max())+gridSize, step=gridSize)
+    gridZ = np.arange(round(recircData.z.min()), round(recircData.z.max())+gridSize, step=gridSize)
     # ID Grid elements by the centerpoint of the bin
     gridXCoords = (gridX[1:]+gridX[:-1])/2
     gridYCoords = (gridY[1:]+gridY[:-1])/2
     gridZCoords = (gridZ[1:]+gridZ[:-1])/2
-    recircData['xCoord'] = pd.cut(recircData.x, gridX, labels=gridXCoords)
-    recircData['yCoord'] = pd.cut(recircData.y, gridY, labels=gridYCoords)
-    recircData['zCoord'] = pd.cut(recircData.z, gridZ, labels=gridZCoords)
+    recircData['xCoord'] = pd.cut(recircData.x, gridX, right=False, labels=gridXCoords)
+    recircData['yCoord'] = pd.cut(recircData.y, gridY, right=False, labels=gridYCoords)
+    recircData['zCoord'] = pd.cut(recircData.z, gridZ, right=False, labels=gridZCoords)
     boundCoords = np.zeros((len(gridYCoords)*len(gridZCoords),3))
     index = 0
     # Raster over each grid block. Would nice to vectorize this.
     for yCoord in gridYCoords:
         for zCoord in gridZCoords:
             # Pick the column of data corresponding to the y and z coords we're picking
-            subData = recircData.loc[(recircData.yBin == yCoord) & (recircData.zBin == zCoord), :]
+            subData = recircData.loc[(recircData.yCoord == yCoord) & (recircData.zCoord == zCoord), :].copy()
             # Sort the data from low to high (i.e. from 250 up, may need to smartly detect where it changes)
-            subData.sort(by='xCoord', ascending=True, inplace=True)
-            xCoords = subData.xCoords.values
+            subData.sort_values(by='xCoord', ascending=True, inplace=True)
+            xCoords = subData.xCoord.values
             u = subData.u.values
-            vol = subData.recircVol.values
+            vol = subData.eleVol.values
             flux = u*np.square(np.cbrt(vol))
             cumFlux = np.cumsum(flux, axis=0)
             indices = crossings_nonzero_all(cumFlux)
-            xCoord = xCoords[min(indices)]
+            if len(indices) == 0:
+                boundCoords[index, :] = [0, yCoord, zCoord]
+                index +=1
+                continue
+            xCoord = xCoords[min(indices)] # This is absolutely hacky and you should make something more rigorous
             boundCoords[index, :] = [xCoord, yCoord, zCoord]
             index += 1
 
@@ -570,7 +574,7 @@ print(workingDir)
 testMode = True  # Set to true to use only one file, which you have to specify
 plotData = True
 
-binProp = True  # True to bin values defined by binProp, false to skip
+binProp = False  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 useMid = True # Use middle plane for calculating recirc center?
@@ -578,7 +582,7 @@ regionName = 'TestBasic'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = None #'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
 autoRegion = True
 includePillar = True
@@ -623,7 +627,7 @@ for fileName in fileList:
         if testMode & plotData:
             ax1 = plotDataSet(data, "raw")
         if recircDefinedRegion:
-            data = selectRecircZoneAdvanced(data, params['r1'], params['r2'], params['d'], gridSize=10)
+            data = selectRecircZoneNegVel(data, params['r1'], params['r2'], params['d'], gridSize=10)
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
                 print("EMPTY FILE")
                 continue
@@ -741,6 +745,17 @@ if calcFlow:
 
     flowFitData.to_csv(caseName+"_flowFits.csv")
 
+recircData, boundCoords = calcRecircBoundsFluxInt(data, 10)
+f4, ax4 = plt.subplots(subplot_kw={"projection":"3d"})
+# ax4.scatter(boundCoords[:,0], boundCoords[:,1], boundCoords[:,2]
+x = boundCoords[:,0]
+y = boundCoords[:,1]
+z = boundCoords[:,2]
+ax4.scatter(x,y,z)
+ax4.set_xlabel('y coord')
+ax4.set_ylabel('z coord')
+ax4.set_zlabel('x coord')
+
 """
 What do I want to do?
 
@@ -760,8 +775,8 @@ Bad because I may not have all combinations.
 # linFit = np.polyfit(metaData.q, metaData.dP, 1)
 # interp_dP = np.polyval(linFit, metaData.q)
 # plt.plot(metaData.q, interp_dP, ls='-', color='k', label='Overall fit')
-plt.legend(loc=0)
-plt.ylabel('Pressure Difference (Pa)')
-plt.xlabel('Flow rate (m^3/s)')
-plt.title('Flow rate vs Pressure')
-plt.savefig(caseName+'_dPvsQ.png', dpi=600)
+# plt.legend(loc=0)
+# plt.ylabel('Pressure Difference (Pa)')
+# plt.xlabel('Flow rate (m^3/s)')
+# plt.title('Flow rate vs Pressure')
+# plt.savefig(caseName+'_dPvsQ.png', dpi=600)
