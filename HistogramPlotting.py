@@ -25,6 +25,20 @@ HEY SOME STUFF YOU NEED TO DO
 
 
  """
+
+class DataSet:
+    def __init__(self, workingDir, ext, label, caseName, smooth=False, window=5):
+        self.workingDir = workingDir
+        self.caseExt = ext
+        self.label = label
+        self.caseName = caseName
+        self.smooth = smooth
+        self.window = window
+        self.dataSet = dataExtraction(self.workingDir, self.caseName,
+                                      self.caseExt, self.smooth, self.window)
+        self.metaData = dataSetPlot(self.dataSet)
+
+
 plt.rcParams['svg.fonttype'] = 'none'
 sns.set_context('talk')
 
@@ -100,10 +114,12 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     return dataSets
 
 
-def dataSetPlot(dataSets, metaData, linestyle='-', smooth=0, fit=True):
+def dataSetPlot(dataSets, metaData=None, linestyle='-', smooth=0):
     # In this case, key refers to the filename for the given data set
     workingDirParams = importParams()
-    # print(workingDirParams)
+    # print(workingDirParams
+    if not metaData:
+        metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
     for key in dataSets:
         print(key)
         data = dataSets[key]
@@ -213,24 +229,35 @@ def genPMF(data):
     return PMF, xVal
 
 
+def runDataSet(workingDir, caseName, caseExt, label, smooth, window, metaData, props):
+    """Helper function which loads data, produces the associated metaData, then plots it
+    Would be nice to maybe pack these things up (workingDir, caseName, ext, Label)
+    all belong together"""
+    dataSet = dataExtraction(workingDir, caseName, caseExt, smooth, window)
+    metaData = dataSetPlot(dataSet, metaData, smooth=window, linestyle='-')
+    for prop in props:
+        metaPlot(metaData, prop=prop, label=label+' '+prop)
+    return dataSet, metaData
+
+
 quickVol = {0.1: 1.48E-13, 1: 6.02E-14, 10: 5.85E-14, 50: 4.58E-13}
 
 window = 5
 smooth = False
 fitRange = np.array([85, 90])
-prop = 'negMRT'  # Options include: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
-prop2 = None # 'estRT' #'posMRT' # Lets you plot multiple properties vs Re, beware axis scaling
+prop = 'recircVol'  # Options include: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
+prop2 = None#'estRT' # 'estRT' #'posMRT' # Lets you plot multiple properties vs Re, beware axis scaling
 # fitRange = np.array([65, 85])
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
+# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact v2-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact v2-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseExtA = "d100_Re.*\.flowdata_histogram\.csv"
 labelA = "Pillar Inclusive"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\RecircZoneAdv-velMag-100 linear bins\\"
+# workingDirB = "..\\RecircZoneIntFluxMethod-velMag-100 linear bins\\"
 caseNameB = "TwoPillar_v6_ExF_"
 caseExtB = "d100_Re.*\.flowdata_histogram\.csv"
 labelB = "Exact Recirculation Zone"
@@ -245,19 +272,20 @@ f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
+
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 
-dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
+# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+# metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop)
-metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop)
+# metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop)
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
-    metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
+    # metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
