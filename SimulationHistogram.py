@@ -457,16 +457,18 @@ def calcRecircBoundsFluxInt(data, gridSize=1):
             # Sort the data from low to high (i.e. from 250 up, may need to smartly detect where it changes)
             subData.sort_values(by='xCoord', ascending=True, inplace=True)
             xCoords = subData.xCoord.values
-            u = subData.u.values
+            u = subData.v.values # Should be v because y direction is along channel
             vol = subData.eleVol.values
             flux = u*np.square(np.cbrt(vol))
             cumFlux = np.cumsum(flux, axis=0)
             indices = crossings_nonzero_all(cumFlux)
             if len(indices) == 0:
+                recircData = recircData.drop(recircData.loc[(recircData.yCoord == yCoord) & (recircData.zCoord == zCoord),:].index)
                 boundCoords[index, :] = [0, yCoord, zCoord]
                 index +=1
                 continue
             xCoord = xCoords[min(indices)] # This is absolutely hacky and you should make something more rigorous
+            recircData = recircData.drop(recircData.loc[(recircData.yCoord == yCoord) & (recircData.zCoord == zCoord) & (recircData.xCoord > xCoord),:].index)
             boundCoords[index, :] = [xCoord, yCoord, zCoord]
             index += 1
 
@@ -560,6 +562,7 @@ def plotPoints(ax, coords):
 #workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
+caseName = "TwoPillar_v6"
 caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 #caseExt = "\.chemdata.txt$"
 caseExt = "\.flowdata.txt$"
@@ -578,12 +581,12 @@ binProp = False  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 useMid = True # Use middle plane for calculating recirc center?
-regionName = 'TestBasic'
+regionName = 'RecircZoneIntFluxMethod'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = None #'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = False  # Will cut data to strictly defined recirculation zone only
+binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
 autoRegion = True
 includePillar = True
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
@@ -627,7 +630,9 @@ for fileName in fileList:
         if testMode & plotData:
             ax1 = plotDataSet(data, "raw")
         if recircDefinedRegion:
-            data = selectRecircZoneNegVel(data, params['r1'], params['r2'], params['d'], gridSize=10)
+            #data = selectRecircZoneNegVel(data, params['r1'], params['r2'], params['d'], gridSize=10)
+            data = subSelectData(data,xRange=[250, 500]) # Subselect only half the recirculation area
+            data, coords = calcRecircBoundsFluxInt(data, gridSize=1)
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
                 print("EMPTY FILE")
                 continue
@@ -704,6 +709,18 @@ for fileName in fileList:
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
         if testMode:
+            recircData, boundCoords = calcRecircBoundsFluxInt(data, 10)
+            f4, ax4 = plt.subplots(subplot_kw={"projection":"3d"})
+            # ax4.scatter(boundCoords[:,0], boundCoords[:,1], boundCoords[:,2]
+            x = boundCoords[:,0]
+            y = boundCoords[:,1]
+            z = boundCoords[:,2]
+            ax4.scatter(x,y,z)
+            ax4.set_xlabel('x coord')
+            ax4.set_ylabel('y coord')
+            ax4.set_zlabel('z coord')
+            plt.ion()
+            plt.show()
             print('BREAK')
             break
 
@@ -745,16 +762,7 @@ if calcFlow:
 
     flowFitData.to_csv(caseName+"_flowFits.csv")
 
-recircData, boundCoords = calcRecircBoundsFluxInt(data, 10)
-f4, ax4 = plt.subplots(subplot_kw={"projection":"3d"})
-# ax4.scatter(boundCoords[:,0], boundCoords[:,1], boundCoords[:,2]
-x = boundCoords[:,0]
-y = boundCoords[:,1]
-z = boundCoords[:,2]
-ax4.scatter(x,y,z)
-ax4.set_xlabel('y coord')
-ax4.set_ylabel('z coord')
-ax4.set_zlabel('x coord')
+
 
 """
 What do I want to do?
