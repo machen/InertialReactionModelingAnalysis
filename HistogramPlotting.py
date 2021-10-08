@@ -114,11 +114,11 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     return dataSets
 
 
-def dataSetPlot(dataSets, metaData=None, linestyle='-', smooth=0):
+def dataSetPlot(dataSets, metaData=pd.DataFrame([]), linestyle='-', smooth=0):
     # In this case, key refers to the filename for the given data set
     workingDirParams = importParams()
     # print(workingDirParams
-    if not metaData:
+    if not metaData.empty:
         metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
     for key in dataSets:
         print(key)
@@ -245,22 +245,25 @@ quickVol = {0.1: 1.48E-13, 1: 6.02E-14, 10: 5.85E-14, 50: 4.58E-13}
 window = 5
 smooth = False
 fitRange = np.array([85, 90])
-prop = 'recircVol'  # Options include: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
-prop2 = None#'estRT' # 'estRT' #'posMRT' # Lets you plot multiple properties vs Re, beware axis scaling
+prop = 'negMRT'  # Options include: Re, d, RePil, DaAdv, DaDiff, Pe, reactorConserv
+prop2 = 'estRT' #'negFlux' #'estRT' # 'estRT' #'posMRT' # Lets you plot multiple properties vs Re, beware axis scaling
 # fitRange = np.array([65, 85])
-# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exact v2-dCdt-100 linear bins\\"
+# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Pillar Exclusive-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
+# caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtA = "d100_Re.*\.flowdata_histogram\.csv"
-labelA = "Pillar Inclusive"
+# caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
+# labelA = "Pillar Inclusive"
+labelA = "Dilution Index: Conservative Component"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-# workingDirB = "..\\RecircZoneIntFluxMethod-velMag-100 linear bins\\"
+workingDirB = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 caseNameB = "TwoPillar_v6_ExF_"
 caseExtB = "d100_Re.*\.flowdata_histogram\.csv"
-labelB = "Exact Recirculation Zone"
+labelB = "Flux Integral Recirculation Zone"
 
 
 # Plot for everything
@@ -274,18 +277,18 @@ f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
-dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
+# dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+# metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 
-# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-# metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
+dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
-metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop)
-# metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop)
+# metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop)
+metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop)
 
 if prop2:
-    metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
-    # metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
+    # metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
+    metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
