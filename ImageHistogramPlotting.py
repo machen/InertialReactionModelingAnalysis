@@ -7,6 +7,34 @@ import scipy.stats as stats
 import seaborn as sns
 
 
+class DataSet:
+    def __init__(self, workingDir, caseName, caseExt, d, label, smooth=False, window=5):
+        self.workingDir = workingDir
+        self.caseName = caseName
+        self.caseExt = caseExt
+        self.pillarGap = d
+        self.label = label
+        self.dataSet = dataExtraction(workingDir, caseName, caseExt)
+
+    def getDataSet(self):
+        return self.dataSet
+
+    def getWorkingDir(self):
+        return self.workingDir
+
+    def getCaseName(self):
+        return self.caseName
+
+    def getCaseExt(self):
+        return self.caseExt
+
+    def getPillarGap(self):
+        return self.pillarGap
+
+    def getLabel(self):
+        return self.label
+
+
 def flowRateConversion(q, width, height, charLen, nu=0.45):
     # Base nu is in mm2/s, so you should report this in mm and seconds as units
     reyn = q/width/height*charLen/nu
@@ -115,14 +143,12 @@ def metaPlot(metaData, prop='q'):
                  ls='none', marker='o', label=val)
         maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
         ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
-                 yerr=stdData.loc[:,'PDFstd'], ls='none', marker='o',
-                 capsize=2,
-                 label= "{} max val q: {}".format(val,float(maxLoc)))
+                     yerr=stdData.loc[:,'PDFstd'], ls='none', marker='o',
+                     capsize=2, label= "{} max val q: {}".format(val,float(maxLoc)))
         maxVal = meanData.PDFmean.max()
         ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
-                 yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
-                 capsize=2,
-                 label= "{} max val: {}".format(val, maxVal))
+                     yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
+                     capsize=2, label= "{} max val: {}".format(val, maxVal))
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -138,7 +164,6 @@ def metaPlot(metaData, prop='q'):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([-0.1, 1.1])
-    ax7.set_xlim([-1, 105])
     return
 
 sns.set_context('talk')
@@ -148,21 +173,21 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\Apr29_2021-Chemilum-100um\\ExptImages\\Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\Pillar Gap 50 bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\June14_2021-Chemilum-50_75um\\50 um pillars\\Pillar Gap 50 bins\\"
-workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\June14_2021-Chemilum-50_75um\\75 um pillars\\Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\All Raw Image Background 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\All Raw Image Pillar Gap 50 bins\\"
+# workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-06-14-Chemilum-50_75um\\50 um Pillars\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
-caseNameA = '2PD-1_P4_A3_3c'
+caseNameA = ''
 caseExtA = ".*_dark_hist\.csv"
-caseNameB = '2PD-2_P3_A4_3c'
-caseNameC = '2PD3_P4_B3_3c'
-caseNameD = '2PD3_P4_C4_3c'
+caseNameB = ''
+caseNameC = ''
+caseNameD = ''
 # You must set these to the correct pillar gaps of the experiment
-dA = 100
-dB = 25
-dC = 50
-dD = 75
+dA = "Raw Image Pillar Gap"
+dB = "All Raw Image Background"
+dC = "All Raw Image Pillar"
+dD = "2021-06-14 50um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -173,13 +198,13 @@ f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
-dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtA, smooth, window)
-# dataSetC = dataExtraction(workingDirC, caseNameC, caseExtA, smooth, window)
-# dataSetD = dataExtraction(workingDirD, caseNameD, caseExtA, smooth, window)
-metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
-# metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
-# metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
+# dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+# metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
+metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
+metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
 # metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
 metaPlot(metaData, prop='ReP')
 # dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
