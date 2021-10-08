@@ -64,7 +64,7 @@ def subSelectData(data, xRange=None, yRange=None):
     return data
 
 
-def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
+def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
                              imageDict=None,
                              regionName='Result', dataRegionX=None,
                              dataRegionY=None, dataRegionZ=None):
@@ -81,7 +81,7 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm,
         outFile.write("Case extension: {}\n".format(case))
         outFile.write("Number of bins: {}\n".format(nBins))
         outFile.write("Image key: {}\n".format(imageDict))
-        outFile.write("Maximum Normalization: {}\n".format(maxNorm))
+        outFile.write("Maximum Normalization: {}, Value: {}\n".format(maxNorm, maxVal))
         outFile.write("X Region: {}\n".format(dataRegionX))
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
@@ -119,21 +119,21 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\May19_2021-Chemilum-25um\\Experimental\\SplitImgs\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\AllSplitImgs\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [825, 1145]  # [700, 1050]  # [800, 1300]  # Should be matrix indices for the given image, you must update this
-yRange = [1200, 1250]  # [1000, 1150]  # [900, 1500]  # Should be matrix indices for the given image
+xRange = [920, 1075] #[760, 1060] # [825, 1145]   # [800, 1300]  # Should be matrix indices for the given image, you must update this
+yRange =  [860, 1180]#[1140, 1220] # [1200, 1250]  # [900, 1500]  # Should be matrix indices for the given image
 maxNorm = False
-maxVal = 1063  # Set to none to use max observed in image. Value will depend on specific days mix
-regionName = "Raw Image Pillar Gap"
+maxVal = 1640  # Set to none to use max observed in image. Value will depend on specific days mix
+regionName = "All Raw Image Pillar Gap"
 bgFile = 'NoDevice.tif'
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
-outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm,
+outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
                                    regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
