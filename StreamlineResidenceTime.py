@@ -6,6 +6,9 @@ import re
 import seaborn as sns
 
 
+""""""
+
+
 def stringVal(pattern, string):
     """Given a regular expression searching for a single instance of a numeric
     value, function will return a float of that value, or -1 if no match is found."""
@@ -102,7 +105,7 @@ def groupStreamlines(data):
     yVal = data.y.values
     zVal = data.z.values
     dist = np.sqrt(np.square(xVal[:-1]-xVal[1:])+np.square(yVal[:-1]-yVal[1:])+np.square(zVal[:-1]-zVal[1:]))*1E-6
-    dist = np.append(dist, 0) # The last point will contribute no travel time
+    dist = np.append(dist, 0) # The last point will contribute no travel time THIS IS WRONG??? I NEED TO TARGET EVERY STREAMLINE'S LAST POINT
     data['dist'] = dist  # Attach distance to a given coordinate (note distance is in m)
     data['travelTime'] = dist/data.velMag  # Calculate travel time
     sIDGroups = data.groupby(data.sID)  # Group everything by streamline ID
@@ -185,11 +188,13 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             plt.xlabel('log(Time)')
             plt.ylabel('PDF')
             plt.savefig(outputPath+f[:-4]+'_timePDF.png')
+            sns.despine()
             plt.figure(2)
             plt.plot((lenBins[1:]+lenBins[:-1])/2, lenPDF)
             plt.title('lengthPDF')
             plt.xlabel('Streamline length (m)')
             plt.ylabel('PDF')
+            sns.despine()
             plt.savefig(outputPath+f[:-4]+'_lenPDF.png')
             if testMode:
                 plt.ion()
