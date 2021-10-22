@@ -173,9 +173,9 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\All Raw Image Background 50 bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\All Raw Image Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-08-18-Chemilum-100um\\Offset 100 um Gap\\Raw Image Pillar Gap 50 bins\\"
 # workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-06-14-Chemilum-50_75um\\50 um Pillars\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
@@ -184,9 +184,9 @@ caseNameB = ''
 caseNameC = ''
 caseNameD = ''
 # You must set these to the correct pillar gaps of the experiment
-dA = "Raw Image Pillar Gap"
-dB = "All Raw Image Background"
-dC = "All Raw Image Pillar"
+dA = "2021-10-20"
+dB = "2021-04-29"
+dC = "2021-08-18-Offset"
 dD = "2021-06-14 50um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -198,17 +198,16 @@ f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
-# dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
+metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
 metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
 metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
 # metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
 metaPlot(metaData, prop='ReP')
-# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-# metaData = dataSetPlot(dataSetB, metaData, smooth=window)
+
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")

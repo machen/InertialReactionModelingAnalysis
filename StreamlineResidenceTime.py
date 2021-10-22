@@ -109,43 +109,129 @@ def groupStreamlines(data):
     return sIDGroups
 
 
+def calcPDFStats(bins, freq):
+    """ Calcuates the mean and variance of a histogram produced by
+    np.histogram().
+
+    inputs:
+
+    bins: N bin edges
+    freq: N-1 frequency values corresponding to each bin
+
+    returns:
+
+    mean: the mean of the PDF
+    variance: the pdf variance
+    """
+    rightBin = bins[1:]
+    leftBin = bins[:-1]
+    binMean = (leftBin+rightBin)/2
+    dx = rightBin
+    mean = np.sum(binMean*freq*dx)
+    variance = np.sum(freq*(binMean-mean)**2*dx)
+    return mean, variance
+
+
+def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
+    """Generates PDFs and outputs both the histograms, histogram plots,
+    and statistical information about the PDFs.
+
+    For now, log(time) and streamline length are binned.
+
+    INPUTS
+    workingDir: Working directory where data to be binned is stored
+    caseName: Regex expression to produce PDFs using only certain files
+    ext: Extension for the PDFs of interest
+    testMode: Flag which will run only one file and then return.
+
+    """
+    # Intialize output folder and metaData data structure
+
+    filePat = re.compile('(.*)('+ext+')')
+    fileList = os.listdir('.')
+    metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2', 'd', 'Re',
+                                         'c', 'k'])
+    for f in fileList:
+        if re.match(filePat, f):
+            print(f)
+            # Load in data set and group by streamline
+            dataSet, params = loadData(f)
+            gStream = groupStreamlines(dataSet)
+            # Calculate travel times
+            travelTime = gStream.travelTime.sum().values
+            streamLen = gStream.dist.sum().values
+            # refTime = streamLen/gStream.velMag.mean().values
+            timePDF, timeBins = np.histogram(np.log10(travelTime), bins=nBins,
+                                             density=True)
+
+            # timeBins = np.power(10, timeBins)  # Convert back to non logspace times
+            lenPDF, lenBins = np.histogram(streamLen, bins=nBins,
+                                           density=True)
+            output = pd.DataFrame({'lenLBins': lenBins[:-1],
+                                   'lenRBins': lenBins[1:],
+                                   'lenBinMean': (lenBins[:-1]+lenBins[1:])/2,
+                                   'lenPDF': lenPDF,
+                                   'timeLLogBins': timeBins[:-1],
+                                   'timeRLogBins': timeBins[1:],
+                                   'timeLogBinMean': (timeBins[:-1]+timeBins[1:])/2,
+                                   'timePDF': timePDF})
+            params['lenMean'], params['lenVar'] = calcPDFStats(lenBins, lenPDF)
+            params['timeMean'], params['timeVar'] = calcPDFStats(timeBins, timePDF)
+            metaData.append(params, ignore_index=True)
+            output.to_csv(outputPath+f+".histogram.csv")
+            plt.figure(1)
+            plt.plot((timeBins[1:]+timeBins[:-1])/2, timePDF)
+            plt.title('timePDF')
+            plt.xlabel('log(Time)')
+            plt.ylabel('PDF')
+            plt.savefig(outputPath+f[:-4]+'_timePDF.png')
+            plt.figure(2)
+            plt.plot((lenBins[1:]+lenBins[:-1])/2, lenPDF)
+            plt.title('lengthPDF')
+            plt.xlabel('Streamline length (m)')
+            plt.ylabel('PDF')
+            plt.savefig(outputPath+f[:-4]+'_lenPDF.png')
+            if testMode:
+                plt.ion()
+                fig3 = plt.figure(3)
+                ax3 = fig3.add_subplot(111, projection='3d')
+                for sID in gStream.sID.min().values:
+                    streamLine = dataSet.loc[dataSet.sID == sID, :]
+                    ax3.plot(streamLine.x, streamLine.y, streamLine.z)
+                plt.title('Streamlines')
+                return metaData
+    plt.close('all')
+    metaData.to_csv(outputPath+caseName+'_metaData.csv')
+    return metaData
+
+
+def generateMeanPlots(metaData):
+    return
+
 """SCRIPT INPUTS"""
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines"
+
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\FullChannel\\"
 caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
-testMode = True
-nBins = 50
+testMode = False  # Runs on one file, produces plots, then stops PDF calculation
+nBins = 50  # Number of bins to use for PDF
+calculatePDFs = True  # Flag to toggle calculation of PDFs.
+
+"""MAIN SCRIPT"""
 
 os.chdir(workingDir)
-filePat = re.compile('(.*)('+ext+')')
-fileList = os.listdir('.')
+outputPath = ".\\PDF {} bins\\".format(nBins)
+if not os.path.isdir(outputPath):
+    os.mkdir(outputPath)
+if calculatePDFs:
+    metaData = generatePDFs(workingDir, caseName, ext, testMode, nBins,
+                            outputPath)
+else:
+    metaData = pd.read_csv(outputPath+caseName+"_metaData.csv")
 
-for f in fileList:
-    if re.match(filePat, f):
-        print(f)
-        # Load in data set and group by streamline
-        dataSet, params = loadData(f)
-        gStream = groupStreamlines(dataSet)
-        # Calculate travel times
-        travelTime = gStream.travelTime.sum().values
-        streamLen = gStream.dist.sum().values
-        refTime = streamLen/gStream.velMag.mean().values
-        timePDF, timeBins = np.histogram(np.log(travelTime), bins=nBins, density=True)
-        lenPDF, lenBins = np.histogram(streamLen, bins=nBins, density=True)
-        if testMode:
-            plt.ion()
-            plt.figure(1)
-            plt.plot((timeBins[1:]+timeBins[:-1])/2,timePDF)
-            plt.title()
-            plt.figure(2)
-            plt.plot((lenBins[1:]+lenBins[:-1])/2,lenPDF)
-            fig3 = plt.figure(3)
-            ax3 = fig3.add_subplot(111, projection='3d')
-            for sID in gStream.sID.min().values:
-                streamLine = dataSet.loc[dataSet.sID==sID,:]
-                ax3.plot(streamLine.x,streamLine.y,streamLine.z)
-            break
+generateMeanPlots(metaData)
+
 
 
 

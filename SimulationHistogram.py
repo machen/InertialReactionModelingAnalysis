@@ -471,7 +471,6 @@ def calcRecircBoundsFluxInt(data, gridSize=1):
             recircData = recircData.drop(recircData.loc[(recircData.yCoord == yCoord) & (recircData.zCoord == zCoord) & (recircData.xCoord > xCoord),:].index)
             boundCoords[index, :] = [xCoord, yCoord, zCoord]
             index += 1
-
     return recircData, boundCoords
 
 def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
@@ -543,7 +542,7 @@ def plotDataSet(data, label):
     # Plot the selected data.
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
-    ax.scatter(data.x, data.y, data.z,c=data.v, label=label, marker='.')
+    ax.scatter(data.x, data.y, data.z,c=data.x, label=label, marker='.')
     ax.set_xlabel('x (Cross flow direction)')
     ax.set_ylabel('y (Mean flow direction)')
     ax.set_zlabel('z')
@@ -559,34 +558,34 @@ def plotPoints(ax, coords):
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-#workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoPillar_v6"
-caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
-#caseExt = "\.chemdata.txt$"
-caseExt = "\.flowdata.txt$"
+# caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
+caseExt = "\.chemdata.txt$"
+# caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = False  # Do calculations for PDF from chemistry
+calcChem = True  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
 #PDF Properties
 
-testMode = True  # Set to true to use only one file, which you have to specify
-plotData = True
+testMode = False  # Set to true to use only one file, which you have to specify
+plotData = False
 
-binProp = False  # True to bin values defined by binProp, false to skip
+binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 useMid = True # Use middle plane for calculating recirc center?
-regionName = 'RecircZoneIntFluxMethod'
+regionName = 'Pillar Gap Inclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
-recircDefinedRegion = True  # Will cut data to strictly defined recirculation zone only
+binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
 includePillar = True
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
@@ -636,8 +635,9 @@ for fileName in fileList:
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
                 print("EMPTY FILE")
                 continue
-        else:
-            data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'], includePillar)
+        # else:
+        # This uses negative velocity criteria to find the edge. Likely not worth using.
+        #     data, params['xEdge'] = selectRecircZoneBasic(data, params['r1'], params['r2'], params['d'], includePillar)
         if testMode & plotData:
             ax2 = plotDataSet(data, "Subselected")
         params['recircVol'] = data.eleVol.sum()
@@ -709,16 +709,18 @@ for fileName in fileList:
             plt.close()
         metaData = metaData.append(params, ignore_index=True)
         if testMode:
-            recircData, boundCoords = calcRecircBoundsFluxInt(data, 10)
-            f4, ax4 = plt.subplots(subplot_kw={"projection":"3d"})
-            # ax4.scatter(boundCoords[:,0], boundCoords[:,1], boundCoords[:,2]
-            x = boundCoords[:,0]
-            y = boundCoords[:,1]
-            z = boundCoords[:,2]
-            ax4.scatter(x,y,z)
-            ax4.set_xlabel('x coord')
-            ax4.set_ylabel('y coord')
-            ax4.set_zlabel('z coord')
+            if recircDefinedRegion:
+                f4, ax4 = plt.subplots(subplot_kw={"projection":"3d"})
+                # ax4.scatter(boundCoords[:,0], boundCoords[:,1], boundCoords[:,2]
+                boundCoords = coords[coords[:, 0] != 0]
+                x = boundCoords[:, 0]
+                y = boundCoords[:, 1]
+                z = boundCoords[:, 2]
+                ax4.scatter(x, y, z)
+                ax4.set_xlabel('x coord')
+                ax4.set_ylabel('y coord')
+                ax4.set_zlabel('z coord')
+                ax4.set_title('Boundary Points')
             plt.ion()
             plt.show()
             print('BREAK')
