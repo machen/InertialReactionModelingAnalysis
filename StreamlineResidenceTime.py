@@ -104,9 +104,14 @@ def groupStreamlines(data):
     xVal = data.x.values
     yVal = data.y.values
     zVal = data.z.values
+    sID = data.sID.values
     dist = np.sqrt(np.square(xVal[:-1]-xVal[1:])+np.square(yVal[:-1]-yVal[1:])+np.square(zVal[:-1]-zVal[1:]))*1E-6
-    dist = np.append(dist, 0) # The last point will contribute no travel time THIS IS WRONG??? I NEED TO TARGET EVERY STREAMLINE'S LAST POINT
+    sIDMask = sID[1:] == sID[:-1]  # Find the points where the switch occurs
+    dist = dist*sIDMask  # Sets the values where the streamlines change to 0
+    # Make a mask which sets dist to 0 where the next element is on a new streamline
+    dist = np.append(dist, 0)  # The last point will contribute no travel time, also aligning the data
     data['dist'] = dist  # Attach distance to a given coordinate (note distance is in m)
+    # ID indices where the streamline number changes, set dist to 0 at those points
     data['travelTime'] = dist/data.velMag  # Calculate travel time
     sIDGroups = data.groupby(data.sID)  # Group everything by streamline ID
     return sIDGroups
@@ -164,7 +169,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             travelTime = gStream.travelTime.sum().values
             streamLen = gStream.dist.sum().values
             # refTime = streamLen/gStream.velMag.mean().values
-            timePDF, timeBins = np.histogram(np.log10(travelTime), bins=nBins,
+            timePDF, timeBins = np.histogram(travelTime, bins=nBins,
                                              density=True)
 
             # timeBins = np.power(10, timeBins)  # Convert back to non logspace times
@@ -180,7 +185,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                                    'timePDF': timePDF})
             params['lenMean'], params['lenVar'] = calcPDFStats(lenBins, lenPDF)
             params['timeMean'], params['timeVar'] = calcPDFStats(timeBins, timePDF)
-            metaData.append(params, ignore_index=True)
+            metaData = metaData.append(params, ignore_index=True)
             output.to_csv(outputPath+f+".histogram.csv")
             plt.figure(1)
             plt.plot((timeBins[1:]+timeBins[:-1])/2, timePDF)
