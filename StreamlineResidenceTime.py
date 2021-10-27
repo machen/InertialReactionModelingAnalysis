@@ -168,6 +168,9 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             # Calculate travel times
             travelTime = gStream.travelTime.sum().values
             streamLen = gStream.dist.sum().values
+            if logVal:
+                travelTime = np.log10(travelTime)
+                streamLen = np.log10(streamLen)
             # refTime = streamLen/gStream.velMag.mean().values
             timePDF, timeBins = np.histogram(travelTime, bins=nBins,
                                              density=True)
@@ -175,6 +178,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             # timeBins = np.power(10, timeBins)  # Convert back to non logspace times
             lenPDF, lenBins = np.histogram(streamLen, bins=nBins,
                                            density=True)
+
             output = pd.DataFrame({'lenLBins': lenBins[:-1],
                                    'lenRBins': lenBins[1:],
                                    'lenBinMean': (lenBins[:-1]+lenBins[1:])/2,
@@ -185,19 +189,27 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                                    'timePDF': timePDF})
             params['lenMean'], params['lenVar'] = calcPDFStats(lenBins, lenPDF)
             params['timeMean'], params['timeVar'] = calcPDFStats(timeBins, timePDF)
+            params['RePil'] = params['Re']*params['r1']*2/500  # RePil = r1*2/500*Re
             metaData = metaData.append(params, ignore_index=True)
             output.to_csv(outputPath+f+".histogram.csv")
             plt.figure(1)
             plt.plot((timeBins[1:]+timeBins[:-1])/2, timePDF)
             plt.title('timePDF')
-            plt.xlabel('log(Time)')
+            if logVal:
+                plt.label('log(Time)')
+            else:
+                plt.xlabel('Time (s)')
             plt.ylabel('PDF')
+            #plt.yscale('log')
             plt.savefig(outputPath+f[:-4]+'_timePDF.png')
             sns.despine()
             plt.figure(2)
             plt.plot((lenBins[1:]+lenBins[:-1])/2, lenPDF)
             plt.title('lengthPDF')
-            plt.xlabel('Streamline length (m)')
+            if logVal:
+                plt.label('log(Streamline Length)')
+            else:
+                plt.xlabel('Streamline Length (m)')
             plt.ylabel('PDF')
             sns.despine()
             plt.savefig(outputPath+f[:-4]+'_lenPDF.png')
@@ -210,28 +222,65 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                     ax3.plot(streamLine.x, streamLine.y, streamLine.z)
                 plt.title('Streamlines')
                 return metaData
-    plt.close('all')
+            plt.close('all')
     metaData.to_csv(outputPath+caseName+'_metaData.csv')
     return metaData
 
 
-def generateMeanPlots(metaData):
+def generateMeanPlots(metaData, logVal):
+    # Should correctly consider if log of values or not.
+    f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+    f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+
+    for d in metaData.d.unique():
+        subData = metaData.loc[metaData.d==d,:]
+        if logVal:
+            x = subData.RePil
+            yTime = np.power(10, subData.timeMean)
+            yerrTime = np.power(10, np.sqrt(subData.timeVar))
+            yLen = np.power(10, subData.lenMean)
+            yerrLen = np.power(10, np.sqrt(subData.lenVar))
+        else:
+            x = subData.RePil
+            yTime = subData.timeMean
+            yerrTime = np.sqrt(subData.timeVar)
+            yLen = subData.lenMean
+            yerrLen = np.sqrt(subData.lenVar)
+
+
+        ax1.errorbar(x, yTime, yerr=yerrTime,
+                     ls='None', marker='.', label=float(d))
+        ax2.errorbar(x, yLen, yerr=yerrLen,
+                     ls='None', marker='.', label=float(d))
+
+    ax1.set_xlabel('RePil')
+    ax2.set_xlabel('RePil')
+    ax1.set_ylabel('Mean Residence Time (s)')
+    ax2.set_ylabel('Mean Streamline Length (m)')
+    ax1.set_title('Time PDF')
+    ax2.set_title('Length PDF')
+
+
     return
 
 """SCRIPT INPUTS"""
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\FullChannel\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\PillarGap\\"
 caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 50  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
+logVal = True # Bin log values instead of the actual values
 
 """MAIN SCRIPT"""
 
 os.chdir(workingDir)
-outputPath = ".\\PDF {} bins\\".format(nBins)
+if logVal:
+    outputPath = ".\\log value PDF {} bins\\".format(nBins)
+else:
+    outputPath = ".\\PDF {} bins\\".format(nBins)
 if not os.path.isdir(outputPath):
     os.mkdir(outputPath)
 if calculatePDFs:
@@ -240,10 +289,6 @@ if calculatePDFs:
 else:
     metaData = pd.read_csv(outputPath+caseName+"_metaData.csv")
 
-generateMeanPlots(metaData)
-
-
-
-
-
-
+generateMeanPlots(metaData, logVal)
+plt.ion()
+plt.show()
