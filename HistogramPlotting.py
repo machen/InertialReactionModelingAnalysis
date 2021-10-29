@@ -128,8 +128,8 @@ def dataSetPlot(dataSets, metaData=pd.DataFrame([]), linestyle='-', smooth=0):
         params['PDFmean'] = dataMean
         params['PDFstd'] = np.sqrt(dataVar)
         metaData = metaData.append(params, ignore_index=True)
-        dataMid = np.mean([np.min(data.normFreq), np.max(data.normFreq)])
-        pmf, xPmf = genPMF(data)
+        # dataMid = np.mean([np.min(data.normFreq), np.max(data.normFreq)])
+        # pmf, xPmf = genPMF(data)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
@@ -150,7 +150,7 @@ def dataSetPlot(dataSets, metaData=pd.DataFrame([]), linestyle='-', smooth=0):
         #          [dataMid, dataMid], ls='--', color='k')
         diffPDF = np.diff(data.normFreq)/np.diff(data.valMean)
         ax3.plot(data.valMean[1:], diffPDF, label=key, ls=linestyle)
-        ax5.plot(xPmf, pmf, label=key, ls=linestyle)
+        # ax5.plot(xPmf, pmf, label=key, ls=linestyle)
 # HEY UNIFY THE NAMING IN THE MAIN SCRIPT SINCE IT'S NOT ALWAYS VELOCITIES
     return metaData
 
