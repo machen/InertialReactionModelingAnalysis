@@ -6,7 +6,7 @@ import os
 import scipy.stats as stats
 import seaborn as sns
 
-
+# TODO: THIS NEEDS TO LOAD THE METADATA AS WELL THAT WAS GENERATED FOR EACH CASE
 class DataSet:
     def __init__(self, workingDir, caseName, caseExt, d, label, smooth=False, window=5):
         self.workingDir = workingDir
@@ -173,21 +173,21 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
 workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
 workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-08-18-Chemilum-100um\\Offset 100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-06-14-Chemilum-50_75um\\50 um Pillars\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
 caseExtA = ".*_dark_hist\.csv"
-caseNameB = ''
-caseNameC = ''
-caseNameD = ''
+
 # You must set these to the correct pillar gaps of the experiment
-dA = "2021-10-20"
+dA = "2021-10-20 Device A3"
 dB = "2021-04-29"
 dC = "2021-08-18-Offset"
-dD = "2021-06-14 50um"
+dD = "2021-10-05"
+dE = "2021-10-20 Device A2"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -199,13 +199,15 @@ f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normaliz
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+# dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-# dataSetD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+dataSetD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+dataSetE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
-metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
+# metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
 metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
-# metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
+metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
+metaData = dataSetPlot(dataSetE, metaData, dE, smooth=window)
 metaPlot(metaData, prop='ReP')
 
 
