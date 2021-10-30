@@ -6,7 +6,7 @@ import re
 import seaborn as sns
 
 
-""""""
+"""TODO: Convert script inputs into user prompts, see input(). Will need to set up to take default values as well."""
 
 
 def stringVal(pattern, string):
@@ -296,7 +296,7 @@ caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
-calculatePDFs = True  # Flag to toggle calculation of PDFs.
+calculatePDFs = False  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 
 """MAIN SCRIPT"""

@@ -297,10 +297,10 @@ ax1.set_xlabel("Value")
 ax1.set_ylabel("Normalized freq.")
 ax2.set_xlabel("Value")
 ax2.set_ylabel("Normalized freq.")
-ax1.legend(loc=0)
+# ax1.legend(loc=0) # Legends get too long for this
 ax1.set_yscale('log')
-ax2.legend(loc=0)
-ax3.legend(loc=0)
+# ax2.legend(loc=0)
+# ax3.legend(loc=0)
 
 ax4.set_ylabel('Mean of PDF')
 ax3.set_yscale('log')
