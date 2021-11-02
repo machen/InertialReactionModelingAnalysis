@@ -6,12 +6,14 @@ import re
 import seaborn as sns
 
 
-"""TODO: Convert script inputs into user prompts, see input(). Will need to set up to take default values as well."""
+"""TODO: Convert script inputs into user prompts, see input(). Will need to 
+set up to take default values as well."""
 
 
 def stringVal(pattern, string):
     """Given a regular expression searching for a single instance of a numeric
-    value, function will return a float of that value, or -1 if no match is found."""
+    value, function will return a float of that value, or -1 if no match is
+     found."""
     val = re.search(pattern, string)
     if not val:
         return -1
@@ -59,7 +61,8 @@ def extractParams(fileName, nPil=2):
 
 def pillarGapCalculation(r1, r2, d, includePillar=True):
     """ Use this to properly calculate the true "pillar gap" area depending on
-    the available parameters of the model. This calculation will directly assume:
+    the available parameters of the model. 
+    This calculation will directly assume:
     1) That the edge of the most upstream pillar is at y = 0
     2) That there are only two pillars
     3) Positive y is upstream, negative y is downstream
@@ -75,7 +78,9 @@ def pillarGapCalculation(r1, r2, d, includePillar=True):
     x1 = xPil-max(r1, r2)
     x2 = xPil+max(r1, r2)
     if includePillar:
-        y1 = yPil+d/2+r1 # Includes the pillar itself, allowing the box to cover volume near the pillar far away from the centerline
+        # Includes the pillar itself
+        # allowing the box to cover volume near the pillar far away from the centerline
+        y1 = yPil+d/2+r1  
         y2 = yPil-d/2-r2
     else:
         y1 = yPil+d/2
