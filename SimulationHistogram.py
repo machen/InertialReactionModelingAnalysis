@@ -670,8 +670,6 @@ for fileName in fileList:
             params['totalProd'] = np.sum(np.multiply(data.cProduct.values, elementVol))
             params['totalTCPO'] = np.sum(np.multiply(data.tcpo.values, elementVol))
             params['totalH2O2'] = np.sum(np.multiply(data.h2o2.values, elementVol))
-            params['dCdtAvg'] = np.mean(dCdt)
-            params['dCdtStd'] = np.std(dCdt)
             params['dCdtMax'] = np.max(dCdt)
             params['dCdtSum'] = np.sum(dCdt)
             params['dilutionTCPO'], params['reactorTCPO'] = calcDilutionIndex(data, 'tcpo')
@@ -691,10 +689,14 @@ for fileName in fileList:
             params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
             params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
         if binProp:
+            # Calculate stats of mean and std dev based solely on prop weighted by vol
+            params['volWeightedMean'] = np.average(data.loc[:, binProp].values, weights=elementVol)
+            # params['volWeightedStd']  = ???
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,
                        'leftBin': valBin[:-1], 'rightBin': valBin[1:]}
+            # Write PDF mean and std to params file, will need to import PDFstats function from elsewhere
             velDF = pd.DataFrame(pdfData)
             velDF.to_csv(outFile+fileName[:-4]+"_histogram.csv")
             plt.figure()
