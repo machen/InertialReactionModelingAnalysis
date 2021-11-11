@@ -210,7 +210,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                 plt.xlabel('Time (s)')
             plt.ylabel('PDF')
             plt.yscale('log')
-            plt.savefig(outputPath+f[:-4]+'_timePDF.png', dpi=600)
+            plt.savefig(outputPath+f[:-4]+'_timePDF.png', dpi=300)
             sns.despine()
             plt.figure(2)
             plt.plot((lenBins[1:]+lenBins[:-1])/2, lenPDF)
@@ -221,7 +221,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                 plt.xlabel('Streamline Length (m)')
             plt.ylabel('PDF')
             sns.despine()
-            plt.savefig(outputPath+f[:-4]+'_lenPDF.png', dpi=600)
+            plt.savefig(outputPath+f[:-4]+'_lenPDF.png', dpi=300)
             if testMode:
                 plt.ion()
                 fig3 = plt.figure(3)
@@ -258,13 +258,17 @@ def generateMeanPlots(metaData, logVal):
             yerrTime = np.sqrt(subData.timeStd)
             yLen = subData.lenMean
             yerrLen = np.sqrt(subData.lenStd)
+            yTimePDF = subData.timePDFMean
+            yerrTimePDF = np.sqrt(subData.timePDFVar)
 
         ax1.errorbar(x, yTime, yerr=yerrTime,
-                     ls='None', marker='.', label=float(d))
+                     ls='None', marker='o', label=float(d))
+        ax1.errorbar(x, yTimePDF, yerr=yerrTimePDF,
+                     ls='None', marker='.', label='{} PDF Mean'.format(float(d)))
         ax2.errorbar(x, yLen, yerr=yerrLen,
-                     ls='None', marker='.', label=float(d))
-        ax3.plot(x, yTime, ls='None', marker='.', label=float(d))
-        ax4.plot(x, yLen, ls='None', marker='.', label=float(d))
+                     ls='None', marker='o', label=float(d))
+        ax3.plot(x, yTime, ls='None', marker='o', label=float(d))
+        ax4.plot(x, yLen, ls='None', marker='o', label=float(d))
 
     ax1.set_xlabel('RePil')
     ax2.set_xlabel('RePil')
@@ -293,6 +297,8 @@ def plotPDF():
     f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
     f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
     return ax1, ax2
+
+    
 """SCRIPT INPUTS"""
 
 
@@ -306,7 +312,7 @@ logVal = False  # Bin log values instead of the actual values
 
 """MAIN SCRIPT"""
 
-sns.set_context('talk')
+sns.set_context('paper')
 plt.rcParams['svg.fonttype'] = 'none'
 os.chdir(workingDir)
 if logVal:
