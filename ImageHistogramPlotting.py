@@ -53,6 +53,11 @@ def extractParams(fileName):
     return res
 
 
+def loadMetaData(metaFile):
+    params = pd.read_csv(metaFile, index_col=1)
+    return params
+
+
 def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     os.chdir(workingDir)
     filePat = re.compile(caseName+'.*?'+caseExt)
@@ -69,19 +74,23 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
                 # Drop NaNs
                 data = data.dropna()
             dataSets[fileName] = data
-    return dataSets
+    metaData = loadMetaData('_meta.csv')
+    return dataSets, metaData
 
 
 def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0, fit=True):
     for key in dataSets:
         data = dataSets[key]
-        params = extractParams(key)
         dataMean, dataVar = pdfStats(data)
-        params['d'] = d
-        params['fileName'] = key
-        params['PDFmean'] = dataMean
-        params['PDFstd'] = np.sqrt(dataVar)
-        metaData = metaData.append(params, ignore_index=True)
+        # params = extractParams(key)
+        # params['d'] = d
+        # params['fileName'] = key
+        # params['PDFmean'] = dataMean
+        # params['PDFstd'] = np.sqrt(dataVar)
+        metaData.loc[key,'d'] = d
+        metaData.loc[key, 'PDFmean'] = dataMean
+        metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
+        # metaData = metaData.append(params, ignore_index=True)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
@@ -149,6 +158,10 @@ def metaPlot(metaData, prop='q'):
         ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
                      yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
+        maxVal = meanData.meanInt.max()
+        ax8.errorbar(meanData.index, meanData.meanInt/maxVal, 
+                     yerr=meanData.stdInt/maxVal, ls='none', 
+                     marker='o', capsize=2, label = val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -164,6 +177,10 @@ def metaPlot(metaData, prop='q'):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([-0.1, 1.1])
+    ax8.legend(loc=0)
+    ax8.set_xlabel(prop)
+    ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
+    ax8.set_title('Max normalized - check meaning of max val')
     return
 
 sns.set_context('talk')
@@ -196,18 +213,19 @@ f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
+f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 
-metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
-dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+# metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
+dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 # dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-dataSetD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-dataSetE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
+# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+metaData = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 # metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
-metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
-metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
-metaData = dataSetPlot(dataSetE, metaData, dE, smooth=window)
+# metaData = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
+# metaData = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
+# metaData = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 metaPlot(metaData, prop='ReP')
 
 
