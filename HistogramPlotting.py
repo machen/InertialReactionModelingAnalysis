@@ -204,9 +204,20 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None):
     ax7.set_xlabel(prop)
     ax7.set_ylabel('Max normalized')
     ax7.set_title('Watch out for what the max means')
-    ax7.legend(loc=0)
-    ax7.set_ylim([-0.1, 1.1])
-    ax7.set_xlim([-1, 105])
+
+    ax8.legend(loc=0)
+    ax8.set_ylim([-0.1, 1.1])
+    ax8.set_xlim([-1, 105])
+    maxVal = subData.loc[:, 'volWeightedMean'].max()
+    ax8.plot(subData.loc[:, prop], subData.loc[:, 'volWeightedMean']/maxVal,
+                 ls='none', marker='o',
+                 label=label+' Max val: {}'.format(maxVal))
+    ax8.set_xlabel(prop)
+    ax8.set_ylabel('Volume Weighted Mean Reaction Rate Normalized to Max (.)')
+    ax8.set_title('Watch out for what the max means')
+    ax8.legend(loc=0)
+    ax8.set_ylim([-0.1, 1.1])
+    ax8.set_xlim([-1, 105])
     return
 
 
@@ -274,6 +285,7 @@ f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
 
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
@@ -320,6 +332,7 @@ sns.despine(f4)
 sns.despine(f5)
 sns.despine(f6)
 sns.despine(f7)
+sns.despine(f8)
 
 plt.ion()
 plt.show()
