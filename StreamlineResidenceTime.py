@@ -169,6 +169,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             print(f)
             # Load in data set and group by streamline
             dataSet, params = loadData(f)
+            params['velMean'] = dataSet.velMag.mean()
             gStream = groupStreamlines(dataSet)
             # Calculate travel times
             travelTime = gStream.travelTime.sum().values
@@ -199,6 +200,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
             params['lenMean'] = np.mean(streamLen)
             params['lenStd'] = np.std(streamLen)
             params['RePil'] = params['Re']*params['r1']*2/500  # RePil = r1*2/500*Re
+            params['StraightResTime'] = params['d']*10**-6/params['velMean']
             metaData = metaData.append(params, ignore_index=True)
             output.to_csv(outputPath+f+".histogram.csv")
             plt.figure(1)
@@ -210,7 +212,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                 plt.xlabel('Time (s)')
             plt.ylabel('PDF')
             plt.yscale('log')
-            plt.savefig(outputPath+f[:-4]+'_timePDF.png', dpi=300)
+            plt.savefig(outputPath+f[:-4]+'_timePDF.png', dpi=300, bbox_inches='tight')
             sns.despine()
             plt.figure(2)
             plt.plot((lenBins[1:]+lenBins[:-1])/2, lenPDF)
@@ -221,7 +223,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
                 plt.xlabel('Streamline Length (m)')
             plt.ylabel('PDF')
             sns.despine()
-            plt.savefig(outputPath+f[:-4]+'_lenPDF.png', dpi=300)
+            plt.savefig(outputPath+f[:-4]+'_lenPDF.png', dpi=300, bbox_inches='tight')
             if testMode:
                 plt.ion()
                 fig3 = plt.figure(3)
@@ -263,8 +265,10 @@ def generateMeanPlots(metaData, logVal):
 
         ax1.errorbar(x, yTime, yerr=yerrTime,
                      ls='None', marker='o', label=float(d))
+        ax1.plot(x, subData.StraightResTime, marker='o', ls='None',
+                 label='Resdience time without recirculation, d = {}'.format(float(d)))
         ax1.errorbar(x, yTimePDF, yerr=yerrTimePDF,
-                     ls='None', marker='.', label='{} PDF Mean'.format(float(d)))
+                     ls='None', marker='o', label='{} PDF Mean'.format(float(d)))
         ax2.errorbar(x, yLen, yerr=yerrLen,
                      ls='None', marker='o', label=float(d))
         ax3.plot(x, yTime, ls='None', marker='o', label=float(d))
@@ -298,7 +302,7 @@ def plotPDF():
     f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
     return ax1, ax2
 
-    
+
 """SCRIPT INPUTS"""
 
 
@@ -307,7 +311,7 @@ caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
-calculatePDFs = False  # Flag to toggle calculation of PDFs.
+calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 
 """MAIN SCRIPT"""
