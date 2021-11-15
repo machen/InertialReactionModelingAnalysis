@@ -6,15 +6,23 @@ import os
 import scipy.stats as stats
 import seaborn as sns
 
-# TODO: THIS NEEDS TO LOAD THE METADATA AS WELL THAT WAS GENERATED FOR EACH CASE
+""" TODO: THIS NEEDS TO LOAD THE METADATA AS WELL
+THAT WAS GENERATED FOR EACH CASE
+
+"""
+
+
 class DataSet:
-    def __init__(self, workingDir, caseName, caseExt, d, label, smooth=False, window=5):
+    def __init__(self, workingDir, caseName, caseExt, d,
+                 label, smooth=False, window=5):
         self.workingDir = workingDir
         self.caseName = caseName
         self.caseExt = caseExt
         self.pillarGap = d
         self.label = label
-        self.dataSet = dataExtraction(workingDir, caseName, caseExt)
+        self.dataSet, self.metaData = dataExtraction(workingDir,
+                                                     caseName, caseExt,
+                                                     smooth, window)
 
     def getDataSet(self):
         return self.dataSet
@@ -34,6 +42,19 @@ class DataSet:
     def getLabel(self):
         return self.label
 
+    def getMetaData(self):
+        return self.metaData
+
+    def plotDataSet(self, linestyle='-'):
+        for key in self.dataSet:
+            data = self.dataSet[key]
+            # Key is going to be a .csv file contianing the PDF data
+            # We need to match it to the metadata associated
+            extRe = re.compile('()('+self.caseExt[2:]+')')
+            keyBase = re.search(extRe, key).group(1)+'.tif'
+
+
+        
 
 def flowRateConversion(q, width, height, charLen, nu=0.45):
     # Base nu is in mm2/s, so you should report this in mm and seconds as units
@@ -78,7 +99,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     return dataSets, metaData
 
 
-def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0, fit=True):
+def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
     for key in dataSets:
         data = dataSets[key]
         dataMean, dataVar = pdfStats(data)
@@ -87,7 +108,7 @@ def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0, fit=True):
         # params['fileName'] = key
         # params['PDFmean'] = dataMean
         # params['PDFstd'] = np.sqrt(dataVar)
-        metaData.loc[key,'d'] = d
+        metaData.loc[key, 'd'] = d
         metaData.loc[key, 'PDFmean'] = dataMean
         metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
         # metaData = metaData.append(params, ignore_index=True)

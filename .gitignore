@@ -3,3 +3,5 @@
 *.txt
 *.csv
 *.png
+workspace.code-workspace
+.vscode/extensions.json
