@@ -100,7 +100,7 @@ def loadData(fileName):
                          names=['x', 'y', 'z', 'sID', 'velMag'])
     params = extractParams(fileName, nPil=1)
     params['fileName'] = fileName
-    xRange, yRange = pillarGapCalculation(params['r1'], params['r2'], params['d'])
+    xRange, yRange = pillarGapCalculation(params['r1'], params['r2'], params['d'], includePillar=False)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
     return data, params
 
@@ -238,7 +238,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
     return metaData
 
 
-def generateMeanPlots(metaData, logVal):
+def generateMeanPlots(metaData, logVal, dList=None):
     # Should correctly consider if log of values or not.
     f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
     f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -246,7 +246,9 @@ def generateMeanPlots(metaData, logVal):
     f3, ax3 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
     f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
-    for d in metaData.d.unique():
+    if not dList:
+        dList = metaData.d.unique()
+    for d in dList:
         subData = metaData.loc[metaData.d == d, :]
         if logVal:
             x = subData.RePil
@@ -272,6 +274,10 @@ def generateMeanPlots(metaData, logVal):
         ax2.errorbar(x, yLen, yerr=yerrLen,
                      ls='None', marker='o', label=float(d))
         ax3.plot(x, yTime, ls='None', marker='o', label=float(d))
+        ax3.plot(x, subData.StraightResTime, marker='o', ls='None',
+                 label='Resdience time without recirculation, d = {}'.format(float(d)))
+        ax3.plot([0, 100], [1/3E-3/2000, 1/3E-3/2000], ls='--',
+                 color='r', label='Reaction half life')
         ax4.plot(x, yLen, ls='None', marker='o', label=float(d))
 
     ax1.set_xlabel('RePil')
@@ -313,10 +319,11 @@ testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
+dList = [100]
 
 """MAIN SCRIPT"""
 
-sns.set_context('paper')
+sns.set_context('talk')
 plt.rcParams['svg.fonttype'] = 'none'
 os.chdir(workingDir)
 if logVal:
@@ -331,6 +338,6 @@ if calculatePDFs:
 else:
     metaData = pd.read_csv(outputPath+caseName+"_metaData.csv")
 
-ax1, ax2, ax3, ax4 = generateMeanPlots(metaData, logVal)
+ax1, ax2, ax3, ax4 = generateMeanPlots(metaData, logVal, dList)
 plt.ion()
 plt.show()
