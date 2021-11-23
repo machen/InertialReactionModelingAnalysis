@@ -274,12 +274,13 @@ def generateMeanPlots(metaData, logVal, dList=None):
         ax2.errorbar(x, yLen, yerr=yerrLen,
                      ls='None', marker='o', label=float(d))
         ax3.plot(x, yTime, ls='None', marker='o', label=float(d))
-        ax3.plot(x, subData.StraightResTime, marker='o', ls='None',
-                 label='Resdience time without recirculation, d = {}'.format(float(d)))
-        ax3.plot([0, 100], [1/3E-3/2000, 1/3E-3/2000], ls='--',
-                 color='r', label='Reaction half life')
+        # ax3.plot(x, subData.StraightResTime, marker='o', ls='None',
+        #          label='Resdience time without recirculation, d = {}'.format(float(d)))
+        
         ax4.plot(x, yLen, ls='None', marker='o', label=float(d))
 
+    ax3.plot([0, 100], [1/3E-3/2000, 1/3E-3/2000], ls='--',
+             color='r', label='Reaction half life')
     ax1.set_xlabel('RePil')
     ax2.set_xlabel('RePil')
     ax3.set_xlabel('RePil')
@@ -292,6 +293,7 @@ def generateMeanPlots(metaData, logVal, dList=None):
     ax2.set_title('Streamline Length')
     ax3.set_title('Streamline Residence Time')
     ax4.set_title('Streamline Length')
+    ax3.set_yscale('log')
     sns.despine(f1)
     sns.despine(f2)
     sns.despine(f3)
@@ -317,9 +319,9 @@ caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
-calculatePDFs = True  # Flag to toggle calculation of PDFs.
+calculatePDFs = False  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
-dList = [100]
+dList = [100, 25]
 
 """MAIN SCRIPT"""
 
