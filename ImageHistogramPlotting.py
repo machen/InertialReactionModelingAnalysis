@@ -198,6 +198,7 @@ def metaPlot(metaData, prop='q'):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([-0.1, 1.1])
+    ax7.set_xlim([-1, 105])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
@@ -212,18 +213,18 @@ window = 10
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+# workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+# workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
 workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-08-18-Chemilum-100um\\Offset 100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
 caseExtA = ".*_dark_hist\.csv"
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "2021-10-20 Device A3"
-dB = "2021-04-29"
-dC = "2021-08-18-Offset"
+dA = "2021-10-20 Device A3-100um"
+dB = "2021-10-20 Device A2-100um"
+dC = "2021-10-05 100 um"
 dD = "2021-11-19 25 um"
 dE = "2021-11-18 25 um"
 
@@ -238,15 +239,15 @@ f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIn
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-# dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+# dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 # dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
 # metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
-# metaData = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-# metaData = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaData = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+# metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
+# metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
+metaData = dataSetPlot(dataSetE, metaData, dE, smooth=window)
 metaPlot(metaData, prop='ReP')
 
 

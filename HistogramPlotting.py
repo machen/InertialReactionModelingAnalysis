@@ -204,6 +204,8 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None):
     ax7.set_xlabel(prop)
     ax7.set_ylabel('Max normalized')
     ax7.set_title('Watch out for what the max means')
+    ax7.set_ylim([-0.1, 1.1])
+    ax7.set_xlim([-1, 105])
 
     ax8.legend(loc=0)
     ax8.set_ylim([-0.1, 1.1])
@@ -261,7 +263,7 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 # fitRange = np.array([65, 85])
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Exclusive-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
