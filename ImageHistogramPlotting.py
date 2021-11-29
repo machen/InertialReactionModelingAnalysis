@@ -54,7 +54,7 @@ class DataSet:
             keyBase = re.search(extRe, key).group(1)+'.tif'
 
 
-        
+
 
 def flowRateConversion(q, width, height, charLen, nu=0.45):
     # Base nu is in mm2/s, so you should report this in mm and seconds as units
@@ -103,15 +103,15 @@ def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
     for key in dataSets:
         data = dataSets[key]
         dataMean, dataVar = pdfStats(data)
-        # params = extractParams(key)
-        # params['d'] = d
-        # params['fileName'] = key
-        # params['PDFmean'] = dataMean
-        # params['PDFstd'] = np.sqrt(dataVar)
-        metaData.loc[key, 'd'] = d
-        metaData.loc[key, 'PDFmean'] = dataMean
-        metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
-        # metaData = metaData.append(params, ignore_index=True)
+        params = extractParams(key)
+        params['d'] = d
+        params['fileName'] = key
+        params['PDFmean'] = dataMean
+        params['PDFstd'] = np.sqrt(dataVar)
+        # metaData.loc[key, 'd'] = d
+        # metaData.loc[key, 'PDFmean'] = dataMean
+        # metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
+        metaData = metaData.append(params, ignore_index=True)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
@@ -179,10 +179,10 @@ def metaPlot(metaData, prop='q'):
         ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
                      yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
-        maxVal = meanData.meanInt.max()
-        ax8.errorbar(meanData.index, meanData.meanInt/maxVal, 
-                     yerr=meanData.stdInt/maxVal, ls='none', 
-                     marker='o', capsize=2, label = val)
+        # maxVal = meanData.meanInt.max()
+        # ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
+        #              yerr=meanData.stdInt/maxVal, ls='none',
+        #              marker='o', capsize=2, label = val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -212,10 +212,10 @@ window = 10
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
 workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
 workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-08-18-Chemilum-100um\\Offset 100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
 caseExtA = ".*_dark_hist\.csv"
@@ -224,8 +224,8 @@ caseExtA = ".*_dark_hist\.csv"
 dA = "2021-10-20 Device A3"
 dB = "2021-04-29"
 dC = "2021-08-18-Offset"
-dD = "2021-10-05"
-dE = "2021-10-20 Device A2"
+dD = "2021-11-19 25 um"
+dE = "2021-11-18 25 um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -236,13 +236,13 @@ f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 
-# metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
+metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 # dataSetB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 # dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
 # dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-metaData = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
+metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
 # metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
 # metaData = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 # metaData = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
