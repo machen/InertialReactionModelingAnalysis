@@ -104,7 +104,7 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
         else:
             data = data/np.max(data)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
-    params['fileName'] = file
+    params['fileName'] = os.path.splitext(file)[0]
     params['maxInt'] = np.max(data)
     params['meanInt'] = np.mean(data)
     params['stdInt'] = np.std(data)
@@ -119,12 +119,12 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\SplitImgs\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\SplitImgs\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [970, 1120]
-yRange = [860, 1170]
+xRange = [860, 1170]
+yRange = [960, 1000]
 maxNorm = False
 maxVal = 1640  # Set to none to use max observed in image. Value will depend on specific days mix
 regionName = "Raw Image Pillar Gap"

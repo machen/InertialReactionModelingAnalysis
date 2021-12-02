@@ -94,7 +94,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
                 data = dataSmoothing(data, window)
                 # Drop NaNs
                 data = data.dropna()
-            dataSets[fileName] = data
+            dataSets[os.path.splitext(fileName)[0]] = data
     metaData = loadMetaData('_meta.csv')
     return dataSets, metaData
 
@@ -104,13 +104,13 @@ def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
         data = dataSets[key]
         dataMean, dataVar = pdfStats(data)
         params = extractParams(key)
-        params['d'] = d
-        params['fileName'] = key
-        params['PDFmean'] = dataMean
-        params['PDFstd'] = np.sqrt(dataVar)
-        # metaData.loc[key, 'd'] = d
-        # metaData.loc[key, 'PDFmean'] = dataMean
-        # metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
+        # params['d'] = d
+        # params['fileName'] = key
+        # params['PDFmean'] = dataMean
+        # params['PDFstd'] = np.sqrt(dataVar)
+        metaData.loc[key, 'd'] = d
+        metaData.loc[key, 'PDFmean'] = dataMean
+        metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
         metaData = metaData.append(params, ignore_index=True)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
