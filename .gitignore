@@ -5,3 +5,4 @@
 *.png
 workspace.code-workspace
 .vscode/extensions.json
+.vscode/launch.json

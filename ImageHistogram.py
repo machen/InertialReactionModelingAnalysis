@@ -109,24 +109,25 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     params['meanInt'] = np.mean(data)
     params['stdInt'] = np.std(data)
     params['channel'] = channelName
+    params['caseExt'] = f'.{channelName}_hist'
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
     dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
                 'leftBin': dataLeft, 'rightBin': dataRight}
     dataDF = pd.DataFrame(dataDict)
-    dataDF.to_csv(outFile+file[:-4]+'_{}_hist.csv'.format(channelName))
+    dataDF.to_csv(outFile+params['fileName']+params['caseExt'])
     dataImage = Image.fromarray(data)
     dataImage.save(outFile+file[:-4]+'.tiff')
     return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\SplitImgs\\"
+workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\SplitImgs\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [860, 1170]
-yRange = [960, 1000]
+xRange = [718, 1042]
+yRange = [1000, 1160]
 maxNorm = False
-maxVal = 1640  # Set to none to use max observed in image. Value will depend on specific days mix
+maxVal = 1006  # Set to none to use max observed in image. Value will depend on specific days mix
 regionName = "Raw Image Pillar Gap"
 
 fileList = os.listdir()

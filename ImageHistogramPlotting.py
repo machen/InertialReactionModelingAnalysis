@@ -74,14 +74,15 @@ def extractParams(fileName):
     return res
 
 
-def loadMetaData(metaFile):
+def loadMetaData(metaFile, caseExt):
     params = pd.read_csv(metaFile, index_col=1)
+    params = params.loc[params.caseExt == caseExt]
     return params
 
 
 def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     os.chdir(workingDir)
-    filePat = re.compile(caseName+'.*?'+caseExt)
+    filePat = re.compile(caseName+r".*"+caseExt)
     fileList = os.listdir('.')
     dataSets = {}
     for fileName in fileList:
@@ -95,7 +96,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
                 # Drop NaNs
                 data = data.dropna()
             dataSets[os.path.splitext(fileName)[0]] = data
-    metaData = loadMetaData('_meta.csv')
+    metaData = loadMetaData('_meta.csv', caseExt)
     return dataSets, metaData
 
 
@@ -111,7 +112,7 @@ def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
         metaData.loc[key, 'd'] = d
         metaData.loc[key, 'PDFmean'] = dataMean
         metaData.loc[key, 'PDFstd'] = np.sqrt(dataVar)
-        metaData = metaData.append(params, ignore_index=True)
+        #metaData = metaData.append(params, ignore_index=True)
         a1 = ax1.plot(data.valMean, data.normFreq,
                       label=key+'smooth {}'.format(smooth), ls=linestyle)
         c = a1[0].get_color()
@@ -217,9 +218,10 @@ workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments
 # workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
 # workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
 workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
-caseExtA = ".*_dark_hist\.csv"
+caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
 dA = "2021-10-20 Device A3-100um"
@@ -242,13 +244,13 @@ dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, w
 # dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 # dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-metaData = dataSetPlot(dataSetA, metaData, dA, smooth=window)
+# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 # metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
 # metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
 # metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
-metaData = dataSetPlot(dataSetE, metaData, dE, smooth=window)
-metaPlot(metaData, prop='ReP')
+# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaPlot(metaDataA, prop='ReP')
 
 
 ax1.set_title("PDFs")
