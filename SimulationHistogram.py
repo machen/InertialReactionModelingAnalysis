@@ -1,11 +1,10 @@
 import pandas as pd
-#import modin.pandas as pd # Allows for multicore processing using pandas
 import numpy as np
 import re
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
-from mpl_toolkits.mplot3d import Axes3D
+# from mpl_toolkits.mplot3d import Axes3D
 
 
 """ Purpose of script is to import data for velocity analysis,
@@ -13,8 +12,8 @@ but will also serve as a means of doing general data import from comsol.
 
 %TODO:
 
--Further, you should likely export depth averaged data, and, barring that, depth average
-the data you have yourself, likely by coarsening the data.
+-Further, you should likely export depth averaged data, and, barring that,
+ depth average the data you have yourself, likely by coarsening the data.
 -Perhaps also output a 2D map of the area considered?
 
 Is there a way to boost the speed of the readin?
@@ -24,7 +23,8 @@ FORMAT IS:
 x, y, z, MeshID, MeshVolumeScale, MeshElementVolume, u (m/s), v (m/s), w (m/s),
 p, Velocity Magnitude (m/s), Mass flow (kg/s)
 
-DON'T FORGET: X is along channel width, Y is along channel length, Z is along channel depth
+DON'T FORGET: X is along channel width, Y is along channel length, Z is along
+channel depth
 
 -Analyze for recirculation zone (how do we tag points as in or not in a zone?)
 -Do calculations for residence time?
@@ -38,7 +38,7 @@ Some notes about current results:
 The area approximation is kind of inaccurate, as evidenced by studying the math
 for a plane just through the main channel width.
 
-For a 0.2 um slice, the cross sectional area is something like 50% of the actual
+For a 0.2 um slice, the cross sectional area is ~50% of the actual
 For a 2 um slice, the area is more like 25% of actual
 For a 20 um slice, the area is about 5% of actual
 
@@ -53,7 +53,8 @@ It's easy enough to pull the total flux to see what the rough error is.
 
 def pillarGapCalculation(r1, r2, d, includePillar=True):
     """ Use this to properly calculate the true "pillar gap" area depending on
-    the available parameters of the model. This calculation will directly assume:
+    the available parameters of the model.
+    This calculation will directly assume:
     1) That the edge of the most upstream pillar is at y = 0
     2) That there are only two pillars
     3) Positive y is upstream, negative y is downstream
@@ -69,7 +70,8 @@ def pillarGapCalculation(r1, r2, d, includePillar=True):
     x1 = xPil-max(r1, r2)
     x2 = xPil+max(r1, r2)
     if includePillar:
-        y1 = yPil+d/2+r1 # Includes the pillar itself, allowing the box to cover volume near the pillar far away from the centerline
+        # Includes the pillar itself
+        y1 = yPil+d/2+r1
         y2 = yPil-d/2-r2
     else:
         y1 = yPil+d/2
@@ -79,18 +81,20 @@ def pillarGapCalculation(r1, r2, d, includePillar=True):
 
 def dataLoader(filename, type='flowdata.txt'):
     if type == 'flowdata.txt':
-        data = pd.read_table(fileName, header=9, sep='\s+',
+        data = pd.read_table(fileName, header=9, sep=r'\s+',
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'vortX', 'vortY', 'vortZ', 'vortMag'])
 
     if type == 'chemdata.txt':
-        data = pd.read_table(fileName, header=10, sep='\s+',
+        data = pd.read_table(fileName, header=10, sep=r'\s+',
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
-        # Drop lines where concentration values are less than 0, which break calculations
-        data = data.drop(data.loc[(data.h2o2 <=0) | (data.tcpo <= 0) | (data.cProduct <= 0)].index)
+        # Drop lines where concentration values are less than 0
+        data = data.drop(data.loc[(data.h2o2 <= 0)
+                         | (data.tcpo <= 0)
+                         | (data.cProduct <= 0)].index)
     return data
 
 
@@ -109,8 +113,10 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
 
 
 def crossings_nonzero_all(data):
-    # Will calculate a zero crossing and return the indices where the crossing occurs
-    # Credit to https://stackoverflow.com/questions/3843017/efficiently-detect-sign-changes-in-python
+    """Will calculate a zero crossing and
+    return the indices where the crossing occurs
+    Credit to https://stackoverflow.com/questions/3843017/
+    efficiently-detect-sign-changes-in-python"""
     pos = data > 0
     npos = ~pos
     return ((pos[:-1] & npos[1:]) | (npos[:-1] & pos[1:])).nonzero()[0]
@@ -118,16 +124,19 @@ def crossings_nonzero_all(data):
 
 def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
-    TO DO: Try to boost computational efficiency by subselecting the data to work on
+    TO DO: Try to boost computational efficiency by subselecting the data
+    to work on
     (i.e., don't use the columns you don't need)
     subData = data.loc[:,('EleVol', prop)]
 
     INPUT:
-    data: data output from comsol, must include column specified by prop & "eleVol" cols
+    data: data output from comsol,
+    must include column specified by prop & "eleVol" cols
     nBins: Number of bins you want to use, default is 1000
     logBin: True-> bins are evenly spaced in log space,
     otherwise, linear spacing
-    prop: Column name of data you wish to use, default, velMag (velocity magnitude)
+    prop: Column name of data you wish to use, default,
+    velMag (velocity magnitude)
 
     OUTPUT
     normFreq: Normalized frequencies for the defined bins by bin size
@@ -207,10 +216,10 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
 
 def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
     # Produces a dictionary of experimental parameters
-    rePat = re.compile('Re(\d+\.?\d*).'+caseExt)
-    dPat = re.compile('d(\d+\.?\d*)_')
-    cPat = re.compile('c(\d+\.?\d*)')
-    kPat = re.compile('k(\d+\.?\d*)_')
+    rePat = re.compile(r'Re(\d+\.?\d*).'+caseExt)
+    dPat = re.compile(r'd(\d+\.?\d*)_')
+    cPat = re.compile(r'c(\d+\.?\d*)')
+    kPat = re.compile(r'k(\d+\.?\d*)_')
     dVal = re.search(dPat, fileName).group(1)
     reVal = re.search(rePat, fileName).group(1)
     if caseExt == 'chemdata.txt':
@@ -220,14 +229,14 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
         cVal = 0
         kVal = 0
     if nPil == 2:
-        r1Pat = re.compile('r1_(\d+?)_')
-        r2Pat = re.compile('r2_(\d+?)_')
+        r1Pat = re.compile(r'r1_(\d+?)_')
+        r2Pat = re.compile(r'r2_(\d+?)_')
         r1Val = re.search(r1Pat, fileName).group(1)
         r2Val = re.search(r2Pat, fileName).group(1)
         res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
                'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
     if nPil == 1:
-        rPat = re.compile('r(\d+?)_')
+        rPat = re.compile(r'r(\d+?)_')
         rVal = re.search(rPat, fileName).group(1)
         res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
                'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
@@ -244,9 +253,12 @@ def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
     # depth is the channel depth
     # Region size is how wide a slice you want to use for pressure averaging
     You should more explicitly calculate pressure of the inflow and outflow
-    1) Group data by y value (could be 1 micron intervals) -> data.groupby(data.y)
-    Or you could do subDataMin = data.loc[(data.y <= TARGETMAX) & (data.y>= TARGETMIN), :]
-    2) find average pressure in each bin which represents a y slice-> WORTH OUTPUTTING POTENTIALLY
+    1) Group data by y value (could be 1 micron intervals)
+    -> data.groupby(data.y)
+    Or you could do subDataMin =
+    data.loc[(data.y <= TARGETMAX) & (data.y>= TARGETMIN), :]
+    2) find average pressure in each bin which represents a y slice->
+    WORTH OUTPUTTING POTENTIALLY
     3) Find absolute value of pressure difference of max y bin and min y bin
     4) Output some statistics about that pressure/info about where it's from
     maybe also the distance over which the pressure drop is realized"""
@@ -281,7 +293,8 @@ def calcVortVelAngle(data, uxName, uyName, uzName, wxName, wyName, wzName):
 def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
                              binProp, regionName='Result', recircCenter=False,
                              dataRegionX=None, dataRegionY=None,
-                             dataRegionZ=None, autoRegion=False, includePillar=False):
+                             dataRegionZ=None, autoRegion=False,
+                             includePillar=False):
     if logBins:
         binType = 'log'
     else:
@@ -301,42 +314,54 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("X Region: {}\n".format(dataRegionX))
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
-        outFile.write("Region defined by recirc center: {}\n".format(recircCenter))
+        outFile.write("Region defined by recirc center: {}\n"
+                      .format(recircCenter))
         outFile.write("Region defined by geometry: {}\n".format(autoRegion))
         outFile.write("Region includes pillars: {}\n".format(autoRegion))
     return outputPath
 
 
 def calcDilutionIndex(data, prop):
-    # Calculates the dilution index following Kitidanis, 1994. Note that we use the discrete case, not the continuous.
-    # Notably, the continuous case has a thorny issue where the units don't match that of the discrete case.
+    """ Calculates the dilution index following Kitidanis, 1994.
+    Note that we use the discrete case, not the continuous.
+    Notably, the continuous case has a thorny issue where the units
+    don't match that of the discrete case."""
     dV = data.eleVol.values
     c = data.loc[:, prop].values
     mTot = np.sum(c*dV)
-    mTotMax = np.sum(dV)  # If we define well mixed as the concentration is the same everywhere, the contribution of the "c" term will normalize out
+    """ If we define well mixed as the concentration is the same everywhere,
+    the contribution of the "c" term will normalize out
+    """
+    mTotMax = np.sum(dV)
     p = c*dV/mTot
-    pMax = dV/mTotMax  # Again, we can normalize out the concentration since we assume the well mixed case is that the concentration is the same everywhere
+    # Same as above
+    pMax = dV/mTotMax
     e = np.exp(-np.sum(p*np.log(p)))*np.mean(dV)
     eMax = np.exp(-np.sum(np.log(pMax)*pMax))*np.mean(dV)
     return e, e/eMax
 
 
-def centerPointEstimation(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
+def centerPointEstimation(data, planeWidth=1,
+                          r1=100, r2=100, d=100, useMid=True):
     """Given a dataset, should give the estimated centerpoint using the
     point with the lowest velocity in the middle (z=50) plane of the channel.
     """
-    xGap, yGap = pillarGapCalculation(r1, r2, d,False)  # Calculate the exact space between the pillars
+    # Calculate the exact space between the pillars
+    xGap, yGap = pillarGapCalculation(r1, r2, d, False)
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
-    data = subSelectData(data, xRange=xGap, yRange=yGap, zRange=[10,90])
+    data = subSelectData(data, xRange=xGap, yRange=yGap, zRange=[10, 90])
     if useMid:
-        midPlane = subSelectData(data, zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
+        midPlane = subSelectData(data,
+                                 zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
         if midPlane.empty:
             planeWidthAdjust = planeWidth
             while midPlane.empty:
                 planeWidthAdjust += planeWidth
                 print("Plane width too small, incrementing planeWidth")
-                midPlane = subSelectData(data, zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
+                midPlane = subSelectData(data,
+                                         zRange=[50-planeWidthAdjust*0.5,
+                                                 50+planeWidthAdjust*0.5])
                 if planeWidthAdjust >= 10*planeWidth:
                     print('WARNING: Planewidth too large, writing null')
                     return None
@@ -344,7 +369,7 @@ def centerPointEstimation(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True
         centerPointRow = midPlane.loc[midPlane.velMag == minU, :]
     else:
         minU = data.velMag.min()
-        centerPointRow = data.loc[data.velMag==minU,:]
+        centerPointRow = data.loc[data.velMag == minU, :]
     centerCoords = [float(centerPointRow.x.values),
                     float(centerPointRow.y.values),
                     float(centerPointRow.z.values)]
@@ -356,7 +381,8 @@ def estimateRecircFlux(recircData, centerCoords, recircVol, planeWidth=1):
     and the center coordinates for that zone, calculates the recirculation
     flux through the zone by estimating the flux that cuts through the
     centerplane """
-    recircPlane = subSelectData(recircData, xRange=[centerCoords[0]-planeWidth*0.5,
+    recircPlane = subSelectData(recircData, xRange=[
+                                centerCoords[0]-planeWidth*0.5,
                                 centerCoords[0]+planeWidth*0.5])
     totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(planeWidth*1E-6))
     posRecircPlane = recircPlane.loc[recircPlane.u > 0, :]
@@ -409,15 +435,19 @@ def selectRecircZoneNegVel(data, r1, r2, d, gridSize=1):
     data.drop(data.x >data.xVals)
 
     """
-    xRange, yRange = pillarGapCalculation(r1, r2, d, True)  # Boundaries 2 and 3 covered by this
+    # Boundaries 2 and 3 covered by this
+    xRange, yRange = pillarGapCalculation(r1, r2, d, True)
     data = subSelectData(data, xRange=xRange, yRange=yRange)
-    data = subSelectData(data, xRange=[250, 500])  # Covers middle line in 1)
+    # Covers middle line in 1)
+    data = subSelectData(data, xRange=[250, 500])
     bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
-    data['yBin'] = pd.cut(data.y, bins, labels=bins[:-1]) # bin data, label is left end
+    # bin data, label is left end
+    data['yBin'] = pd.cut(data.y, bins, labels=bins[:-1])
     for leftBin in bins[:-1]:
-        subData = data.loc[data.yBin==leftBin,:] # Subselect the "grid" block
+        # Subselect the "grid" block
+        subData = data.loc[data.yBin == leftBin, :]
         if not (subData.v>0).any():
-            data = data.loc[data.yBin!=leftBin, :] # If data has no opposing velocities, remove and move on
+            data = data.loc[data.yBin!=leftBin, :]  # If data has no opposing velocities, remove and move on
             continue
         # Apparently upgrading to 1.2.4 pandas broke this. FUN FUN FUN
         # Seems like that there are "missing labels" in the subdataarg1, arg2
@@ -563,7 +593,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 #workingDir = "TestData"
 caseName = "TwoPillar_v6"
 # caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
-caseExt = "\.chemdata.txt$"
+caseExt = r"\.chemdata.txt$"
 # caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
@@ -579,7 +609,7 @@ plotData = False
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
-useMid = True # Use middle plane for calculating recirc center?
+useMid = True  # Use middle plane for calculating recirc center?
 regionName = 'Pillar Gap Inclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
