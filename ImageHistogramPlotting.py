@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import scipy.stats as stats
 import seaborn as sns
+from itertools import cycle
 
 """ TODO: THIS NEEDS TO LOAD THE METADATA AS WELL
 THAT WAS GENERATED FOR EACH CASE
@@ -155,7 +156,7 @@ def genGaussian(mu, variance):
     return x, y
 
 
-def metaPlot(metaData, prop='q'):
+def metaPlot(metaData, prop='q', marker='o'):
     # Change me to work with the image histograms and metadata
     if prop == 'Re':
         metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 500E-3)
@@ -168,22 +169,22 @@ def metaPlot(metaData, prop='q'):
         meanData = subData.groupby(prop).mean()
         stdData = subData.groupby(prop).std()
         ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                     yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
+                     yerr=subData.loc[:, 'PDFstd'], ls='none', marker=marker,
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                 ls='none', marker='o', label=val)
+                 ls='none', marker=marker, label=val)
         maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
         ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
-                     yerr=stdData.loc[:,'PDFstd'], ls='none', marker='o',
+                     yerr=stdData.loc[:,'PDFstd'], ls='none', marker=marker,
                      capsize=2, label= "{} max val q: {}".format(val,float(maxLoc)))
         maxVal = meanData.PDFmean.max()
         ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
-                     yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker='o',
+                     yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker=marker,
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
-        # maxVal = meanData.meanInt.max()
-        # ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
-        #              yerr=meanData.stdInt/maxVal, ls='none',
-        #              marker='o', capsize=2, label = val)
+        maxVal = meanData.meanInt.max()
+        ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
+                     yerr=meanData.stdInt/maxVal, ls='none',
+                     marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -204,6 +205,8 @@ def metaPlot(metaData, prop='q'):
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
     ax8.set_title('Max normalized - check meaning of max val')
+    ax8.set_ylim([0.3, 1.1])
+    ax8.set_xlim([-1, 105])
     return
 
 sns.set_context('talk')
@@ -214,11 +217,10 @@ window = 10
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-# workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
-# workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
 # workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
 workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(workingDirA)
 caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
@@ -240,17 +242,21 @@ f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normaliz
 f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
-dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+# dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 # dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
-# metaData = dataSetPlot(dataSetB, metaData, dB, smooth=window)
-# metaData = dataSetPlot(dataSetC, metaData, dC, smooth=window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+# metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
+# metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
+metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 # metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
-metaPlot(metaDataA, prop='ReP')
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+markerCycle = cycle(['o', '^', 's', 'd', 'D'])
+# metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
 
 
 ax1.set_title("PDFs")
@@ -271,6 +277,7 @@ sns.despine(f3)
 sns.despine(f4)
 sns.despine(f5)
 sns.despine(f6)
+sns.despine(f8)
 
 # ax3.set_yscale('log')
 # plt.xscale('log')

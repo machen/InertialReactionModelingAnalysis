@@ -5,6 +5,7 @@ import matplotlib.pyplot as plt
 import os
 import scipy.stats as stats
 import seaborn as sns
+from itertools import cycle
 
 """Purpose of script is to open and plot generated histogram files, skipping
 the analysis, but instead just putting out the images.
@@ -183,23 +184,23 @@ def semilogYFitting(data, xPropName, yPropName, xRange):
     return fit, xData, yEst
 
 
-def metaPlot(metaData, prop='Re', flowCond='NS', label=None):
+def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     if not label:
         label = flowCond+" "+prop
     subData = metaData.loc[metaData.loc[:, 'Flow'] == flowCond, :]
-    subData.sort_values(by=prop)
+    subData.sort_values(by=prop, inplace=True)
     ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'PDFmean'],
-                 yerr=subData.loc[:, 'PDFstd'], ls='none', marker='o',
+                 yerr=subData.loc[:, 'PDFstd'], ls='-', marker=marker,
                  capsize=2, label=label)
     ax4.set_xlabel(prop)
     ax6.plot(subData.loc[:, 'RePil'], subData.loc[:, prop],
-             ls='none', marker='o',
+             ls='-', marker=marker,
              label=label)
     ax6.set_ylabel(prop)
     ax6.set_xlabel('Re')
     maxVal = subData.loc[:, 'PDFmean'].max()
     ax7.plot(subData.loc[:, prop], subData.loc[:, 'PDFmean']/maxVal,
-                 ls='none', marker='o',
+                 ls='-', marker=marker,
                  label=label+' Max val: {}'.format(maxVal))
     ax7.set_xlabel(prop)
     ax7.set_ylabel('Max normalized')
@@ -212,13 +213,13 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None):
     ax8.set_xlim([-1, 105])
     maxVal = subData.loc[:, 'volWeightedMean'].max()
     ax8.plot(subData.loc[:, prop], subData.loc[:, 'volWeightedMean']/maxVal,
-                 ls='none', marker='o',
+                 ls='-', marker=marker,
                  label=label+' Max val: {}'.format(maxVal))
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Volume Weighted Mean Reaction Rate Normalized to Max (.)')
     ax8.set_title('Watch out for what the max means')
     ax8.legend(loc=0)
-    ax8.set_ylim([-0.1, 1.1])
+    ax8.set_ylim([0.3, 1.1])
     ax8.set_xlim([-1, 105])
     return
 
@@ -263,20 +264,21 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 # fitRange = np.array([65, 85])
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
+# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Top gap pillar inclusive-constC-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
 # caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
 # labelA = "Pillar Inclusive"
-labelA = "100 um pillar gap"
+labelA = "TCPO+Product"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\Pillar Gap Exclusive-dCdt-100 linear bins\\"
+workingDirB = "..\\Bottom gap pillar inclusive-h2o2-100 linear bins\\"
 caseNameB = "TwoPillar_v6_ExF_c3_k2000_"
-caseExtB = "d25_Re.*\.chemdata_histogram\.csv"
-labelB = "25 um pillar gap"
+caseExtB = "d100_Re.*\.chemdata_histogram\.csv"
+labelB = "TCPO"
 
 
 # Plot for everything
@@ -297,8 +299,9 @@ metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
-metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop)
-metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop)
+markerCycle = cycle(['o', '^', 's', 'd', 'D'])
+metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
