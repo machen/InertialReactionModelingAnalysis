@@ -82,22 +82,21 @@ def loadMetaData(metaFile, caseExt):
 
 
 def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
-    os.chdir(workingDir)
     filePat = re.compile(caseName+r".*"+caseExt)
-    fileList = os.listdir('.')
+    fileList = os.listdir(workingDir)
     dataSets = {}
     for fileName in fileList:
         if re.match(filePat, fileName):
             print(fileName)
             # params = extractParams(fileName)
-            data = pd.read_csv(fileName, header=0)
+            data = pd.read_csv(workingDir+fileName, header=0)
             if smooth:
                 # Smooth data with rolling average of size window
                 data = dataSmoothing(data, window)
                 # Drop NaNs
                 data = data.dropna()
             dataSets[os.path.splitext(fileName)[0]] = data
-    metaData = loadMetaData('_meta.csv', caseExt)
+    metaData = loadMetaData(workingDir+'_meta.csv', caseExt)
     return dataSets, metaData
 
 
@@ -216,20 +215,22 @@ window = 10
 
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
-workingDirA = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
-workingDirC = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirD = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-19-Chemilum-25um\\2PD3_A4\\Raw Image Pillar Gap 50 bins\\"
-workingDirE = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
-os.chdir(workingDirA)
+mainDir = "C:\\Users\\mache\\Google Drive Workspace\\Inertial flow study\\Experiments\\"
+
+workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "2022-1-6-Chemilum\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirE = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
+os.chdir(mainDir)
 caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
 dA = "2021-10-20 Device A3-100um"
-dB = "2021-10-20 Device A2-100um"
+dB = "2022-1-15 100um"
 dC = "2021-10-05 100 um"
-dD = "2021-11-19 25 um"
+dD = "2022-1-6 100 um"
 dE = "2021-11-18 25 um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -243,20 +244,20 @@ f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIn
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 # dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-# dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
-# metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
-metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-# metaData = dataSetPlot(dataSetD, metaData, dD, smooth=window)
-metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
+# metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
+# metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
+# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
 # metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))
 
 
 ax1.set_title("PDFs")
