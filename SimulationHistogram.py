@@ -52,7 +52,6 @@ It's easy enough to pull the total flux to see what the rough error is.
 
 
 def pillarGapCalculation(r1, r2, d, includePillar=True):
-    #TODO: Make new optional argument to take full gap, or top or bottom half
     """ Use this to properly calculate the true "pillar gap" area depending on
     the available parameters of the model.
     This calculation will directly assume:
@@ -589,9 +588,10 @@ def plotPoints(ax, coords):
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 # workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
+workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
 # caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
@@ -609,7 +609,7 @@ plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 250]
-dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
+dataRegionY = [-300, -200]  # [-5000, 250] # Pillar center should be at -400
 useMid = True  # Use middle plane for calculating recirc center?
 regionName = 'Bottom gap pillar exclusive'
 nBins = 100
@@ -617,7 +617,7 @@ logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
 binProp = 'h2o2'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
-autoRegion = True
+autoRegion = False
 includePillar = False
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
