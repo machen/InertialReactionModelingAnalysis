@@ -52,6 +52,7 @@ It's easy enough to pull the total flux to see what the rough error is.
 
 
 def pillarGapCalculation(r1, r2, d, includePillar=True):
+    #TODO: Make new optional argument to take full gap, or top or bottom half
     """ Use this to properly calculate the true "pillar gap" area depending on
     the available parameters of the model.
     This calculation will directly assume:

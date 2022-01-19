@@ -255,7 +255,7 @@ def runDataSet(workingDir, caseName, caseExt, label, smooth, window, metaData, p
 
 
 quickVol = {0.1: 1.48E-13, 1: 6.02E-14, 10: 5.85E-14, 50: 4.58E-13}
-
+#TODO: Change this move to the base directory containing the data, then operate out of that folder
 window = 5
 smooth = False
 fitRange = np.array([85, 90])
@@ -266,6 +266,7 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
 workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom gap pillar inclusive-constC-100 linear bins\\"
+workingDirA = "..\\Working Data\\ChemData\\Bottom gap pillar exclusive-constC-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
@@ -279,6 +280,11 @@ workingDirB = "..\\Bottom gap pillar inclusive-tcpo-100 linear bins\\"
 caseNameB = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtB = "d100_Re.*\.chemdata_histogram\.csv"
 labelB = "TCPO"
+
+workingDirC = "..\\Bottom gap pillar inclusive-h2o2-100 linear bins\\"
+caseNameC = "TwoPillar_v6_ExF_c3_k2000_"
+caseExtC = "d100_Re.*\.chemdata_histogram\.csv"
+labelC = "H2O2"
 
 
 # Plot for everything
@@ -299,14 +305,18 @@ metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
+dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
+metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
+
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
 metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
     metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
-
+    metaPlot(metaDataC, prop=prop2, flowCond='NS', label=labelC+' '+prop2)
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
 ax3.set_title("Differentiated PDF")
