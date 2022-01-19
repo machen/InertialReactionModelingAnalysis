@@ -584,7 +584,7 @@ def plotPoints(ax, coords):
     ax.scatter(coords[0], coords[1], coords[2], color='r')
     return
 
-# Read through files in a directory
+"""SCRIPT INPUTS"""
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
@@ -607,17 +607,17 @@ testMode = False  # Set to true to use only one file, which you have to specify
 plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
-dataRegionX = [150, 350]
+dataRegionX = [150, 250]
 dataRegionY = [-550, -250]  # [-5000, 250] # Pillar center should be at -400
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'Pillar Gap Inclusive'
+regionName = 'Bottom gap pillar exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'h2o2'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
-includePillar = True
+includePillar = False
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
@@ -625,7 +625,8 @@ metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
 diff = 3E-9  # m2/s, H2O2
 nu = 4.3E-7  #m^2/s Acetnonitrile kinematic viscosity
 
-# Scipt start
+
+""" Script start """
 
 os.chdir(workingDir)
 filePat = re.compile(caseName+'.*?'+caseExt)
@@ -722,7 +723,7 @@ for fileName in fileList:
             # Calculate stats of mean and std dev based solely on prop weighted by vol
             params['volWeightedMean'] = np.average(data.loc[:, binProp].values, weights=elementVol)
             var = data.loc[:,binProp].values-params['volWeightedMean']
-            params['volWeightedStd']  = np.sqrt(np.average(var**2, weights = elementVol))
+            params['volWeightedStd']  = np.sqrt(np.average(var**2, weights=elementVol))
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,

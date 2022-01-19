@@ -120,14 +120,17 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2021-04-29-Chemilum-100um\\ExptImages\\SplitImgs\\"
+# workingDir = "G:\\My Drive\\Postdoctoral work\\Inertial flow study\\Experiments\\2022-1-6-Chemilum\\100 um Gap\\SplitImgs\\"
+workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 os.chdir(workingDir)
 filePat = re.compile('.*\.tif')
 bins = 50
-xRange = [718, 1042]
-yRange = [1000, 1160]
+# Remember that this is supposed to be the frame of the image
+xRange = [944, 1100]
+yRange = [860, 1200]
 maxNorm = False
-maxVal = 1006  # Set to none to use max observed in image. Value will depend on specific days mix
+# Set to none to use max observed in image, otherwise use well mixed value
+maxVal = 1282
 regionName = "Raw Image Pillar Gap"
 
 fileList = os.listdir()
