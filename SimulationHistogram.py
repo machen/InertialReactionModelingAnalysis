@@ -657,7 +657,7 @@ for fileName in fileList:
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         if autoRegion:
             dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],includePillar=includePillar)
-            data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         if testMode & plotData:
             ax1 = plotDataSet(data, "raw")
         if recircDefinedRegion:
