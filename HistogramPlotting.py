@@ -80,7 +80,7 @@ def extractParams(fileName, metaData):
         reVal = float(re.search(rePat, fileName).group(1))
         cVal = float(re.search(cPat, fileName).group(1))
         kVal = float(re.search(kPat, fileName).group(1))
-        vel = reVal*1.6E-6/500E-6  # Viscosity, and 500 um channel width
+        vel = reVal*4.3E-7/500E-6  # Viscosity, and 500 um channel width
         daAdv = kVal*cVal/1000*2E-6*r1Val/vel  # Convert r1 to microns and give it as a diameter
         daDiff = kVal*cVal/1000*(2E-6*r1Val)**2/3E-9  # Assuming TCPO diff. coeff.
         pe = vel*r1Val*2E-6/3E-9
