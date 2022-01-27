@@ -615,7 +615,7 @@ regionName = 'Pillar Gap Pillar Exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dC/dt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
 includePillar = False

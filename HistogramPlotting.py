@@ -267,14 +267,14 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom gap pillar inclusive-constC-100 linear bins\\"
-workingDirA = "..\\Working Data\\ChemData\\Bottom gap pillar exclusive-constC-100 linear bins\\"
+workingDirA = "..\\Working Data\\ChemData\\Pillar gap Pillar Exclusive-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
-# caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
+caseExtA = "_Re.*\.chemdata_histogram\.csv"
 # labelA = "Pillar Inclusive"
-labelA = "TCPO+Product"
+labelA = "dCdt"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
 workingDirB = "..\\Bottom gap pillar exclusive-tcpo-100 linear bins\\"
@@ -303,21 +303,21 @@ metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', '
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 
-dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
+# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+# metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
-dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
-metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
+# dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
+# metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
 
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
-metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
-metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
+# metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
+# metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
-    metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
-    metaPlot(metaDataC, prop=prop2, flowCond='NS', label=labelC+' '+prop2)
+    # metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
+    # metaPlot(metaDataC, prop=prop2, flowCond='NS', label=labelC+' '+prop2)
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
 ax3.set_title("Differentiated PDF")

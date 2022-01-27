@@ -221,7 +221,7 @@ mainDir = "C:\\Users\\mache\\Google Drive Workspace\\Inertial flow study\\Experi
 workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
 workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
 workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirD = "2022-1-6-Chemilum\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Image Pillar Gap 50 bins\\"
 workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
 os.chdir(mainDir)
 caseNameA = ''
@@ -231,7 +231,7 @@ caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNE
 dA = "2021-10-20 Device A3-100um"
 dB = "2022-1-15 100um"
 dC = "2021-10-05 100 um"
-dD = "2022-1-6 100 um"
+dD = "2021-11-18 25 um"
 dE = "2022-10-20 100 um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
