@@ -608,16 +608,16 @@ testMode = False  # Set to true to use only one file, which you have to specify
 plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
-dataRegionX = [150, 250]
-dataRegionY = [-300, -200]  # [-5000, 250] # Pillar center should be at -400
+dataRegionX = [150, 350]
+dataRegionY = [-5000, 250] # Pillar center should be at -400
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'Bottom gap pillar exclusive'
+regionName = 'Pillar Gap Pillar Exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'h2o2'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'dC/dt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
-autoRegion = False
+autoRegion = True
 includePillar = False
 maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',

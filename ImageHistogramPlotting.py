@@ -7,8 +7,9 @@ import scipy.stats as stats
 import seaborn as sns
 from itertools import cycle
 
-""" TODO: THIS NEEDS TO LOAD THE METADATA AS WELL
-THAT WAS GENERATED FOR EACH CASE
+"""
+TODO: Data that is collated should be output as a csv (or at least have a flag to output as a CSV)
+TODO: Implement dataset method which would allow for sweeping an arbitrary number of folders
 
 """
 

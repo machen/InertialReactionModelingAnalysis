@@ -10,6 +10,7 @@ from itertools import cycle
 """Purpose of script is to open and plot generated histogram files, skipping
 the analysis, but instead just putting out the images.
 
+TODO: Data that is collated should be output as a csv (or at least have a flag to output as a CSV)
 
 CURRENTLY SWEEPS A WORKING FOLDER, TURN INTO A FUNCTION
 
