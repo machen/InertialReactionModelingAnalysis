@@ -6,7 +6,7 @@ import re
 import seaborn as sns
 
 
-"""TODO: Convert script inputs into user prompts, see input(). Will need to 
+"""TODO: Convert script inputs into user prompts, see input(). Will need to
 set up to take default values as well."""
 
 
@@ -61,7 +61,7 @@ def extractParams(fileName, nPil=2):
 
 def pillarGapCalculation(r1, r2, d, includePillar=True):
     """ Use this to properly calculate the true "pillar gap" area depending on
-    the available parameters of the model. 
+    the available parameters of the model.
     This calculation will directly assume:
     1) That the edge of the most upstream pillar is at y = 0
     2) That there are only two pillars
@@ -80,7 +80,7 @@ def pillarGapCalculation(r1, r2, d, includePillar=True):
     if includePillar:
         # Includes the pillar itself
         # allowing the box to cover volume near the pillar far away from the centerline
-        y1 = yPil+d/2+r1  
+        y1 = yPil+d/2+r1
         y2 = yPil-d/2-r2
     else:
         y1 = yPil+d/2
@@ -276,7 +276,7 @@ def generateMeanPlots(metaData, logVal, dList=None):
         ax3.plot(x, yTime, ls='None', marker='o', label=float(d))
         # ax3.plot(x, subData.StraightResTime, marker='o', ls='None',
         #          label='Resdience time without recirculation, d = {}'.format(float(d)))
-        
+
         ax4.plot(x, yLen, ls='None', marker='o', label=float(d))
 
     ax3.plot([0, 100], [1/3E-3/2000, 1/3E-3/2000], ls='--',
@@ -314,12 +314,12 @@ def plotPDF():
 """SCRIPT INPUTS"""
 
 
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\PillarGap\\"
+workingDir = "..\\Working Data\\RecircZoneStreamlines\\PillarGap\\"
 caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
-calculatePDFs = False  # Flag to toggle calculation of PDFs.
+calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 dList = [100, 25]
 
