@@ -117,7 +117,7 @@ def groupStreamlines(data):
     dist = np.append(dist, 0)  # The last point will contribute no travel time, also aligning the data
     data['dist'] = dist  # Attach distance to a given coordinate (note distance is in m)
     # ID indices where the streamline number changes, set dist to 0 at those points
-    data['travelTime'] = dist/data.velMag  # Calculate travel time
+    data['travelTime'] = dist/data.velMag  # Calculate travel time along single streamline segment
     sIDGroups = data.groupby(data.sID)  # Group everything by streamline ID
     return sIDGroups
 
@@ -139,7 +139,7 @@ def calcPDFStats(bins, freq):
     rightBin = bins[1:]
     leftBin = bins[:-1]
     binMean = (leftBin+rightBin)/2
-    dx = rightBin
+    dx = rightBin-leftBin
     mean = np.sum(binMean*freq*dx)
     variance = np.sum(freq*(binMean-mean)**2*dx)
     return mean, variance
@@ -314,11 +314,11 @@ def plotPDF():
 """SCRIPT INPUTS"""
 
 
-workingDir = "..\\Working Data\\RecircZoneStreamlines\\PillarGap\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\PillarGap\\"
 caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
-nBins = 100  # Number of bins to use for PDF
+nBins = 2000  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 dList = [100, 25]
