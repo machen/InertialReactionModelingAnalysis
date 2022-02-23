@@ -185,6 +185,9 @@ def metaPlot(metaData, prop='q', marker='o'):
         ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
                      yerr=meanData.stdInt/maxVal, ls='none',
                      marker=marker, capsize=2, label=val)
+        ax9.errorbar(meanData.index, meanData.meanInt,
+                     yerr=meanData.stdInt, ls='none',
+                     marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
     ax4.legend(loc=0)
@@ -207,6 +210,11 @@ def metaPlot(metaData, prop='q', marker='o'):
     ax8.set_title('Max normalized - check meaning of max val')
     ax8.set_ylim([0.3, 1.1])
     ax8.set_xlim([-1, 105])
+    ax9.legend(loc=0)
+    ax9.set_xlabel(prop)
+    ax9.set_ylabel('Mean Intensity')
+    ax9.set_title('Mean intensities')
+    ax9.set_xlim([-1, 105])
     return
 
 sns.set_context('talk')
@@ -218,21 +226,41 @@ window = 10
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
+# workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+# workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
 # workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+
+# workingDirA = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 1 50 bins\\"
+# workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
+# workingDirC = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 5 50 bins\\"
+
+workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirE = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirF = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirG = "2021-05-19-Chemilum-25um\\ExptImages\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirH = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
+
 os.chdir(mainDir)
 caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "2021-10-20 Device A3-100um"
-dB = "2022-1-15 100um"
-dC = "2021-10-05 100 um"
-dD = "2022-2-1 100 um"
-dE = "2022-10-20 100 um"
+dA = "1/15 100 um"
+dB = "2/9 25 um"
+dC = "10/20 100 um"
+dD = "2/1 100 um"
+dE = "11/18 25 um"
+dF = "10/5 100 um"
+dG = "5/19 25 um"
+dH = "1/6 100 um"
+
+# dD = "2022-2-1 100 um"
+# dE = "2022-10-20 100 um"
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -242,24 +270,38 @@ f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
+f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
+dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
+dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
+
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
+metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
+metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
+
+
+
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
 metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
 metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
 metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
 metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataF, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataG, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataH, prop='ReP', marker=next(markerCycle))
 
 
 ax1.set_title("PDFs")
