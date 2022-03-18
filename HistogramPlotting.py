@@ -209,19 +209,25 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax7.set_ylim([-0.1, 1.1])
     ax7.set_xlim([-1, 105])
 
-    ax8.legend(loc=0)
-    ax8.set_ylim([-0.1, 1.1])
-    ax8.set_xlim([-1, 105])
+
     maxVal = subData.loc[:, 'volWeightedMean'].max()
     ax8.plot(subData.loc[:, prop], subData.loc[:, 'volWeightedMean']/maxVal,
                  ls='-', marker=marker,
                  label=label+' Max val: {}'.format(maxVal))
     ax8.set_xlabel(prop)
-    ax8.set_ylabel('Volume Weighted Mean Reaction Rate Normalized to Max (.)')
+    ax8.set_ylabel('Volume Weighted Mean Normalized to Max (.)')
     ax8.set_title('Watch out for what the max means')
     ax8.legend(loc=0)
     ax8.set_ylim([0.3, 1.1])
     ax8.set_xlim([-1, 105])
+
+
+    ax9.plot(subData.loc[:, prop], subData.loc[:, 'volWeightedMean'],
+             ls='-', marker=marker, label=label)
+    ax9.set_xlabel(prop)
+    ax9.set_ylabel('Volume Weighted Mean (.)')
+    ax9.legend(loc=0)
+    ax9.set_xlim([-1, 105])
     return
 
 
@@ -266,21 +272,21 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar Gap Inclusive-dCdt-100 linear bins\\"
-# workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom gap pillar inclusive-constC-100 linear bins\\"
-workingDirA = "..\\Working Data\\ChemData\\Pillar gap Pillar Exclusive-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom gap pillar exclusive-constC-100 linear bins\\"
+# workingDirA = "..\\Working Data\\ChemData\\Pillar gap Pillar Exclusive-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
-caseExtA = "_Re.*\.chemdata_histogram\.csv"
+# caseExtA = "_Re.*\.chemdata_histogram\.csv"
 # labelA = "Pillar Inclusive"
-labelA = "dCdt"
+labelA = "100 um"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
-workingDirB = "..\\Bottom gap pillar exclusive-tcpo-100 linear bins\\"
+workingDirB = "..\\Bottom gap pillar exclusive-constC-100 linear bins\\"
 caseNameB = "TwoPillar_v6_ExF_c3_k2000_"
-caseExtB = "d100_Re.*\.chemdata_histogram\.csv"
-labelB = "TCPO"
+caseExtB = "d25_Re.*\.chemdata_histogram\.csv"
+labelB = "25 um"
 
 workingDirC = "..\\Bottom gap pillar exclusive-h2o2-100 linear bins\\"
 caseNameC = "TwoPillar_v6_ExF_c3_k2000_"
@@ -296,22 +302,23 @@ f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12,10))
+f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 
 
 metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
 dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 
-# dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-# metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
+dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
+metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 
 # dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
 # metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
 
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
-# metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
 # metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
 
 if prop2:
@@ -349,6 +356,7 @@ sns.despine(f5)
 sns.despine(f6)
 sns.despine(f7)
 sns.despine(f8)
+sns.despine(f9)
 
 plt.ion()
 plt.show()
