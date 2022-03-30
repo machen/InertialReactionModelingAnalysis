@@ -186,10 +186,10 @@ def metaPlot(metaData, prop='q', marker='o'):
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
         maxVal = meanData.meanInt.max()
         ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
-                     yerr=meanData.stdInt/maxVal, ls='none',
+                     yerr=stdData.meanInt/maxVal, ls='none',
                      marker=marker, capsize=2, label=val)
         ax9.errorbar(meanData.index, meanData.meanInt,
-                     yerr=meanData.stdInt, ls='none',
+                     yerr=stdData.meanInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
     ax4.set_ylabel('Mean of PDF')
@@ -206,18 +206,18 @@ def metaPlot(metaData, prop='q', marker='o'):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([-0.1, 1.1])
-    ax7.set_xlim([-1, 105])
+    ax7.set_xlim([-1, 150])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
     ax8.set_title('Max normalized - check meaning of max val')
     ax8.set_ylim([0.3, 1.1])
-    ax8.set_xlim([-1, 105])
+    ax8.set_xlim([-1, 150])
     ax9.legend(loc=0)
     ax9.set_xlabel(prop)
     ax9.set_ylabel('Mean Intensity')
     ax9.set_title('Mean intensities')
-    ax9.set_xlim([-1, 105])
+    ax9.set_xlim([-1, 150])
     return
 
 sns.set_context('talk')
@@ -239,11 +239,14 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
 # workingDirC = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 5 50 bins\\"
 
-workingDirA = "2022-3-10-Chemilum-MP\\MultipillarD2\\Raw Aligned Image Pore 3 50 bins\\"
-workingDirB = "2022-3-10-Chemilum-MP\\MultipillarD2\\Raw Aligned Image Pore 12 50 bins\\"
-workingDirC = "2022-3-10-Chemilum-MP\\MultipillarD2\\Raw Aligned Image 1 Whole Image 50 bins\\"
-workingDirD = "2022-3-10-Chemilum-MP\\MultipillarD2\\Raw Aligned Image 3 Whole Image 50 bins\\"
-# workingDirE = "2022-3-10-Chemilum-MP\\MultipillarD2\\Raw Aligned Image 5 Whole Image 50 bins\\"
+workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
+workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
+workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 16 50 bins\\"
+workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 2 Channel 50 bins\\"
+workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 3 Channel 50 bins\\"
+workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 5 Channel 50 bins\\"
+
+# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
 # workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
@@ -259,12 +262,12 @@ caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "3/10/2022 Pore 3"
-dB = "3/10/2022 Pore 12"
-dC = "3/10/2022 Image 1"
-dD = "3/10/2022 Image 3"
-dE = "3/10/2022 5"
-dF = "10/5 100 um"
+dA = "3/22/2022 Pore 3"
+dB = "3/22/2022 Pore 10"
+dC = "3/22/2022 Pore 16"
+dD = "3/22/2022 Image 2"
+dE = "3/22/2022 Image 3"
+dF = "3/22/2022 Image 5"
 dG = "5/19 25 um"
 dH = "1/6 100 um"
 
@@ -282,31 +285,31 @@ f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIn
 f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
-dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
+# dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-# dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
 
-metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
-metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
-metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
+# metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
+# metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
+# metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
-# metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
-metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
 metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataF, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))
+metaPlot(metaDataF, prop='ReP', marker=next(markerCycle))
 # metaPlot(metaDataG, prop='ReP', marker=next(markerCycle))
 # metaPlot(metaDataH, prop='ReP', marker=next(markerCycle))
 
@@ -329,7 +332,9 @@ sns.despine(f3)
 sns.despine(f4)
 sns.despine(f5)
 sns.despine(f6)
+sns.despine(f7)
 sns.despine(f8)
+sns.despine(f9)
 
 # ax3.set_yscale('log')
 # plt.xscale('log')
