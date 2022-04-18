@@ -18,7 +18,7 @@ os.chdir(baseDir)
 
 # This should be a registered tile configuration produced by stitching a brightfield image.
 tempLoc = "Stitching\\TileConfigurationTemplate.txt"
-with open(tempLoc,'r') as tempFile:
+with open(tempLoc, 'r') as tempFile:
     tempStr = tempFile.read()
     template = Template(tempStr)
 

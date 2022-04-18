@@ -588,10 +588,10 @@ def plotPoints(ax, coords):
 
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 # workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
-workingDir = "..\\Working Data\\ChemData\\RawData\\"
+# workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
 # caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
