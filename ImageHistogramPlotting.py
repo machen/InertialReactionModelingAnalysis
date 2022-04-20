@@ -218,7 +218,11 @@ def metaPlot(metaData, prop='q', marker='o'):
     ax9.set_ylabel('Mean Intensity')
     ax9.set_title('Mean intensities')
     ax9.set_xlim([-1, 105])
-    return
+    meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
+           'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
+    out = pd.DataFrame(meanDict)
+    out.loc[:,'ID'] = val
+    return out
 
 sns.set_context('talk')
 plt.rcParams['svg.fonttype'] = 'none'
@@ -229,11 +233,11 @@ window = 10
 
 mainDir = "..\\..\\Experiments\\"
 
-# workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-# workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
-# workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
+workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
 
 # workingDirA = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 1 50 bins\\"
 # workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
@@ -245,9 +249,10 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 2 Channel 50 bins\\"
 # workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 3 Channel 50 bins\\"
 # workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 5 Channel 50 bins\\"
-workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Whole Channel 50 bins\\"
-workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore Throats 50 bins\\"
-workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
+# workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Whole Channel 50 bins\\"
+# workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore Throats 50 bins\\"
+# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
+# workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
@@ -268,7 +273,7 @@ caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNE
 dA = "Center pore throats"
 dB = "Pore throats"
 dC = "Whole Channel"
-dD = "3/22/2022 Image 2"
+dD = "Pore throat 3"
 dE = "11/18 Experiment"
 dF = "3/22/2022 Image 5"
 dG = "3/22/2022 Whole Channel"
@@ -286,13 +291,14 @@ f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
+f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12,10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
@@ -300,21 +306,32 @@ dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, w
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-# metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
-metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))
-metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataF, prop='ReP', marker=next(markerCycle))
+out = metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
+out = pd.concat([out, metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))])
+out = pd.concat([out, metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))])
+out = pd.concat([out, metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))])
+out = pd.concat([out, metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))])
+
 # metaPlot(metaDataG, prop='ReP', marker=next(markerCycle))
 # metaPlot(metaDataH, prop='ReP', marker=next(markerCycle))
 
+out = out.dropna()
+out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 500E-3, 100E-3, 200E-3)
+traceAvg = out.dropna().groupby('q').mean()
+traceStd = out.dropna().groupby('q').std()
+ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt,color='k',marker='o')
+ax10.set_title('Averaged Traces')
+ax10.set_xlabel('Reynolds Number')
+ax10.set_ylabel('Normalized Intensity (.)')
+ax10.set_ylim([0.3, 1.1])
+ax10.set_xlim([-1, 105])
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
