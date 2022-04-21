@@ -61,7 +61,7 @@ class DataSet:
 
 
 
-def flowRateConversion(q, width, height, charLen, nu=0.45):
+def flowRateConversion(q, width, height, charLen, nu=0.43):
     # Base nu is in mm2/s, so you should report this in mm and seconds as units
     reyn = q/width/height*charLen/nu
     return reyn
@@ -162,9 +162,9 @@ def genGaussian(mu, variance):
 def metaPlot(metaData, prop='q', marker='o'):
     # Change me to work with the image histograms and metadata
     if prop == 'Re':
-        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 500E-3)
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 250E-3)
     elif prop == 'ReP':
-        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 500E-3, 100E-3, 200E-3)
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 200E-3)
     metaData.sort_values(by=prop)
     traceList = metaData.d.unique()
     for val in traceList:
@@ -205,19 +205,19 @@ def metaPlot(metaData, prop='q', marker='o'):
     ax7.set_ylabel('Mean of PDF')
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
-    ax7.set_ylim([-0.1, 1.1])
-    ax7.set_xlim([-1, 105])
+    ax7.set_ylim([-0.1, 1.05])
+    ax7.set_xlim([-1, 205])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
     ax8.set_title('Max normalized - check meaning of max val')
-    ax8.set_ylim([0.3, 1.1])
-    ax8.set_xlim([-1, 105])
+    ax8.set_ylim([0.3, 1.05])
+    ax8.set_xlim([-1, 205])
     ax9.legend(loc=0)
     ax9.set_xlabel(prop)
     ax9.set_ylabel('Mean Intensity')
     ax9.set_title('Mean intensities')
-    ax9.set_xlim([-1, 105])
+    ax9.set_xlim([-1, 205])
     meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
            'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
     out = pd.DataFrame(meanDict)
@@ -270,14 +270,14 @@ caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "Center pore throats"
-dB = "Pore throats"
-dC = "Whole Channel"
-dD = "Pore throat 3"
-dE = "11/18 Experiment"
-dF = "3/22/2022 Image 5"
-dG = "3/22/2022 Whole Channel"
-dH = "1/6 100 um"
+dA = "10/20 A3"
+dB = "1/15"
+dC = "10/5"
+dD = "2/1"
+dE = "10/20 A2"
+# dF = "3/22/2022 Image 5"
+# dG = "3/22/2022 Whole Channel"
+# dH = "1/6 100 um"
 
 # dD = "2022-2-1 100 um"
 # dE = "2022-10-20 100 um"
@@ -323,7 +323,7 @@ out = pd.concat([out, metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))]
 # metaPlot(metaDataH, prop='ReP', marker=next(markerCycle))
 
 out = out.dropna()
-out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 500E-3, 100E-3, 200E-3)
+out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 250E-3, 100E-3, 200E-3)
 traceAvg = out.dropna().groupby('q').mean()
 traceStd = out.dropna().groupby('q').std()
 ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt,color='k',marker='o')
@@ -331,7 +331,7 @@ ax10.set_title('Averaged Traces')
 ax10.set_xlabel('Reynolds Number')
 ax10.set_ylabel('Normalized Intensity (.)')
 ax10.set_ylim([0.3, 1.1])
-ax10.set_xlim([-1, 105])
+ax10.set_xlim([-1, 205])
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
