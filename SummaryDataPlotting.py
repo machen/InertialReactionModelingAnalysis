@@ -17,6 +17,7 @@ data.sort_values(by="ReP", inplace=True)
 plt.ion()
 sns.set_context('paper',font_scale=1.25)
 plt.rcParams['font.family'] = 'Cambria'
+plt.rcParams['svg.fonttype'] = 'none'
 
 # Figure 2: Mean dCdt results
 f2, (ax2a, ax2b) = plt.subplots(ncols=1, nrows=2, figsize=(5,10))
@@ -98,5 +99,8 @@ ax10c.plot(subData25.ReP, subData25.scalDisConserv,
           marker="o", ls='none', label="25 um Gap")
 ax10c.set_yscale('log')
 ax10c.set_ylabel('Scalar dissipation rate (mol2/m3/s)')
+
+sns.despine(f2)
+sns.despine(f3)
 
 plt.show()

@@ -159,7 +159,7 @@ def genGaussian(mu, variance):
     return x, y
 
 
-def metaPlot(metaData, prop='q', marker='o'):
+def metaPlot(metaData, prop='q', marker='o', propLim=None):
     # Change me to work with the image histograms and metadata
     if prop == 'Re':
         metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 250E-3)
@@ -169,6 +169,8 @@ def metaPlot(metaData, prop='q', marker='o'):
     traceList = metaData.d.unique()
     for val in traceList:
         subData = metaData.loc[metaData.d == val, :]
+        if propLim:
+            subData = subData.loc[subData.loc[:, prop] < propLim, :]
         meanData = subData.groupby(prop).mean()
         stdData = subData.groupby(prop).std()
         ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'meanInt'],
@@ -176,7 +178,7 @@ def metaPlot(metaData, prop='q', marker='o'):
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'meanInt'],
                  ls='none', marker=marker, label=val)
-        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
+        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), prop].values
         ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
                      yerr=stdData.loc[:,'PDFstd'], ls='none', marker=marker,
                      capsize=2, label= "{} max val q: {}".format(val,float(maxLoc)))
@@ -205,7 +207,7 @@ def metaPlot(metaData, prop='q', marker='o'):
     ax7.set_ylabel('Mean of PDF')
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
-    ax7.set_ylim([-0.1, 1.05])
+    ax7.set_ylim([0.3, 1.05])
     ax7.set_xlim([-1, 205])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
@@ -223,35 +225,36 @@ def metaPlot(metaData, prop='q', marker='o'):
     out = pd.DataFrame(meanDict)
     out.loc[:,'ID'] = val
     return out
-
 sns.set_context('talk')
 plt.rcParams['svg.fonttype'] = 'none'
+# plt.rcParams['font.family'] = 'Cambria'
 smooth = False
 window = 10
-
+prop = 'ReP'
+propLim = 220
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirC = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
-workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
-workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+# workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirB = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
+# workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
 
 # workingDirA = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 1 50 bins\\"
 # workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
 # workingDirC = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 5 50 bins\\"
 
-# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
-# workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
-# workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 16 50 bins\\"
+workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
+workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
+workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 7 50 bins\\"
+workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 12 50 bins\\"
 # workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 2 Channel 50 bins\\"
 # workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 3 Channel 50 bins\\"
 # workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 5 Channel 50 bins\\"
 # workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Whole Channel 50 bins\\"
 # workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore Throats 50 bins\\"
-# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
 # workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
@@ -260,9 +263,9 @@ workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins
 # workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
-# workingDirE = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
+# workingDirA = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirF = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
-# workingDirG = "2021-05-19-Chemilum-25um\\ExptImages\\Raw Aligned Image Pillar Gap 50 bins\\"
+# workingDirC = "2021-05-19-Chemilum-25um\\ExptImages\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirH = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 
 os.chdir(mainDir)
@@ -270,10 +273,10 @@ caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "10/20 A3"
-dB = "1/15"
-dC = "10/5"
-dD = "2/1"
+dA = "Center pores"
+dB = "Pore 3"
+dC = "Pore 7"
+dD = "Pore 12"
 dE = "10/20 A2"
 # dF = "3/22/2022 Image 5"
 # dG = "3/22/2022 Whole Channel"
@@ -291,14 +294,14 @@ f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 f7, ax7 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot for normalizing to max average value
 f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
-f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12,10))
+f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
@@ -307,30 +310,30 @@ metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
 markerCycle = cycle(['o', '^', 's', 'd', 'D'])
-out = metaPlot(metaDataA, prop='ReP', marker=next(markerCycle))
-out = pd.concat([out, metaPlot(metaDataB, prop='ReP', marker=next(markerCycle))])
-out = pd.concat([out, metaPlot(metaDataC, prop='ReP', marker=next(markerCycle))])
-out = pd.concat([out, metaPlot(metaDataD, prop='ReP', marker=next(markerCycle))])
-out = pd.concat([out, metaPlot(metaDataE, prop='ReP', marker=next(markerCycle))])
+out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle))
+out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
 
-# metaPlot(metaDataG, prop='ReP', marker=next(markerCycle))
-# metaPlot(metaDataH, prop='ReP', marker=next(markerCycle))
+# metaPlot(metaDataG, prop=prop, marker=next(markerCycle))
+# metaPlot(metaDataH, prop=prop, marker=next(markerCycle))
 
 out = out.dropna()
 out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 250E-3, 100E-3, 200E-3)
 traceAvg = out.dropna().groupby('q').mean()
 traceStd = out.dropna().groupby('q').std()
-ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt,color='k',marker='o')
+ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt, color='k', marker='o')
 ax10.set_title('Averaged Traces')
 ax10.set_xlabel('Reynolds Number')
 ax10.set_ylabel('Normalized Intensity (.)')
-ax10.set_ylim([0.3, 1.1])
+ax10.set_ylim([0.3, 1.05])
 ax10.set_xlim([-1, 205])
 
 ax1.set_title("PDFs")

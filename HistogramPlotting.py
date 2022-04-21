@@ -206,7 +206,7 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax7.set_xlabel(prop)
     ax7.set_ylabel('Max normalized')
     ax7.set_title('Watch out for what the max means')
-    ax7.set_ylim([-0.1 1.05])
+    ax7.set_ylim([-0.1, 1.05])
     ax7.set_xlim([-1, 205])
 
 
@@ -218,7 +218,7 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax8.set_ylabel('Volume Weighted Mean Normalized to Max (.)')
     ax8.set_title('Watch out for what the max means')
     ax8.legend(loc=0)
-    ax8.set_ylim([0.3, 1.5])
+    ax8.set_ylim([0.3, 1.05])
     ax8.set_xlim([-1, 205])
 
 
