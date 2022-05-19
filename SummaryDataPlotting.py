@@ -39,18 +39,21 @@ ax2a.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
 ax2b.legend()
 ax2b.set_xlabel('Reynolds Number')
 ax2b.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
-ax2a.set_xlim([-1, 205])
+ax2a.set_xlim([-1, 105])
 ax2a.set_ylim([0.3, 1.05])
-ax2b.set_xlim([-1, 205])
+ax2b.set_xlim([-1, 105])
 ax2b.set_ylim([0.3, 1.05])
 
 # Figure 3: MRT and Scalar Dissipation
 f3, (ax3a, ax3b) = plt.subplots(ncols=1, nrows=2, figsize=(5,10))
+tReact = np.log(10)/3E-3/2000  # Hard coded, reaction time scale with 3 mM inlet conc. and assuming limiting reactant behavior
 ax3c = ax3b.twinx()
 ax3a.plot(subData100.ReP, subData100.MRT, marker="o",
           ls='none', label="100 um Gap")
 ax3a.plot(subData25.ReP, subData25.MRT, marker="o",
           ls='none', label="25 um Gap")
+ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[tReact, tReact],
+          ls='--', label="Treact 10% Limiting")
 ax3a.set_xlabel('Reynolds Number')
 ax3a.set_ylabel('Mean residence time (s)')
 ax3a.set_yscale('log')

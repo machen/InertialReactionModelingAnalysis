@@ -128,12 +128,12 @@ os.chdir(workingDir)
 filePat = re.compile('.*(series 4).*\.tif')
 bins = 50
 # Remember that tis is supposed to be the frame of the image
-xRange = [739, 865]
-yRange = [837, 1216]
+xRange = [1572, 1768]
+yRange = [776, 1190]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 1083
-regionName = "Raw Masked Pore 12"
+regionName = "Raw Masked Pore 14"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned

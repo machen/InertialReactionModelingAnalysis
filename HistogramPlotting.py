@@ -41,8 +41,9 @@ class DataSet:
         self.metaData = dataSetPlot(self.dataSet)
 
 
+sns.set_context('poster', font_scale=1.25)
 plt.rcParams['svg.fonttype'] = 'none'
-sns.set_context('talk')
+plt.rcParams['font.family'] = 'Cambria'
 
 
 def importParams(dir='.'):
@@ -93,7 +94,7 @@ def extractParams(fileName, metaData):
         res['Flow'] = 'Stokes'
     else:
         res['Flow'] = 'NS'
-    rePillar = res['Re']*res['r1']*2/250  # Assume 500 um channel width
+    rePillar = res['Re']*res['r1']/250  # Assume 500 um channel width
     res['RePil'] = rePillar
     return res
 
@@ -206,8 +207,8 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax7.set_xlabel(prop)
     ax7.set_ylabel('Max normalized')
     ax7.set_title('Watch out for what the max means')
-    ax7.set_ylim([-0.1, 1.05])
-    ax7.set_xlim([-1, 205])
+    ax7.set_ylim([0.3, 1.05])
+    ax7.set_xlim([-1, 105])
 
 
     maxVal = subData.loc[:, 'volWeightedMean'].max()
@@ -219,7 +220,7 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax8.set_title('Watch out for what the max means')
     ax8.legend(loc=0)
     ax8.set_ylim([0.3, 1.05])
-    ax8.set_xlim([-1, 205])
+    ax8.set_xlim([-1, 105])
 
 
     ax9.plot(subData.loc[:, prop], subData.loc[:, 'volWeightedMean'],
@@ -227,7 +228,7 @@ def metaPlot(metaData, prop='Re', flowCond='NS', label=None, marker='o'):
     ax9.set_xlabel(prop)
     ax9.set_ylabel('Volume Weighted Mean (.)')
     ax9.legend(loc=0)
-    ax9.set_xlim([-1, 205])
+    ax9.set_xlim([-1, 105])
     return
 
 

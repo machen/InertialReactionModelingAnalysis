@@ -164,7 +164,7 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
     if prop == 'Re':
         metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 250E-3)
     elif prop == 'ReP':
-        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 200E-3)
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 100E-3)
     metaData.sort_values(by=prop)
     traceList = metaData.d.unique()
     for val in traceList:
@@ -178,7 +178,7 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
                      capsize=2, label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'meanInt'],
                  ls='none', marker=marker, label=val)
-        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), prop].values
+        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
         ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
                      yerr=stdData.loc[:,'PDFstd'], ls='none', marker=marker,
                      capsize=2, label= "{} max val q: {}".format(val,float(maxLoc)))
@@ -188,7 +188,7 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
         maxVal = meanData.meanInt.max()
         ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
-                     yerr=stdData.meanInt/maxVal, ls='none',
+                     yerr=stdData.meanInt/maxVal, ls='-',
                      marker=marker, capsize=2, label=val)
         ax9.errorbar(meanData.index, meanData.meanInt,
                      yerr=stdData.meanInt, ls='none',
@@ -208,26 +208,27 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([0.3, 1.05])
-    ax7.set_xlim([-1, 205])
+    ax7.set_xlim([-1, 105])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
     ax8.set_title('Max normalized - check meaning of max val')
     ax8.set_ylim([0.3, 1.05])
-    ax8.set_xlim([-1, 205])
+    ax8.set_xlim([-1, 105])
     ax9.legend(loc=0)
     ax9.set_xlabel(prop)
     ax9.set_ylabel('Mean Intensity')
     ax9.set_title('Mean intensities')
-    ax9.set_xlim([-1, 205])
+    ax9.set_xlim([-1, 105])
     meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
            'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
     out = pd.DataFrame(meanDict)
     out.loc[:,'ID'] = val
     return out
-sns.set_context('talk')
+sns.set_context('poster', font_scale=1.25)
 plt.rcParams['svg.fonttype'] = 'none'
-# plt.rcParams['font.family'] = 'Cambria'
+plt.rcParams['font.family'] = 'Cambria'
+
 smooth = False
 window = 10
 prop = 'ReP'
@@ -236,11 +237,16 @@ propLim = 220
 
 mainDir = "..\\..\\Experiments\\"
 
-# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
 # workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirB = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Image Pillar Gap 50 bins\\"
+# workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
+# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
 # workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
-# workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+# # workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+
+# dA = "1/15"
+# dB = "10/5"
+# dC = "10/20"
+# dD = "2/1"
 
 # workingDirA = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 1 50 bins\\"
 # workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
@@ -248,23 +254,32 @@ mainDir = "..\\..\\Experiments\\"
 
 workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
 workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
-workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 7 50 bins\\"
-workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 12 50 bins\\"
-# workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 2 Channel 50 bins\\"
-# workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 3 Channel 50 bins\\"
-# workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 5 Channel 50 bins\\"
-# workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Whole Channel 50 bins\\"
-# workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore Throats 50 bins\\"
+workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 9 50 bins\\"
+workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
+# workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 5 50 bins\\"
+# workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 9 50 bins\\"
+# workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 15 50 bins\\"
+# # workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Whole Channel 50 bins\\"
+# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore Throats 50 bins\\"
 # workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
+
+dA = "All pore throats"
+dB = "Pore 3"
+dC = "Pore 9"
+dD = "Pore 10"
+# dE = "Pore 5"
+# dF = "Pore 9"
+# dG = "Pore 15"
+# dE = "10/20 A2"
 
 # workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirA = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
-# workingDirF = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
+# workingDirB = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirC = "2021-05-19-Chemilum-25um\\ExptImages\\Raw Aligned Image Pillar Gap 50 bins\\"
 # workingDirH = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 
@@ -273,11 +288,7 @@ caseNameA = ''
 caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
-dA = "Center pores"
-dB = "Pore 3"
-dC = "Pore 7"
-dD = "Pore 12"
-dE = "10/20 A2"
+
 # dF = "3/22/2022 Image 5"
 # dG = "3/22/2022 Whole Channel"
 # dH = "1/6 100 um"
@@ -315,18 +326,21 @@ metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
-markerCycle = cycle(['o', '^', 's', 'd', 'D'])
-out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle))
+markerCycle = cycle(['o', 'd', 's', '^', 'D'])
+out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
 out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
 
 # metaPlot(metaDataG, prop=prop, marker=next(markerCycle))
 # metaPlot(metaDataH, prop=prop, marker=next(markerCycle))
 
 out = out.dropna()
-out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 250E-3, 100E-3, 200E-3)
+out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 250E-3, 100E-3, 100E-3)
 traceAvg = out.dropna().groupby('q').mean()
 traceStd = out.dropna().groupby('q').std()
 ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt, color='k', marker='o')
@@ -334,7 +348,7 @@ ax10.set_title('Averaged Traces')
 ax10.set_xlabel('Reynolds Number')
 ax10.set_ylabel('Normalized Intensity (.)')
 ax10.set_ylim([0.3, 1.05])
-ax10.set_xlim([-1, 205])
+ax10.set_xlim([-1, 105])
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
