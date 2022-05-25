@@ -54,6 +54,8 @@ ax3a.plot(subData25.ReP, subData25.MRT, marker="o",
           ls='none', label="25 um Gap")
 ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[tReact, tReact],
           ls='--', label="Treact 10% Limiting")
+ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[2*tReact, 2*tReact],
+          ls='--', label="Treact 1% Limiting")
 ax3a.set_xlabel('Reynolds Number')
 ax3a.set_ylabel('Mean residence time (s)')
 ax3a.set_yscale('log')

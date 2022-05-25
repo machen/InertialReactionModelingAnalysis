@@ -237,11 +237,12 @@ propLim = 220
 
 mainDir = "..\\..\\Experiments\\"
 
-# workingDirA = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
-# workingDirB = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
-# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
-# workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
-# # workingDirE = "2021-10-20-Chemilum-100um\\A2-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Raw Pillar Gap 50 bins\\"
+workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bins\\"
+workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
+workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
+workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirF = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 
 # dA = "1/15"
 # dB = "10/5"
@@ -252,10 +253,10 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirB = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 3 50 bins\\"
 # workingDirC = "2022-2-9-Chemilum\\Multipillar\\Raw Aligned Image Pillar Gap Image 5 50 bins\\"
 
-workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
-workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
-workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 9 50 bins\\"
-workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
+# workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Center Pore Throats 50 bins\\"
+# workingDirB = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 3 50 bins\\"
+# workingDirC = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 9 50 bins\\"
+# workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
 # workingDirE = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 5 50 bins\\"
 # workingDirF = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 9 50 bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 15 50 bins\\"
@@ -265,11 +266,12 @@ workingDirD = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Pore 10 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
-dA = "All pore throats"
-dB = "Pore 3"
-dC = "Pore 9"
-dD = "Pore 10"
-# dE = "Pore 5"
+dA = "5/19"
+dB = "1/15e"
+dC = "10/20"
+dD = "2/1"
+dE = "10/5"
+dF = "1/6"
 # dF = "Pore 9"
 # dG = "Pore 15"
 # dE = "10/20 A2"
@@ -312,8 +314,8 @@ dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, w
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-# dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
 
@@ -321,8 +323,8 @@ metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
-# metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
@@ -331,8 +333,8 @@ out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
 out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
 
