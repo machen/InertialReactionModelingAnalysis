@@ -7,8 +7,10 @@ import seaborn as sns
 
 
 """TODO: Convert script inputs into user prompts, see input(). Will need to
-set up to take default values as well."""
+set up to take default values as well.
 
+TODO: Implement data selection which uses some non-spatial criteria (i.e. that any streamline has negative y velocity or the likefs)
+"""
 
 def stringVal(pattern, string):
     """Given a regular expression searching for a single instance of a numeric
