@@ -51,7 +51,7 @@ It's easy enough to pull the total flux to see what the rough error is.
 """
 
 
-def pillarGapCalculation(r1, r2, d, includePillar=True):
+def pillarGapCalculation(r1, r2, d, includePillar=True, halfRegion=None):
     """ Use this to properly calculate the true "pillar gap" area depending on
     the available parameters of the model.
     This calculation will directly assume:
@@ -61,14 +61,26 @@ def pillarGapCalculation(r1, r2, d, includePillar=True):
     4) The simulation base unit is microns
 
     The gap is defined by the edges of the pillars along the channel length
-    and the width of the largest pillar
+    and the width of the largest pillar.
+
+    includePillar either includes or excludes the pillars from the region.
+
+    halfRegion is either 'top', 'bot', or None, indicating to either use
+    the top half, bottom half, or to not subdivide the pore throat.
     """
     if not r2:
         r2 = r1
     xPil = 250
     yPil = -(2*r1+d/2)
-    x1 = xPil-max(r1, r2)
-    x2 = xPil+max(r1, r2)
+    if halfRegion == 'top':
+        x1 = xPil
+        x2 = xPil+max(r1, r2)
+    elif halfRegion == 'bot':
+        x1 = xPil-max(r1, r2)
+        x2 = xPil
+    elif not halfRegion:
+        x1 = xPil-max(r1, r2)
+        x2 = xPil+max(r1, r2)
     if includePillar:
         # Includes the pillar itself
         y1 = yPil+d/2+r1
@@ -294,7 +306,8 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
                              binProp, regionName='Result', recircCenter=False,
                              dataRegionX=None, dataRegionY=None,
                              dataRegionZ=None, autoRegion=False,
-                             includePillar=False):
+                             includePillar=False,
+                             halfRegion=None):
     if logBins:
         binType = 'log'
     else:
@@ -317,7 +330,9 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
         outFile.write("Region defined by recirc center: {}\n"
                       .format(recircCenter))
         outFile.write("Region defined by geometry: {}\n".format(autoRegion))
-        outFile.write("Region includes pillars: {}\n".format(autoRegion))
+        if halfRegion:
+            outFile.write("Using {} half\n".format(halfRegion))
+        outFile.write("Region includes pillars: {}\n".format(includePillar))
     return outputPath
 
 
@@ -609,17 +624,18 @@ plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
-dataRegionY = [-5000, 250] # Pillar center should be at -400
+dataRegionY = [-5000, 250]
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'Pillar Gap Pillar Exclusive'
+regionName = 'Bottom half pillar exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'constC'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
+halfRegion = 'bot'
 includePillar = False
-maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
+maxValue = 4  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
 # Chemistry props
@@ -644,7 +660,8 @@ outFile = genOutputFolderAndParams(workingDir, caseName, caseExt,
                                    dataRegionY=dataRegionY,
                                    recircCenter=recircDefinedRegion,
                                    autoRegion=autoRegion,
-                                   includePillar=includePillar)
+                                   includePillar=includePillar,
+                                   halfRegion=halfRegion)
 print(outFile)
 for fileName in fileList:
     if re.match(filePat, fileName):
@@ -656,7 +673,8 @@ for fileName in fileList:
             data = dataLoader(fileName, type=caseExt[2:-1])
         params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         if autoRegion:
-            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],includePillar=includePillar)
+            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],
+                                                            includePillar=includePillar, halfRegion=halfRegion)
         data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         if testMode & plotData:
             ax1 = plotDataSet(data, "raw")
