@@ -604,16 +604,16 @@ def plotPoints(ax, coords):
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-# workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
+workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 #workingDir = "TestData"
 # workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
 # caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
-# caseExt = "\.flowdata.txt$"
-calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
+caseExt = "\.flowdata.txt$"
+calcFlow = True  # Do Pressure/Flow rate fitting? Only valid with flow
 vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = True  # Do calculations for PDF from chemistry
+calcChem = False  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
@@ -626,11 +626,11 @@ binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-5000, 250]
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'Bottom half pillar exclusive'
+regionName = 'Pillar gap pillar exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'constC'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
 halfRegion = 'bot'
@@ -711,12 +711,14 @@ for fileName in fileList:
         if vortAng:
             data.loc[:, 'angle'] = calcVortVelAngle(data, 'u', 'v', 'w',
                                                     'vortX', 'vortY', 'vortZ')
+        elementVol = data.eleVol.values
+        params['totalVol'] = np.sum(elementVol)
+        params['velChar'] = params['Re']*nu/500E-6  #Assume 500 um channel width
+        params['nu'] = nu
         if calcChem:
             kVal = data.loc[data.index[0], 'k']
             dCdt = data.h2o2.values*data.tcpo.values*kVal
             data.loc[:, 'dCdt'] = dCdt
-            elementVol = data.eleVol.values
-            params['totalVol'] = np.sum(elementVol)
             params['totalProd'] = np.sum(np.multiply(data.cProduct.values, elementVol))
             params['totalTCPO'] = np.sum(np.multiply(data.tcpo.values, elementVol))
             params['totalH2O2'] = np.sum(np.multiply(data.h2o2.values, elementVol))
@@ -730,11 +732,8 @@ for fileName in fileList:
             params['maxRef'] = maxValue
             dCdtMaxNorm = data.h2o2.values*data.tcpo.values/maxValue
             data.loc[:, 'dCdtMaxNorm'] = dCdtMaxNorm
-
             params['conservative'] = np.sum(data.constC.values*data.eleVol.values)
             params['DH2O2'] = diff
-            params['nu'] = nu
-            params['velChar'] = params['Re']*nu/500E-6  #Assume 500 um channel width
             params['Pe'] = params['velChar']*params['r1']*2E-6/diff
             params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
             params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
