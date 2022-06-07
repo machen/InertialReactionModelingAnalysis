@@ -136,7 +136,7 @@ def crossings_nonzero_all(data):
 
 def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
     """
-    TO DO: Try to boost computational efficiency by subselecting the data
+    TODO: Try to boost computational efficiency by subselecting the data
     to work on
     (i.e., don't use the columns you don't need)
     subData = data.loc[:,('EleVol', prop)]
@@ -633,7 +633,7 @@ nPil = 1  # Number of pillars in file specification
 binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
-halfRegion = 'bot'
+halfRegion = None # 'top', 'bot', or None
 includePillar = False
 maxValue = 4  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',

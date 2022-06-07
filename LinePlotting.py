@@ -131,6 +131,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData-PoreTraverse\\"
 caseName = "TwoPillar_v6.*"
 caseExt = "\.chemdata.txt$"
 nPil = 1
+savePlots = False
 
 # Script here
 
@@ -183,35 +184,56 @@ for fileName in fileList:
                   xlabel='Coordinate', ylabel='Concentration', figsize=(12,10))
         plt.title('ReChan: {Re}, d: {d}'.format(Re=params['Re'],
                                                 d=params['d']))
-        plt.savefig(fileName[:-3]+'.svg', dpi=600, format='svg')
+        sns.despine()
+        if savePlots:
+            plt.savefig(fileName[:-3]+'Conc.svg', dpi=600, format='svg')
+        diff = data.diff()
+        diff.loc[0, :] = 0
+        data.loc[:, 'dtcpo'] = diff.tcpo/diff.coord
+        data.loc[:, 'dh2o2'] = diff.h2o2/diff.coord
+        data.loc[:, 'dprod'] = diff.cProduct/diff.coord
+        data.plot(x='coord', y=['dh2o2','dtcpo','dprod'], legend=True,
+                  xlabel='Coordinate', ylabel=('dConc/dCoord'), figsize=(12,10))
+        plt.title('ReChan: {Re}, d: {d}'.format(Re=params['Re'],
+                                                d=params['d']))
+        sns.despine()
+        if savePlots:
+            plt.savefig(fileName[:-3]+'Conc.svg', dpi=600, format='svg')
+        plt.savefig(fileName[:-3]+'dConc.svg', dpi=600, format='svg')
+
 
 ax1.set_xlabel('Coordinate')
 ax1.set_ylabel('Concentration')
 ax1.set_title('H2O2')
 ax1.legend(loc=0)
 sns.despine(f1)
-f1.savefig('H2O2.svg', dpi=600, format='svg')
+
 
 ax2.set_xlabel('Coordinate')
 ax2.set_ylabel('Concentration')
 ax2.set_title('TCPO')
 ax2.legend(loc=0)
 sns.despine(f2)
-f2.savefig('TCPO.svg', dpi=600, format='svg')
+
 
 ax3.set_xlabel('Coordinate')
 ax3.set_ylabel('Concentration')
 ax3.set_title('Product')
 ax3.legend(loc=0)
 sns.despine(f3)
-f3.savefig('Product.svg', dpi=600, format='svg')
+
 
 ax4.set_xlabel('Coordinate')
 ax4.set_ylabel('Concentration')
 ax4.set_title('Tracer')
 ax4.legend(loc=0)
 sns.despine(f4)
-f4.savefig('TCPO Tracer.svg', dpi=600, format='svg')
+
+if savePlots:
+    f1.savefig('H2O2.svg', dpi=600, format='svg')
+    f2.savefig('TCPO.svg', dpi=600, format='svg')
+    f3.savefig('Product.svg', dpi=600, format='svg')
+    f4.savefig('TCPO Tracer.svg', dpi=600, format='svg')
 
 plt.ion()
 plt.show()

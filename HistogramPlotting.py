@@ -284,10 +284,10 @@ labelA = "100 um Tracer"
 # workingDirB = "..\\..\\..\\..\\..\\Multipillar\\Normal\\FlowData_Normal\\200 log bins - 250 to -2500"
 #workingDirB = "..\\..\\..\\..\\..\\..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar gap-angle-180 linear bins"
 workingDirB = "..\\Bottom half pillar exclusive-tcpo-100 linear bins\\"
-# workingDirB = "."
+workingDirB = "."
 caseNameB = "TwoPillar_v6_ExF_c3_k2000_"
-caseExtB = "d100_Re.*\.chemdata_histogram\.csv"
-labelB = "100 um TCPO"
+caseExtB = "d25_Re.*\.chemdata_histogram\.csv"
+labelB = "25 um Tracer"
 
 # workingDirC = "..\\Bottom gap pillar exclusive-h2o2-25 linear bins\\"
 # caseNameC = "TwoPillar_v6_ExF_c3_k2000_"
@@ -317,7 +317,7 @@ metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
 # dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
 # metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
 
-markerCycle = cycle(['o', '^', 's', 'd', 'D'])
+markerCycle = cycle(['o', 'o', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
 metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
 # metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))

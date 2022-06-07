@@ -46,16 +46,16 @@ ax2b.set_ylim([0.3, 1.05])
 
 # Figure 3: MRT and Scalar Dissipation
 f3, (ax3a, ax3b) = plt.subplots(ncols=1, nrows=2, figsize=(5,10))
-tReact = np.log(10)/3E-3/2000  # Hard coded, reaction time scale with 3 mM inlet conc. and assuming limiting reactant behavior
+tReact = 1/3E-3/2000  # Half life assuming well mixed and equal reactants
 ax3c = ax3b.twinx()
 ax3a.plot(subData100.ReP, subData100.MRT, marker="o",
           ls='none', label="100 um Gap")
 ax3a.plot(subData25.ReP, subData25.MRT, marker="o",
           ls='none', label="25 um Gap")
 ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[tReact, tReact],
-          ls='--', label="Treact 10% Limiting")
-ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[2*tReact, 2*tReact],
-          ls='--', label="Treact 1% Limiting")
+          ls='--', label="Half life Equal Mixed")
+ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[9*tReact, 9*tReact],
+          ls='--', label="90% Completion Equal Mixed")
 ax3a.set_xlabel('Reynolds Number')
 ax3a.set_ylabel('Mean residence time (s)')
 ax3a.set_yscale('log')
