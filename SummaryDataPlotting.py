@@ -59,6 +59,7 @@ ax3a.plot([subData100.ReP.min(), subData100.ReP.max()],[9*tReact, 9*tReact],
 ax3a.set_xlabel('Reynolds Number')
 ax3a.set_ylabel('Mean residence time (s)')
 ax3a.set_yscale('log')
+ax3a.set_ylim([0.0005, 100])
 ax3a.legend()
 
 ax3b.plot(subData100.ReP, subData100.scalDisConserv,

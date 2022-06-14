@@ -1,4 +1,3 @@
-from turtle import distance
 import pandas as pd
 import numpy as np
 import re
@@ -132,6 +131,7 @@ caseName = "TwoPillar_v6.*"
 caseExt = "\.chemdata.txt$"
 nPil = 1
 savePlots = False
+diffPlot = False
 
 # Script here
 
@@ -187,19 +187,20 @@ for fileName in fileList:
         sns.despine()
         if savePlots:
             plt.savefig(fileName[:-3]+'Conc.svg', dpi=600, format='svg')
-        diff = data.diff()
-        diff.loc[0, :] = 0
-        data.loc[:, 'dtcpo'] = diff.tcpo/diff.coord
-        data.loc[:, 'dh2o2'] = diff.h2o2/diff.coord
-        data.loc[:, 'dprod'] = diff.cProduct/diff.coord
-        data.plot(x='coord', y=['dh2o2','dtcpo','dprod'], legend=True,
-                  xlabel='Coordinate', ylabel=('dConc/dCoord'), figsize=(12,10))
-        plt.title('ReChan: {Re}, d: {d}'.format(Re=params['Re'],
-                                                d=params['d']))
-        sns.despine()
-        if savePlots:
-            plt.savefig(fileName[:-3]+'Conc.svg', dpi=600, format='svg')
-        plt.savefig(fileName[:-3]+'dConc.svg', dpi=600, format='svg')
+        if diffPlot:
+            diff = data.diff()
+            diff.loc[0, :] = 0
+            data.loc[:, 'dtcpo'] = diff.tcpo/diff.coord
+            data.loc[:, 'dh2o2'] = diff.h2o2/diff.coord
+            data.loc[:, 'dprod'] = diff.cProduct/diff.coord
+            data.plot(x='coord', y=['dh2o2','dtcpo','dprod'], legend=True,
+                    xlabel='Coordinate', ylabel=('dConc/dCoord'), figsize=(12,10))
+            plt.title('ReChan: {Re}, d: {d}'.format(Re=params['Re'],
+                                                    d=params['d']))
+            sns.despine()
+            if savePlots:
+                plt.savefig(fileName[:-3]+'Conc.svg', dpi=600, format='svg')
+            plt.savefig(fileName[:-3]+'dConc.svg', dpi=600, format='svg')
 
 
 ax1.set_xlabel('Coordinate')
