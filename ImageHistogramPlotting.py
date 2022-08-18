@@ -242,8 +242,8 @@ workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Raw Image Pillar Gap 50 bi
 workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Raw Image Pillar Gap 50 bins\\"
 workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Raw Image Pillar Gap 50 bins\\"
 workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
-workingDirF = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
-
+workingDirF = "2021-11-18-Chemilum-25um\\2PD3_A2\\Raw Aligned Image Pillar Gap 50 bins\\"
+workingDirG = "2022-2-9-Chemilum\\25umGap\\Raw Aligned Image Pillar Gap 50 bins\\"
 # dA = "1/15"
 # dB = "10/5"
 # dC = "10/20"
@@ -266,12 +266,13 @@ workingDirF = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bi
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
-dA = "5/19"
-dB = "1/15e"
-dC = "10/20"
-dD = "2/1"
-dE = "10/5"
-dF = "1/6"
+dA = "5/19-100 um"
+dB = "1/15-100um"
+dC = "10/20-100 um"
+dD = "2/1-100 um"
+dE = "10/5-100 um"
+dF = "11/18-25 um"
+dG = "2/9-25 um"
 # dF = "Pore 9"
 # dG = "Pore 15"
 # dE = "10/20 A2"
@@ -316,7 +317,7 @@ dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, w
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
 dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
-# dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
+dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
 
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
@@ -325,17 +326,17 @@ metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
 metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
-# metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
+metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
-markerCycle = cycle(['o', 'd', 's', '^', 'D'])
+markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
 out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
 out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
 
 # metaPlot(metaDataG, prop=prop, marker=next(markerCycle))

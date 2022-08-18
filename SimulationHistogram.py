@@ -604,16 +604,16 @@ def plotPoints(ax, coords):
 #workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\RawData\\"
 # workingDir = "..\\Comsol5.5\\TwoPillars\\ExF\\ChemData\\RawData"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
-workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
-#workingDir = "TestData"
+# workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
+# workingDir = "TestData"
 # workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
 # caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
-caseExt = "\.flowdata.txt$"
-calcFlow = True  # Do Pressure/Flow rate fitting? Only valid with flow
+# caseExt = "\.flowdata.txt$"
+calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
 vortAng = False  # Calculate the angle between velocity and vorticity vector, will generate data column "angle"
-calcChem = False  # Do calculations for PDF from chemistry
+calcChem = True  # Do calculations for PDF from chemistry
 
 print(workingDir)
 
@@ -630,12 +630,12 @@ regionName = 'Pillar gap pillar exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'velMag'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
-halfRegion = None # 'top', 'bot', or None
+halfRegion = None # 'top', 'bot', or None (uses whole region)
 includePillar = False
-maxValue = 4  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
+maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
 # Chemistry props

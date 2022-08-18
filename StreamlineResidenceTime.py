@@ -321,7 +321,7 @@ caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 100  # Number of bins to use for PDF
-calculatePDFs = False  # Flag to toggle calculation of PDFs.
+calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 dList = [100, 25]
 
