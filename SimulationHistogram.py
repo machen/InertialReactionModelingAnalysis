@@ -438,7 +438,7 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
     We can use the pillarGapCalculation to generate the exact space between the pillars
     """
     data = dh.subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
-    xGap, yGap = pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
+    xGap, yGap = dh.pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
     if useMid:

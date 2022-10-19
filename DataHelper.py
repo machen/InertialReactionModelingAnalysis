@@ -1,5 +1,4 @@
 import pandas as pd
-import numpy as np
 import re
 
 """Helper functions for use with outputted COMSOL data."""
@@ -39,6 +38,26 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
         data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
 
     return data
+
+
+def slicePlane(data, range1, range2, loc, planeWidth, type):
+    """Slices data into a plane defined by type.
+    Currently only slices planes that are orthogonal to coordinate axes."""
+    if type == 'xy':
+        plane = subSelectData(data, xRange=range1, yRange=range2,
+                              zRange=[loc-0.5*planeWidth, loc+0.5*planeWidth])
+    if type == 'yz':
+        plane = subSelectData(data, xRange=[loc-0.5*planeWidth,
+                                            loc+0.5*planeWidth],
+                              yRange=range1, zRange=range2)
+    if type == 'xz':
+        plane = subSelectData(data, xRange=range1,
+                              yRange=[loc-0.5*planeWidth, loc+0.5*planeWidth],
+                              zRange=range2)
+    if plane.empty:
+        raise ValueError('Plane is empty, checkPlaneWidth')
+
+    return plane
 
 
 def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
