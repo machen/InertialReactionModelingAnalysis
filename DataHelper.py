@@ -22,7 +22,6 @@ def dataLoader(fileName, type='flowdata.txt'):
                          | (data.tcpo <= 0)
                          | (data.cProduct <= 0)].index)
     if type == 'velStreamline.txt':
-        data = pd.read_table
         data = pd.read_table(fileName, sep='\s+', skiprows=8,
                              names=['x', 'y', 'z', 'sID', 'velMag'])
     return data

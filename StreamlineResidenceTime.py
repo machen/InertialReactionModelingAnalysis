@@ -252,7 +252,7 @@ def plotPDF():
 
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\PillarGap\\"
 caseName = "TwoPillar_"
-ext = ".velStreamline.txt"
+ext = "velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
 nBins = 12  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
