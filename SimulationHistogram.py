@@ -4,6 +4,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
+import datahelper as dh
 # from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -49,79 +50,6 @@ associated flux.
 Comparing against the flux in the channel however, the error seems low.
 It's easy enough to pull the total flux to see what the rough error is.
 """
-
-
-def pillarGapCalculation(r1, r2, d, includePillar=True, halfRegion=None):
-    """ Use this to properly calculate the true "pillar gap" area depending on
-    the available parameters of the model.
-    This calculation will directly assume:
-    1) That the edge of the most upstream pillar is at y = 0
-    2) That there are only two pillars
-    3) Positive y is upstream, negative y is downstream
-    4) The simulation base unit is microns
-
-    The gap is defined by the edges of the pillars along the channel length
-    and the width of the largest pillar.
-
-    includePillar either includes or excludes the pillars from the region.
-
-    halfRegion is either 'top', 'bot', or None, indicating to either use
-    the top half, bottom half, or to not subdivide the pore throat.
-    """
-    if not r2:
-        r2 = r1
-    xPil = 250
-    yPil = -(2*r1+d/2)
-    if halfRegion == 'top':
-        x1 = xPil
-        x2 = xPil+max(r1, r2)
-    elif halfRegion == 'bot':
-        x1 = xPil-max(r1, r2)
-        x2 = xPil
-    elif not halfRegion:
-        x1 = xPil-max(r1, r2)
-        x2 = xPil+max(r1, r2)
-    if includePillar:
-        # Includes the pillar itself
-        y1 = yPil+d/2+r1
-        y2 = yPil-d/2-r2
-    else:
-        y1 = yPil+d/2
-        y2 = yPil-d/2
-    return [x1, x2], [y1, y2]
-
-
-def dataLoader(filename, type='flowdata.txt'):
-    if type == 'flowdata.txt':
-        data = pd.read_table(fileName, header=9, sep=r'\s+',
-                             names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow',
-                                    'vortX', 'vortY', 'vortZ', 'vortMag'])
-
-    if type == 'chemdata.txt':
-        data = pd.read_table(fileName, header=10, sep=r'\s+',
-                             names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
-                                    'v', 'w', 'p', 'velMag', 'massFlow',
-                                    'h2o2', 'tcpo', 'cProduct', 'k'])
-        # Drop lines where concentration values are less than 0
-        data = data.drop(data.loc[(data.h2o2 <= 0)
-                         | (data.tcpo <= 0)
-                         | (data.cProduct <= 0)].index)
-    return data
-
-
-def subSelectData(data, xRange=None, yRange=None, zRange=None):
-    """Assumes that each of the inputs to the function is a tuple containing
-     max and min values of x, y, and z that we wish to include. Use for rough
-     chopping of the data to exclude main channel flows"""
-    if xRange:
-        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
-    if yRange:
-        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
-    if zRange:
-        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
-
-    return data
 
 
 def crossings_nonzero_all(data):
@@ -224,35 +152,6 @@ def producePDF(data, nBins=1000, logBin=True, prop="velMag"):
                                         weights=data.loc[:, 'eleVol'],
                                         density=True)
     return normFreq, velVal, velBin
-
-
-def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
-    # Produces a dictionary of experimental parameters
-    rePat = re.compile(r'Re(\d+\.?\d*).'+caseExt)
-    dPat = re.compile(r'd(\d+\.?\d*)_')
-    cPat = re.compile(r'c(\d+\.?\d*)')
-    kPat = re.compile(r'k(\d+\.?\d*)_')
-    dVal = re.search(dPat, fileName).group(1)
-    reVal = re.search(rePat, fileName).group(1)
-    if caseExt == 'chemdata.txt':
-        cVal = re.search(cPat, fileName).group(1)
-        kVal = re.search(kPat, fileName).group(1)
-    else:
-        cVal = 0
-        kVal = 0
-    if nPil == 2:
-        r1Pat = re.compile(r'r1_(\d+?)_')
-        r2Pat = re.compile(r'r2_(\d+?)_')
-        r1Val = re.search(r1Pat, fileName).group(1)
-        r2Val = re.search(r2Pat, fileName).group(1)
-        res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
-               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
-    if nPil == 1:
-        rPat = re.compile(r'r(\d+?)_')
-        rVal = re.search(rPat, fileName).group(1)
-        res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
-               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
-    return res
 
 
 def calcFlowPress(data, params, nu=1.6E-6, c=500E-6, cRatio=0.5,
@@ -362,19 +261,19 @@ def centerPointEstimation(data, planeWidth=1,
     point with the lowest velocity in the middle (z=50) plane of the channel.
     """
     # Calculate the exact space between the pillars
-    xGap, yGap = pillarGapCalculation(r1, r2, d, False)
+    xGap, yGap = dh.pillarGapCalculation(r1, r2, d, False)
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
-    data = subSelectData(data, xRange=xGap, yRange=yGap, zRange=[10, 90])
+    data = dh.subSelectData(data, xRange=xGap, yRange=yGap, zRange=[10, 90])
     if useMid:
-        midPlane = subSelectData(data,
+        midPlane = dh.subSelectData(data,
                                  zRange=[50-planeWidth*0.5, 50+planeWidth*0.5])
         if midPlane.empty:
             planeWidthAdjust = planeWidth
             while midPlane.empty:
                 planeWidthAdjust += planeWidth
                 print("Plane width too small, incrementing planeWidth")
-                midPlane = subSelectData(data,
+                midPlane = dh.subSelectData(data,
                                          zRange=[50-planeWidthAdjust*0.5,
                                                  50+planeWidthAdjust*0.5])
                 if planeWidthAdjust >= 10*planeWidth:
@@ -396,7 +295,7 @@ def estimateRecircFlux(recircData, centerCoords, recircVol, planeWidth=1):
     and the center coordinates for that zone, calculates the recirculation
     flux through the zone by estimating the flux that cuts through the
     centerplane """
-    recircPlane = subSelectData(recircData, xRange=[
+    recircPlane = dh.subSelectData(recircData, xRange=[
                                 centerCoords[0]-planeWidth*0.5,
                                 centerCoords[0]+planeWidth*0.5])
     totalRecircFlux = np.sum(recircPlane.u.values*recircPlane.eleVol.values/(planeWidth*1E-6))
@@ -412,9 +311,9 @@ def selectRecircZoneBasic(data, r1, r2, d, includePillar):
     x velocity still exists.
     """
     xEdge = max(data.loc[data.loc[:, 'v'] > 0, 'x'])
-    recircData = subSelectData(data, xRange=[250, xEdge])
-    xGap, yGap = pillarGapCalculation(r1, r2, d, includePillar)
-    recircData = subSelectData(recircData, yRange=yGap)
+    recircData = dh.subSelectData(data, xRange=[250, xEdge])
+    xGap, yGap = dh.pillarGapCalculation(r1, r2, d, includePillar)
+    recircData = dh.subSelectData(recircData, yRange=yGap)
     return recircData, xEdge
 
 
@@ -451,10 +350,10 @@ def selectRecircZoneNegVel(data, r1, r2, d, gridSize=1):
 
     """
     # Boundaries 2 and 3 covered by this
-    xRange, yRange = pillarGapCalculation(r1, r2, d, True)
-    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    xRange, yRange = dh.pillarGapCalculation(r1, r2, d, True)
+    data = dh.subSelectData(data, xRange=xRange, yRange=yRange)
     # Covers middle line in 1)
-    data = subSelectData(data, xRange=[250, 500])
+    data = dh.subSelectData(data, xRange=[250, 500])
     bins = np.arange(data.y.min(), data.y.max(), step=gridSize)
     # bin data, label is left end
     data['yBin'] = pd.cut(data.y, bins, labels=bins[:-1])
@@ -538,19 +437,19 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
 
     We can use the pillarGapCalculation to generate the exact space between the pillars
     """
-    data = subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
+    data = dh.subSelectData(data, xRange=[250, 500])  # Use half of the main channel # Should also be selecting for areas that don't intersect the pillar
     xGap, yGap = pillarGapCalculation(r1, r2, d)  # Calculate the exact space between the pillars
     xGap = [260, xGap[1]-10]  # Back off of edges by 10 um
     yGap = [yGap[0]-10, yGap[1]+10]  # Back off of edges by 10 um
     if useMid:
-        midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+        midPlane = dh.subSelectData(data, xRange=xGap, yRange=yGap,
                                  zRange=[50-planeWidth*0.5, 50+planeWidth*0.5]) # Use the middle plane
         if midPlane.empty:
             planeWidthAdjust = planeWidth
             while midPlane.empty:
                 planeWidthAdjust += planeWidth
                 print("Plane width too small, incrementing planeWidth")
-                midPlane = subSelectData(data, xRange=xGap, yRange=yGap,
+                midPlane = dh.subSelectData(data, xRange=xGap, yRange=yGap,
                                          zRange=[50-planeWidthAdjust*0.5, 50+planeWidthAdjust*0.5])
                 if planeWidthAdjust >= 10*planeWidth:
                     print('WARNING: Planewidth too large, writing null')
@@ -564,11 +463,11 @@ def estimateFluxes(data, planeWidth=1, r1=100, r2=100, d=100, useMid=True):
                     float(centerPointRow.z.values)]
     xEdge = max(data.loc[data.loc[:, 'v'] > 0, 'x'])  # serach for farthest point where flow goes against mean direction
     # This is essentially the defined recirculation zone.
-    recircData = subSelectData(data, xRange=[250, xEdge])
+    recircData = dh.subSelectData(data, xRange=[250, xEdge])
     # If we're feeling motivated we should probably ID where flux enters/leaves
     recircVol = recircData.eleVol.sum()  # Native units.
     # This is a cut plane, the total flux through the plane should be 0
-    recircPlane = subSelectData(data, xRange=[centerCoords[0]-planeWidth*0.5,
+    recircPlane = dh.subSelectData(data, xRange=[centerCoords[0]-planeWidth*0.5,
                                               centerCoords[0]+planeWidth*0.5])
     """Scale the flux off of each elements volume, but assume a constant depth
     sum(velocity*dV/estimated width (constant)) = sum(u*eleVol)/estimatedWidth
@@ -669,19 +568,19 @@ for fileName in fileList:
         print(fileName)
         # Check for fileName already in metaData, skip if so
         if testMode: # Test mode requires you specify exactly which file you wish to test
-            data = dataLoader(caseName+caseExt, type=caseExt[2:-1])
+            data = dh.dataLoader(caseName+caseExt, type=caseExt[2:-1])
         else:
-            data = dataLoader(fileName, type=caseExt[2:-1])
-        params = extractParams(fileName, nPil, caseExt=caseExt[2:-1])
+            data = dh.dataLoader(fileName, type=caseExt[2:-1])
+        params = dh.extractParams(fileName, nPil, caseExt=caseExt[2:-1])
         if autoRegion:
-            dataRegionX, dataRegionY = pillarGapCalculation(params['r1'], params['r2'], params['d'],
+            dataRegionX, dataRegionY = dh.pillarGapCalculation(params['r1'], params['r2'], params['d'],
                                                             includePillar=includePillar, halfRegion=halfRegion)
-        data = subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
+        data = dh.subSelectData(data, xRange=dataRegionX, yRange=dataRegionY)
         if testMode & plotData:
             ax1 = plotDataSet(data, "raw")
         if recircDefinedRegion:
             #data = selectRecircZoneNegVel(data, params['r1'], params['r2'], params['d'], gridSize=10)
-            data = subSelectData(data,xRange=[250, 500]) # Subselect only half the recirculation area
+            data = dh.subSelectData(data,xRange=[250, 500]) # Subselect only half the recirculation area
             data, coords = calcRecircBoundsFluxInt(data, gridSize=1)
             if data.empty:  # SKIP FILES THAT HAVE NO RECIRCULATION
                 print("EMPTY FILE")

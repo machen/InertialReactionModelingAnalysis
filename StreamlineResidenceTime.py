@@ -4,13 +4,14 @@ import matplotlib.pyplot as plt
 import os
 import re
 import seaborn as sns
-
+import datahelper as dh
 
 """TODO: Convert script inputs into user prompts, see input(). Will need to
 set up to take default values as well.
 
 TODO: Implement data selection which uses some non-spatial criteria (i.e. that any streamline has negative y velocity or the likefs)
 """
+
 
 def stringVal(pattern, string):
     """Given a regular expression searching for a single instance of a numeric
@@ -23,74 +24,7 @@ def stringVal(pattern, string):
         return float(val.group(1))
 
 
-def subSelectData(data, xRange=None, yRange=None, zRange=None):
-    """Assumes that each of the inputs to the function is a tuple containing
-     max and min values of x, y, and z that we wish to include. Use for rough
-     chopping of the data to exclude main channel flows"""
-    if xRange:
-        data = data.loc[(data.x > min(xRange)) & (data.x < max(xRange)), :]
-    if yRange:
-        data = data.loc[(data.y > min(yRange)) & (data.y < max(yRange)), :]
-    if zRange:
-        data = data.loc[(data.z > min(zRange)) & (data.z < max(zRange)), :]
-    return data
-
-
-def extractParams(fileName, nPil=2):
-    # Produces a dictionary of experimental parameters
-    rePat = re.compile('Re(\d+\.?\d*).')
-    dPat = re.compile('d(\d+\.?\d*)_')
-    cPat = re.compile('c(\d+\.?\d*)')
-    kPat = re.compile('k(\d+\.?\d*)_')
-    dVal = stringVal(dPat, fileName)
-    reVal = stringVal(rePat, fileName)
-    cVal = stringVal(cPat, fileName)
-    kVal = stringVal(kPat, fileName)
-    if nPil == 2:
-        r1Pat = re.compile('r1_(\d+?)_')
-        r2Pat = re.compile('r2_(\d+?)_')
-        r1Val = stringVal(r1Pat, fileName)
-        r2Val = stringVal(r2Pat, fileName)
-        res = {'r1': r1Val, 'r2': r2Val, 'd': dVal,
-               'Re': reVal, 'c': cVal, 'k': kVal}
-    if nPil == 1:
-        rPat = re.compile('r(\d+?)_')
-        rVal = stringVal(rPat, fileName)
-        res = {'r1': rVal, 'r2': rVal, 'd': dVal,
-               'Re': reVal, 'c': cVal, 'k': kVal}
-    return res
-
-
-def pillarGapCalculation(r1, r2, d, includePillar=True):
-    """ Use this to properly calculate the true "pillar gap" area depending on
-    the available parameters of the model.
-    This calculation will directly assume:
-    1) That the edge of the most upstream pillar is at y = 0
-    2) That there are only two pillars
-    3) Positive y is upstream, negative y is downstream
-    4) The simulation base unit is microns
-
-    The gap is defined by the edges of the pillars along the channel length
-    and the width of the largest pillar
-    """
-    if not r2:
-        r2 = r1
-    xPil = 250
-    yPil = -(2*r1+d/2)
-    x1 = xPil-max(r1, r2)
-    x2 = xPil+max(r1, r2)
-    if includePillar:
-        # Includes the pillar itself
-        # allowing the box to cover volume near the pillar far away from the centerline
-        y1 = yPil+d/2+r1
-        y2 = yPil-d/2-r2
-    else:
-        y1 = yPil+d/2
-        y2 = yPil-d/2
-    return [x1, x2], [y1, y2]
-
-
-def loadData(fileName):
+def loadDatawParams(fileName, ext):
     """Read in data from a single fileName, determine the relevant
     model parameters from the filename, strip out any data points outside the
     "recirculation" zone, then return the stripped data and the parameters.
@@ -100,10 +34,10 @@ def loadData(fileName):
     """
     data = pd.read_table(fileName, sep='\s+', skiprows=8,
                          names=['x', 'y', 'z', 'sID', 'velMag'])
-    params = extractParams(fileName, nPil=1)
+    params = dh.extractParams(fileName, 1, ext)
     params['fileName'] = fileName
-    xRange, yRange = pillarGapCalculation(params['r1'], params['r2'], params['d'], includePillar=False)
-    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    xRange, yRange = dh.pillarGapCalculation(params['r1'], params['r2'], params['d'], includePillar=False)
+    data = dh.subSelectData(data, xRange=xRange, yRange=yRange)
     return data, params
 
 
@@ -170,7 +104,7 @@ def generatePDFs(workingDir, caseName, ext, testMode, nBins, outputPath):
         if re.match(filePat, f):
             print(f)
             # Load in data set and group by streamline
-            dataSet, params = loadData(f)
+            dataSet, params = loadDatawParams(f, ext)
             params['velMean'] = dataSet.velMag.mean()
             gStream = groupStreamlines(dataSet)
             # Calculate travel times
@@ -320,7 +254,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\P
 caseName = "TwoPillar_"
 ext = ".velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
-nBins = 100  # Number of bins to use for PDF
+nBins = 12  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
 dList = [100, 25]

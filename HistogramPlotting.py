@@ -28,6 +28,7 @@ HEY SOME STUFF YOU NEED TO DO
 
  """
 
+
 class DataSet:
     def __init__(self, workingDir, ext, label, caseName, smooth=False, window=5):
         self.workingDir = workingDir
@@ -46,7 +47,7 @@ plt.rcParams['svg.fonttype'] = 'none'
 plt.rcParams['font.family'] = 'Cambria'
 
 
-def importParams(dir='.'):
+def importParamFile(dir='.'):
     # Scans for a metafile containing the file name associated parameters
     metaPat = re.compile('.*_meta.csv')
     for fileName in os.listdir(dir):
@@ -58,13 +59,13 @@ def importParams(dir='.'):
     return pd.DataFrame([])
 
 
-def extractParams(fileName, metaData):
+def loadParams(fileName, metaData):
     # Produces a dictionary of experimental parameters based on the file name
     # Now also will attempt to extract those params from the existing file
     # Need to update this to capture c and k values
     # Really need to update this to pull the correct file from the metaData file if available
     if not metaData.empty:
-        # This will break if you are not outputting the metaData file from VelocityBinning.py
+        # This will break if you are not outputting the metaData file from SimulationHistogram.py
         origFileName = fileName.replace('_histogram.csv', '.txt')
         entry = metaData.loc[metaData.fileName == origFileName]
         res = entry.to_dict('records')[0]
@@ -106,7 +107,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     dataSets = {}
     for fileName in fileList:
         if re.match(filePat, fileName):
-            # params = extractParams(fileName)
+            # params = loadParams(fileName)
             data = pd.read_csv(fileName, header=0)
             if smooth:
                 # Smooth data with rolling average of size window
@@ -119,14 +120,14 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
 
 def dataSetPlot(dataSets, metaData=pd.DataFrame([]), linestyle='-', smooth=0):
     # In this case, key refers to the filename for the given data set
-    workingDirParams = importParams()
+    workingDirParams = importParamFile()
     # print(workingDirParams
     if not metaData.empty:
         metaData = pd.DataFrame([], columns=['r1', 'r2', 'd', 'Re', 'Flow', 'PDFmean', 'PDFstd'])
     for key in dataSets:
         print(key)
         data = dataSets[key]
-        params = extractParams(key, workingDirParams)
+        params = loadParams(key, workingDirParams)
         dataMean, dataVar = pdfStats(data)
         params['PDFmean'] = dataMean
         params['PDFstd'] = np.sqrt(dataVar)

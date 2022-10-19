@@ -67,7 +67,7 @@ def flowRateConversion(q, width, height, charLen, nu=0.43):
     return reyn
 
 
-def extractParams(fileName):
+def extractExpParams(fileName):
     # Produces a dictionary of experimental parameters
     qPat = re.compile('(\d*\.?\d*)q')
     repPat = re.compile('(\d{0,3}).nd2')
@@ -92,7 +92,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
     for fileName in fileList:
         if re.match(filePat, fileName):
             print(fileName)
-            # params = extractParams(fileName)
+            # params = extractExpParams(fileName)
             data = pd.read_csv(workingDir+fileName, header=0)
             if smooth:
                 # Smooth data with rolling average of size window
@@ -108,7 +108,7 @@ def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
     for key in dataSets:
         data = dataSets[key]
         dataMean, dataVar = pdfStats(data)
-        params = extractParams(key)
+        params = extractExpParams(key)
         # params['d'] = d
         # params['fileName'] = key
         # params['PDFmean'] = dataMean
