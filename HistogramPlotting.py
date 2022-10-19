@@ -273,7 +273,7 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC-100 linear bins\\"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar gap Pillar Exclusive-dCdt-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar gap pillar exclusive-dCdt-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
@@ -312,7 +312,7 @@ dataSetA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 
 dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
-metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='-')
+metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='--')
 
 # dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
 # metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
