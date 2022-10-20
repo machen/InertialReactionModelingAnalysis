@@ -40,8 +40,8 @@ def subSelectData(data, xRange=None, yRange=None, zRange=None):
     return data
 
 
-def slicePlane(data, range1, range2, loc, planeWidth, type):
-    """Slices data into a plane defined by type.
+def slicePlane(data, range1, range2, loc, type, planeWidth=1):
+    """Slices data into a plane defined by type. Units are sim units.
     Currently only slices planes that are orthogonal to coordinate axes."""
     if type == 'xy':
         plane = subSelectData(data, xRange=range1, yRange=range2,
