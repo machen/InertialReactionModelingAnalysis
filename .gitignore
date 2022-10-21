@@ -1,5 +1,4 @@
 
-!SliceTemplate.csv
 *.ini
 *.txt
 *.csv
@@ -9,3 +8,4 @@ workspace.code-workspace
 .vscode/launch.json
 *.pyc
 LinePlotting.py
+!SliceTemplate.csv
