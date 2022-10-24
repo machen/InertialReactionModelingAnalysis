@@ -1,5 +1,3 @@
-from genericpath import isdir
-from readline import set_completion_display_matches_hook
 import datahelper as dh
 import os, re
 import pandas as pd
@@ -16,7 +14,6 @@ TODO: Implement sliceInput as a file instead of bool
 """
 
 
-
 def genSliceFromPillar(data, xPil, yPil, rPil, half=None):
     # Should generate coordinates that can be used to get slices for an XZ plane
     # Slice can be around the pillar, or inlcude the
@@ -26,14 +23,14 @@ def genSliceFromPillar(data, xPil, yPil, rPil, half=None):
     xMin = data.x.min()
     if not half:
         # Assumes you want the whole sim just sliced at one line
-        slice = [xMin, xMax, zMin, zMax, yPil]
+        slice = [xMin, xMax, zMin, zMax, yPil, 'xz']
         return slice
-    elif half=='top':
+    elif half == 'top':
         # Slices above and below the pillar, only works for a single line of pillars
-        topSlice = [xPil+rPil, xMax, zMin, zMax, yPil]
+        topSlice = [xPil+rPil, xMax, zMin, zMax, yPil, 'xz']
         return topSlice
-    elif half=='bot':
-        botSlice = [xMin, xPil-rPil, zMin, zMax, yPil]
+    elif half == 'bot':
+        botSlice = [xMin, xPil-rPil, zMin, zMax, yPil, 'xz']
         return botSlice
     else:
         return
@@ -46,17 +43,17 @@ def gen2PillarSlices(data, slices, r1, r2, d):
     xPil = 250  # Assumes symmetric pillars
     yPil1 = 0-r1  # Asumes 1st pillar edge is at y=0
     yPil2 = -(2*r1+d+r2)
-    slices.loc[0, 'SliceName'] = 'p1Top'
+    slices.loc[0, 'sliceName'] = 'p1Top'
     slices.iloc[0, 1:] = genSliceFromPillar(data, xPil, yPil1, r1, half='top')
-    slices.loc[1, 'SliceName'] = 'p1Bot'
+    slices.loc[1, 'sliceName'] = 'p1Bot'
     slices.iloc[1, 1:] = genSliceFromPillar(data, xPil, yPil1, r1, half='bot')
-    slices.loc[2, 'SliceName'] = 'p2Top'
+    slices.loc[2, 'sliceName'] = 'p2Top'
     slices.iloc[2, 1:] = genSliceFromPillar(data, xPil, yPil2, r2, half='top')
-    slices.loc[3, 'SliceName'] = 'p2Bot'
+    slices.loc[3, 'sliceName'] = 'p2Bot'
     slices.iloc[3, 1:] = genSliceFromPillar(data, xPil, yPil2, r2, half='bot')
-    slices.loc[4, 'SliceName'] = 'throatStart'
+    slices.loc[4, 'sliceName'] = 'throatStart'
     slices.iloc[4, 1:] = genSliceFromPillar(data, xPil, 0, r1)
-    slices.loc[5, 'SliceName'] = 'throatEnd'
+    slices.loc[5, 'sliceName'] = 'throatEnd'
     slices.iloc[5, 1:] = genSliceFromPillar(data, xPil, yPil2-r2, r2)
     return slices
 
@@ -64,14 +61,14 @@ def gen2PillarSlices(data, slices, r1, r2, d):
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
 caseName = 'TwoPillar_v6'
-caseExt = r'chemdata\.txt'
-nPil = 2
+caseExt = 'chemdata.txt'
+nPil = 1  # Should be the number of pillars specified in the file name
 # TODO: Make sliceInput a filename
-sliceInput = True  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
+sliceInput = False  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
 
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
-if not os.isdir(workingDir):
+if not os.path.exists(workingDir):
     os.mkdir(workingDir)
 dataList = os.listdir(dataDir)
 workingList = os.listdir(workingDir)
@@ -82,6 +79,8 @@ if sliceInput:
     except FileNotFoundError:
         print('No slice specification, stopping script.')
         raise
+else:
+    sliceTemp = pd.read_csv('SliceTemplate.csv', header=0)
 
 
 # Iterate through files, picking the ones matching the caseName and extension
@@ -92,11 +91,12 @@ metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2', 'd', 'Re',
 for fileName in dataList:
     if re.match(filePat, fileName):
         print(fileName)
-        data = dh.dataLoader(fileName, caseExt)
+        data = dh.dataLoader(dataDir+fileName, caseExt)
         params = dh.extractParams(fileName, nPil, caseExt)
+        params['fileName'] = fileName  # TODO: This should be built into extractParams()
         if not sliceInput:
             # Create slice list from geometry of pillars. Need helper function to calculate pillar locations from parameters.
-            if nPil == 2:
+            if nPil == 1:
                 slices = gen2PillarSlices(data, sliceTemp, params['r1'],
                                           params['r2'], params['d'])
             else:
