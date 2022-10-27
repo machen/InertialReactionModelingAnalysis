@@ -10,7 +10,6 @@ def dataLoader(fileName, type='flowdata.txt'):
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'vortX', 'vortY', 'vortZ', 'vortMag'])
-
     if type == 'chemdata.txt':
         data = pd.read_table(fileName, header=10, sep=r'\s+',
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
@@ -80,12 +79,12 @@ def extractParams(fileName, nPil=2, caseExt='flowdata.txt'):
         r1Val = re.search(r1Pat, fileName).group(1)
         r2Val = re.search(r2Pat, fileName).group(1)
         res = {'r1': float(r1Val), 'r2': float(r2Val), 'd': float(dVal),
-               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
+               'Re': float(reVal), 'c': float(cVal), 'kVal': float(kVal)}
     if nPil == 1:
         rPat = re.compile(r'r(\d+?)_')
         rVal = re.search(rPat, fileName).group(1)
         res = {'r1': float(rVal), 'r2': float(rVal), 'd': float(dVal),
-               'Re': float(reVal), 'c': float(cVal), 'k': float(kVal)}
+               'Re': float(reVal), 'c': float(cVal), 'kVal': float(kVal)}
     return res
 
 

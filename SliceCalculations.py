@@ -58,6 +58,25 @@ def gen2PillarSlices(data, slices, r1, r2, d):
     return slices
 
 
+def sliceVolAvg(dataColumn, eleVol):
+    # Use to get a volume weighted average value of something within the slice. Feed a specific column of data values.
+    return np.average(dataColumn, weights=eleVol)
+
+
+def sliceFlux(dataColumn, eleVol, planeWidth=None, conversionFactor=1E-6):
+    """Use to calculate the integrated flux of the data col value considering the vol weights.
+    If no planeWidth is specified, grid cell i is assumed to be a cube with vol eleVol(i) and equivalent surface area.
+    If planeWidth is specified, that is assumed to be the width of a grid cell. conversionFactor should convert the native units
+    of the simulation (i.e. x, y, z values) into SI units (m).
+    """
+    if not planeWidth:
+        eleArea = eleVol**(2/3.0)
+    else:
+        eleArea = eleVol/(planeWidth*conversionFactor)
+    flux = dataColumn*eleArea
+    return flux.sum()
+
+
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
 caseName = 'TwoPillar_v6'
@@ -65,7 +84,7 @@ caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
 # TODO: Make sliceInput a filename
 sliceInput = False  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
-
+planeWidth = 1  # Set to larger if you have empty planes, in the native unit of the simulation.
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
 if not os.path.exists(workingDir):
@@ -85,7 +104,7 @@ else:
 
 # Iterate through files, picking the ones matching the caseName and extension
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2', 'd', 'Re',
-                                     'k', 'c', 'sliceName', 'range1Min',
+                                     'kVal', 'c', 'sliceName', 'range1Min',
                                      'range1Max', 'range2Min', 'range2Max',
                                      'loc', 'type'])
 for fileName in dataList:
@@ -110,7 +129,7 @@ for fileName in dataList:
             dataSlice = dh.slicePlane(data,
                                       [slice['range1Min'], slice['range1Max']],
                                       [slice['range2Min'], slice['range2Max']],
-                                      slice['loc'], slice['type'])
+                                      slice['loc'], slice['type'], planeWidth)
             # Calc volume weighted pressure.
             # Calculate ALL vol. weighted params
             wDataSliceSum = dataSlice.mul(dataSlice.eleVol, 0).sum()
