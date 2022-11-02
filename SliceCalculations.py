@@ -79,22 +79,22 @@ def sliceFlux(dataColumn, eleVol, planeWidth=None, conversionFactor=1E-6):
 
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
-caseName = 'TwoPillar_v6'
+caseName = 'TwoPillar.*_v6.*_d100'
 caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
 # TODO: Make sliceInput a filename
-sliceInput = False  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
-planeWidth = 1  # Set to larger if you have empty planes, in the native unit of the simulation.
+sliceInput = True  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
+planeWidth = 100  # Set to larger if you have empty planes, in the native unit of the simulation.
+useWidth = False  # Set to false if you want to estimate elements as cubes
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
 if not os.path.exists(workingDir):
     os.mkdir(workingDir)
 dataList = os.listdir(dataDir)
-workingList = os.listdir(workingDir)
 if sliceInput:
     # load slice list from file. Useful for cases with the same geometry
     try:
-        sliceTemp = pd.read_csv(workingDir+'Slices.csv', header=0)
+        slices = pd.read_csv(workingDir+sliceInput, header=0)
     except FileNotFoundError:
         print('No slice specification, stopping script.')
         raise
@@ -126,21 +126,46 @@ for fileName in dataList:
             slice = slices.loc[indexVal, :]
             # Put slice info into params for export
             out.update(slice.to_dict())
+            out['planeWidth'] = planeWidth
+            out['useWidth'] = useWidth
+            # Switch for estimating element volume depth
+            if useWidth:
+                sliceWidth = planeWidth
+            else:
+                sliceWidth = None
             dataSlice = dh.slicePlane(data,
                                       [slice['range1Min'], slice['range1Max']],
                                       [slice['range2Min'], slice['range2Max']],
                                       slice['loc'], slice['type'], planeWidth)
+            eleVol = dataSlice.eleVol
+            if slice['type'] == 'xy':
+                normalVel = dataSlice.w
+            elif slice['type'] == 'yz':
+                normalVel = dataSlice.u
+            elif slice['type'] == 'xz':
+                normalVel = dataSlice.v
             # Calc volume weighted pressure.
-            # Calculate ALL vol. weighted params
-            wDataSliceSum = dataSlice.mul(dataSlice.eleVol, 0).sum()
-            wDataSliceSum.index += 'VolWeight'
-            dataSliceSum = dataSlice.sum()
-            # Included summed parameters, means we don't need dataformat
-            out.update(dataSliceSum.to_dict())
-            out.update(wDataSliceSum.to_dict())
+            out['volAvgPress'] = sliceVolAvg(dataSlice.p, eleVol)
+            # Calc volumetric fluxes, fluid, solute masses
+            out['fluidFlux'] = sliceFlux(dataSlice.u, eleVol, sliceWidth)
+            if caseExt == 'chemdata.txt':
+                out['tracerTCPOFlux'] = sliceFlux((dataSlice.tcpo +
+                                                   dataSlice.cProduct) *
+                                                  normalVel,
+                                                  eleVol, sliceWidth)
+                out['tcpoFlux'] = sliceFlux(dataSlice.tcpo *
+                                            normalVel,
+                                            eleVol, sliceWidth)
+                out['h2o2Flux'] = sliceFlux(dataSlice.h2o2 *
+                                            normalVel, eleVol, sliceWidth)
+                out['prodFlux'] = sliceFlux(dataSlice.cProduct *
+                                            normalVel, eleVol,
+                                            sliceWidth)
+            out['massFlux'] = dataSlice.massFlow.sum()
+            out['sliceVol'] = eleVol.sum()
             metaData = metaData.append(out, ignore_index=True)
 
 if sliceInput:
-    metaData.to_csv(workingDir+'processedSlices.csv')
+    metaData.to_csv(workingDir+sliceInput[:-4]+"_processed.csv")
 else:
     metaData.to_csv(workingDir+'AutoSlice.csv')
