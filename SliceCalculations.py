@@ -10,7 +10,11 @@ to a readable spreadsheet
 TODO: Implement some kind of warning for setting sliceInput to False. It is better
 to just input a file instead of trying to code for all the cases you may run into.
 
-TODO: Implement sliceInput as a file instead of bool
+TODO: This doesn't work properly in multiple ways. 1) Using this to
+determine an overall volume of a slice results in a mismatch between the dimensions
+of the data volume and the sum of the element volumes. 2) Calculated fluid fluxes
+at the same positions are incorrect. They do not satisfy mass balance, nor do they
+match the integrated fluxes as calculated by COMSOL. DO NOT USE THIS SCRIPT.
 """
 
 
@@ -79,11 +83,11 @@ def sliceFlux(dataColumn, eleVol, planeWidth=None, conversionFactor=1E-6):
 
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
-caseName = 'TwoPillar.*_v6_Exf_.*_d100_Re100'
+caseName = 'TwoPillar.*_v6_ExF_.*_d100_Re100'
 caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
-sliceInput = "d100_Re100"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
-planeWidth = 100  # Set to larger if you have empty planes, in the native unit of the simulation.
+sliceInput = r"d100_Re100.csv"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
+planeWidth = 1  # Set to larger if you have empty planes, in the native unit of the simulation.
 useWidth = False  # Set to false if you want to estimate elements as cubes
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
