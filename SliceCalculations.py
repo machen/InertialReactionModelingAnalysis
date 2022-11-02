@@ -79,11 +79,10 @@ def sliceFlux(dataColumn, eleVol, planeWidth=None, conversionFactor=1E-6):
 
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
-caseName = 'TwoPillar.*_v6.*_d100'
+caseName = 'TwoPillar.*_v6_Exf_.*_d100_Re100'
 caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
-# TODO: Make sliceInput a filename
-sliceInput = True  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
+sliceInput = "d100_Re100"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
 planeWidth = 100  # Set to larger if you have empty planes, in the native unit of the simulation.
 useWidth = False  # Set to false if you want to estimate elements as cubes
 
