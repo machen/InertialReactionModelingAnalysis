@@ -507,7 +507,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 # workingDir = "TestData"
 # workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
-# caseName = "TwoPillar_v6_ExF_FlowOnly_r100_d100_Re100"
+caseName = "TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
 # caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -518,7 +518,7 @@ print(workingDir)
 
 #PDF Properties
 
-testMode = False  # Set to true to use only one file, which you have to specify
+testMode = True  # Set to true to use only one file, which you have to specify
 plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
@@ -568,7 +568,7 @@ for fileName in fileList:
         print(fileName)
         # Check for fileName already in metaData, skip if so
         if testMode: # Test mode requires you specify exactly which file you wish to test
-            data = dh.dataLoader(caseName+caseExt, type=caseExt[2:-1])
+            data = dh.dataLoader(fileName, type=caseExt[2:-1])
         else:
             data = dh.dataLoader(fileName, type=caseExt[2:-1])
         params = dh.extractParams(fileName, nPil, caseExt=caseExt[2:-1])
