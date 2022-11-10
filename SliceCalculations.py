@@ -83,12 +83,12 @@ def sliceFlux(dataColumn, eleVol, planeWidth=None, conversionFactor=1E-6):
 
 dataDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\SliceData\\"
-caseName = 'TwoPillar.*_v6_ExF_.*_d100_Re100'
+caseName = 'TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100'
 caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
-sliceInput = r"d100_Re100.csv"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
-planeWidth = 1  # Set to larger if you have empty planes, in the native unit of the simulation.
-useWidth = False  # Set to false if you want to estimate elements as cubes
+sliceInput = "TestSlices.csv"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
+planeWidth = 5  # Set to larger if you have empty planes, in the native unit of the simulation.
+useWidth = True  # Set to false if you want to estimate elements as cubes
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
 if not os.path.exists(workingDir):
@@ -150,7 +150,7 @@ for fileName in dataList:
             # Calc volume weighted pressure.
             out['volAvgPress'] = sliceVolAvg(dataSlice.p, eleVol)
             # Calc volumetric fluxes, fluid, solute masses
-            out['fluidFlux'] = sliceFlux(dataSlice.u, eleVol, sliceWidth)
+            out['fluidFlux'] = sliceFlux(normalVel, eleVol, sliceWidth)
             if caseExt == 'chemdata.txt':
                 out['tracerTCPOFlux'] = sliceFlux((dataSlice.tcpo +
                                                    dataSlice.cProduct) *
