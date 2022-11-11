@@ -4,7 +4,7 @@ import re
 """Helper functions for use with outputted COMSOL data."""
 
 
-def dataLoader(fileName, type='flowdata.txt'):
+def dataLoader(fileName, type='flowdata.txt', dropNA=True):
     if type == 'flowdata.txt':
         data = pd.read_table(fileName, header=9, sep=r'\s+',
                              names=['x', 'y', 'z', 'meshID', 'eleVol', 'u',
@@ -16,9 +16,10 @@ def dataLoader(fileName, type='flowdata.txt'):
                                     'v', 'w', 'p', 'velMag', 'massFlow',
                                     'h2o2', 'tcpo', 'cProduct', 'k'])
         # Drop lines where concentration values are less than 0
-        data = data.drop(data.loc[(data.h2o2 <= 0)
-                         | (data.tcpo <= 0)
-                         | (data.cProduct <= 0)].index)
+        if dropNA:
+            data = data.drop(data.loc[(data.h2o2 <= 0)
+                             | (data.tcpo <= 0)
+                             | (data.cProduct <= 0)].index)
     if type == 'velStreamline.txt':
         data = pd.read_table(fileName, sep='\s+', skiprows=8,
                              names=['x', 'y', 'z', 'sID', 'velMag'])

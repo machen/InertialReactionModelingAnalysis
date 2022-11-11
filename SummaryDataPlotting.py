@@ -15,7 +15,7 @@ data = pd.read_excel(dataFile, usecols="A:N,T:Y",
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
 plt.ion()
-sns.set_context('paper',font_scale=1.25)
+sns.set_context('poster',font_scale=1.25)
 plt.rcParams['font.family'] = 'Cambria'
 plt.rcParams['svg.fonttype'] = 'none'
 
@@ -24,20 +24,20 @@ f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 subData100 = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='NS'), :]
 ax2.plot(subData100.ReP,
          subData100.dCdtMean/max(subData100.dCdtMean), ls='-',
-         marker=None, label="Sim 100um NS")
+         marker='o', label="Sim 100um NS")
 subData25 = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='NS'), :]
 ax2.plot(subData25.ReP,
          subData25.dCdtMean/max(subData25.dCdtMean), ls='-',
-         marker=None, label="Sim 25um NS")
+         marker='o', label="Sim 25um NS")
 # Plot stokes data
 subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
 ax2.plot(subData100Stokes.ReP,
          subData100Stokes.dCdtMean/max(subData100.dCdtMean), ls='--',
-         marker=None, label="Sim 100um Stokes")
+         marker='o', label="Sim 100um Stokes")
 subData25Stokes = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
 ax2.plot(subData25Stokes.ReP,
          subData25Stokes.dCdtMean/max(subData25.dCdtMean), ls='--',
-         marker=None, label="Sim 25um Stokes")
+         marker='o', label="Sim 25um Stokes")
 
 
 ax2.legend()
