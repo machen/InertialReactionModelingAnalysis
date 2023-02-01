@@ -4,13 +4,17 @@ import seaborn as sns
 import numpy as np
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
-data = pd.read_excel(dataFile, usecols="A:N,V:AA,BH",
+data = pd.read_excel(dataFile, usecols="A:P,V:AA,AX:BA,BH",
                      names=["FileName", "r1", "r2", "d", "k",
                             "c", "Re", "ReP", "FlowCond", "uInlet", "EstRT",
                             "MRT", "MRTerr", "TimeRatio",
+                            "PeNaive", "PePoreThroat",
                             "scalDisTCPO", "scalDisH2O2",
                             "scalDisProd", "scalDisConserv",
-                            "dCdtMean", "dCdtStd", "dCdtSum"],
+                            "dCdtMean", "dCdtStd", "DaAdvNaive",
+                            "DaAdvPoreThroat","DaDiffNaive",
+                            "DaDiffPoreThroat","dCdtSum",
+                            ],
                      skiprows=2, engine="openpyxl")
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
@@ -117,6 +121,35 @@ ax3b.set_yscale('log')
 #           marker=None, color='k', label="Sim 25um")
 # ax3c.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
 ax3b.legend()
+
+f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+ax5.plot(subData100.ReP,
+         subData100.DaAdvNaive, ls='-',
+         marker='o', label="Da Adv 100um Naive")
+ax5.plot(subData100.ReP,
+         subData100.DaAdvPoreThroat, ls='-',
+         marker='o', label="Da Adv 100um Pore Throat")
+ax5.plot(subData100.ReP,
+         subData100.DaDiffNaive, ls='-',
+         marker='o', label="Da Diff 100um Naive")
+ax5.plot(subData100.ReP,
+         subData100.DaDiffPoreThroat, ls='-',
+         marker='o', label="Da Diff 100um Pore Throat")
+
+ax5.plot(subData25.ReP,
+         subData25.DaAdvNaive, ls='--',
+         marker='^', label="Da Adv 25um Naive")
+ax5.plot(subData25.ReP,
+         subData25.DaAdvPoreThroat, ls='--',
+         marker='^', label="Da Adv 25um Pore Throat")
+ax5.plot(subData25.ReP,
+         subData25.DaDiffNaive, ls='--',
+         marker='^', label="Da Diff 25um Naive")
+ax5.plot(subData25.ReP,
+         subData25.DaDiffPoreThroat, ls='--',
+         marker='^', label="Da Diff 25um Pore Throat")
+
+ax5.legend()
 
 # Bonus figure: All trends superimposed
 f10, ax10 = plt.subplots(ncols=1,nrows=1)
