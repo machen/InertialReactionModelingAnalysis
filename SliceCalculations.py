@@ -87,7 +87,7 @@ caseName = 'TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100'
 caseExt = 'chemdata.txt'
 nPil = 1  # Should be the number of pillars specified in the file name
 sliceInput = "TestSlices.csv"  # Set true to use a parameter file containing names and slices to use for a given geometry. Otherwise, script should interpolate based on file geometry
-planeWidth = 0.1  # Set to larger if you have empty planes, in the native unit of the simulation.
+planeWidth = 5  # Set to larger if you have empty planes, in the native unit of the simulation.
 useWidth = True  # Set to false if you want to estimate elements as cubes
 
 filePat = re.compile(caseName+'.*?'+caseExt+'$')
@@ -113,7 +113,7 @@ metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2', 'd', 'Re',
 for fileName in dataList:
     if re.match(filePat, fileName):
         print(fileName)
-        data = dh.dataLoader(dataDir+fileName, caseExt)
+        data = dh.dataLoader(dataDir+fileName, caseExt, False)
         params = dh.extractParams(fileName, nPil, caseExt)
         params['fileName'] = fileName  # TODO: This should be built into extractParams()
         if not sliceInput:

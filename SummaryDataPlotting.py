@@ -4,13 +4,13 @@ import seaborn as sns
 import numpy as np
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
-data = pd.read_excel(dataFile, usecols="A:N,T:Y",
+data = pd.read_excel(dataFile, usecols="A:N,V:AA,BH",
                      names=["FileName", "r1", "r2", "d", "k",
                             "c", "Re", "ReP", "FlowCond", "uInlet", "EstRT",
                             "MRT", "MRTerr", "TimeRatio",
                             "scalDisTCPO", "scalDisH2O2",
                             "scalDisProd", "scalDisConserv",
-                            "dCdtMean", "dCdtStd"],
+                            "dCdtMean", "dCdtStd", "dCdtSum"],
                      skiprows=2, engine="openpyxl")
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
@@ -39,7 +39,6 @@ ax2.plot(subData25Stokes.ReP,
          subData25Stokes.dCdtMean/max(subData25.dCdtMean), ls='--',
          marker='o', label="Sim 25um Stokes")
 
-
 ax2.legend()
 ax2.set_xlabel('Reynolds Number')
 ax2.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
@@ -47,6 +46,35 @@ ax2.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
 ax2.set_xlim([-1, 105])
 ax2.set_ylim([0.3, 1.05])
 ax2.set_title('Check normalization values')
+
+
+f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+subData100 = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='NS'), :]
+ax4.plot(subData100.ReP,
+         subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
+         marker='o', label="Sim 100um NS")
+subData25 = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='NS'), :]
+ax4.plot(subData25.ReP,
+         subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
+         marker='o', label="Sim 25um NS")
+# Plot stokes data
+subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
+ax4.plot(subData100Stokes.ReP,
+         subData100Stokes.dCdtSum/max(subData100.dCdtSum), ls='--',
+         marker='o', label="Sim 100um Stokes")
+subData25Stokes = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
+ax4.plot(subData25Stokes.ReP,
+         subData25Stokes.dCdtSum/max(subData25.dCdtSum), ls='--',
+         marker='o', label="Sim 25um Stokes")
+
+
+ax4.legend()
+ax4.set_xlabel('Reynolds Number')
+ax4.set_ylabel('sum(dCdt) Normalized to Max (.)')
+
+ax4.set_xlim([-1, 105])
+ax4.set_ylim([0.3, 1.05])
+ax4.set_title('Check normalization values')
 
 # Figure 3: MRT and Scalar Dissipation
 f3, (ax3a, ax3b) = plt.subplots(ncols=1, nrows=2, figsize=(5,10))
