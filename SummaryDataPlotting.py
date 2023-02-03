@@ -150,7 +150,24 @@ ax5.plot(subData25.ReP,
          marker='^', label="Da Diff 25um Pore Throat")
 
 ax5.legend()
+sns.despine(f5)
 
+f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+ax6.plot(subData100.ReP,
+         subData100.PeNaive, ls='-',
+         marker='o', label="Pe 100um Naive")
+ax6.plot(subData100.ReP,
+         subData100.PePoreThroat, ls='-',
+         marker='o', label="Pe 100um Pore Throat")
+ax6.plot(subData25.ReP,
+         subData25.PeNaive, ls='-',
+         marker='o', label="Pe 25um Naive")
+ax6.plot(subData25.ReP,
+         subData25.PePoreThroat, ls='-',
+         marker='o', label="Pe 25um Pore Throat")
+
+ax6.legend()
+sns.despine(f6)
 # Bonus figure: All trends superimposed
 f10, ax10 = plt.subplots(ncols=1,nrows=1)
 plt.subplots_adjust(right=0.75)
