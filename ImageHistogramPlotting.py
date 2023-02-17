@@ -173,9 +173,8 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
             subData = subData.loc[subData.loc[:, prop] < propLim, :]
         meanData = subData.groupby(prop).mean()
         stdData = subData.groupby(prop).std()
-        ax4.errorbar(subData.loc[:, prop], subData.loc[:, 'meanInt'],
-                     yerr=subData.loc[:, 'stdInt'], ls='none', marker=marker,
-                     capsize=2, label=val)
+        ax4.plot(subData.loc[:, prop], subData.sumInt, ls='none', marker=marker,
+                 label=val)
         ax5.plot(subData.loc[:, prop], subData.loc[:, 'meanInt'],
                  ls='none', marker=marker, label=val)
         maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
@@ -186,15 +185,14 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
         ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
                      yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker=marker,
                      capsize=2, label= "{} max val: {}".format(val, maxVal))
-        maxVal = meanData.meanInt.max()
-        ax8.errorbar(meanData.index, meanData.meanInt/maxVal,
-                     yerr=stdData.meanInt/maxVal, ls='-',
+        maxVal = meanData.sumInt.max()
+        ax8.errorbar(meanData.index, meanData.sumInt/maxVal,
+                     yerr=stdData.sumInt/maxVal, ls='-',
                      marker=marker, capsize=2, label=val)
-        ax9.errorbar(meanData.index, meanData.meanInt,
-                     yerr=stdData.meanInt, ls='none',
+        ax9.errorbar(meanData.index, meanData.sumInt, yerr=stdData.sumInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
-    ax4.set_ylabel('Mean intensity and variation in individual image')
+    ax4.set_ylabel('Sum intensity individual image')
     ax4.legend(loc=0)
     ax5.set_xlabel(prop)
     ax5.set_ylabel('Mean intensity')
@@ -211,14 +209,14 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
     ax7.set_xlim([-1, 105])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
-    ax8.set_ylabel('Mean Intensity Normalized to Max Observed')
+    ax8.set_ylabel('Sum intensity averaged over images')
     ax8.set_title('Max normalized - check meaning of max val')
     ax8.set_ylim([0.3, 1.05])
     ax8.set_xlim([-1, 105])
     ax9.legend(loc=0)
     ax9.set_xlabel(prop)
-    ax9.set_ylabel('Mean Intensity')
-    ax9.set_title('Mean intensities')
+    ax9.set_ylabel('Sum Intensity averaged over images')
+    ax9.set_title('Sum intensities')
     ax9.set_xlim([-1, 105])
     meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
            'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
@@ -237,13 +235,20 @@ propLim = 220
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
-workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirF = "2021-11-18-Chemilum-25um\\2PD3_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirG = "2022-2-9-Chemilum\\25umGap\\Pillar Gap Exclusive 50 bins\\"
+workingDirA = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 3 Aligned 50 bins\\"
+workingDirB = "2023-2-9-Chemilum\\MPD1C_D1\\Image 1 Aligned 50 bins\\"
+workingDirC = "2023-2-9-Chemilum\\MPD1C_D1\\Image 2 Aligned 50 bins\\"
+workingDirD = "2023-2-9-Chemilum\\MPD1C_D1\\Image 3 Aligned 50 bins\\"
+workingDirE = "2023-2-9-Chemilum\\MPD1C_D1\\Image 4 Aligned 50 bins\\"
+# workingDirF = "2023-2-9-Chemilum\\MPD1C_D1\\Image 5 Aligned 50 bins\\"
+
+# workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
+# workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirF = "2021-11-18-Chemilum-25um\\2PD3_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirG = "2022-2-9-Chemilum\\25umGap\\Pillar Gap Exclusive 50 bins\\"
 # dA = "1/15"
 # dB = "10/5"
 # dC = "10/20"
@@ -266,13 +271,13 @@ workingDirG = "2022-2-9-Chemilum\\25umGap\\Pillar Gap Exclusive 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
-dA = "5/19-100 um"
-dB = "1/15-100um"
-dC = "10/20-100 um"
-dD = "2/1-100 um"
-dE = "10/5-100 um"
-dF = "11/18-25 um"
-dG = "2/9-25 um"
+dA = "2/9/2023 Pore 3"
+dB = "Image 1"
+dC = "Image 2"
+dD = "Image 3"
+dE = "Image 4"
+# dF = "Image 5"
+# dG = "2/9-25 um"
 # dF = "Pore 9"
 # dG = "Pore 15"
 # dE = "10/20 A2"
@@ -316,8 +321,8 @@ dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, w
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
 dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
-dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
+# dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
+# dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
 
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
@@ -325,8 +330,8 @@ metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
 metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
-metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
-metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
+# metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
+# metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
 
 markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
@@ -335,8 +340,8 @@ out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), p
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
 
 # metaPlot(metaDataG, prop=prop, marker=next(markerCycle))
