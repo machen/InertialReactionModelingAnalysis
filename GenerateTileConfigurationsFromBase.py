@@ -11,8 +11,8 @@ file it should be applied to.
 import os
 from string import Template
 
-baseDir = "..\\..\\Experiments\\2023-2-7-Chemilum_MPRand\\MPD1_D1\\"
-imageDir = "." # Directory of images that gives the base image names. Should be the raw data folder
+baseDir = "..\\..\\Experiments\\2023-2-7-Chemilum_MPRand\\MPD1_D3\\"
+imageDir = "RawData\\" # Directory of images that gives the base image names. Should be the raw data folder
 ext = ".nd2"
 os.chdir(baseDir)
 

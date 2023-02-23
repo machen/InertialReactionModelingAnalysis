@@ -30,8 +30,15 @@ def extractParams(fileName):
     qPat = re.compile('(\d*\.?\d*)q')
     repPat = re.compile('(\d{0,3}).nd2')
     qVal = re.search(qPat, fileName).group(1)
-    repVal = re.search(repPat, fileName).group(1)
-    cVal = re.search(cPat, fileName).group(1)
+    try:
+        repVal = re.search(repPat, fileName).group(1)
+    except AttributeError:
+        repVal = 0
+    try:
+        cVal = re.search(cPat, fileName).group(1)
+    except AttributeError:
+        print('Assuming 3 mM concentration. CHECK.')
+        cVal = 3
     if not repVal:
         repVal = 0
     res = {'q': float(qVal), 'replicate': int(repVal), 'c': float(cVal)}
@@ -121,20 +128,20 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "..\\..\\Experiments\\2021-10-05-Chemilum-100um\\100 um Pillar Gap\\RotImg\\"
+workingDir = "..\\..\\Experiments\\2023-2-7-Chemilum_MPRand\\MPD1_D1\\SplitRot\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-#filePat = re.compile('.*(series 5).*\.tif')
-filePat = re.compile('.*\.tif')
+filePat = re.compile('.*(series 2).*\.tif')
+#filePat = re.compile('.*\.tif')
 bins = 50
 # Remember that tis is supposed to be the frame of the image
-xRange = [955, 1110]
-yRange = [880, 1165]
+xRange = None # [778, 934]
+yRange = None # [840, 1072]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
-maxVal = 1282
-regionName = "Pillar Gap Exclusive Aligned"
+maxVal = 956
+regionName = "Image 2 Aligned"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned

@@ -235,9 +235,9 @@ propLim = 220
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 3 Aligned 50 bins\\"
-workingDirB = "2023-2-9-Chemilum\\MPD1C_D1\\Image 1 Aligned 50 bins\\"
-workingDirC = "2023-2-9-Chemilum\\MPD1C_D1\\Image 2 Aligned 50 bins\\"
+workingDirA = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 1 Aligned 50 bins\\"
+workingDirB = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 3 Aligned 50 bins\\"
+workingDirC = "2023-2-9-Chemilum\\MPD1C_D1\\Top Pore 4 Aligned 50 bins\\"
 workingDirD = "2023-2-9-Chemilum\\MPD1C_D1\\Image 3 Aligned 50 bins\\"
 workingDirE = "2023-2-9-Chemilum\\MPD1C_D1\\Image 4 Aligned 50 bins\\"
 # workingDirF = "2023-2-9-Chemilum\\MPD1C_D1\\Image 5 Aligned 50 bins\\"
@@ -271,9 +271,9 @@ workingDirE = "2023-2-9-Chemilum\\MPD1C_D1\\Image 4 Aligned 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
-dA = "2/9/2023 Pore 3"
-dB = "Image 1"
-dC = "Image 2"
+dA = "Pore 1"
+dB = "Pore 3"
+dC = "Top Pore 4"
 dD = "Image 3"
 dE = "Image 4"
 # dF = "Image 5"
@@ -319,8 +319,8 @@ metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
@@ -328,8 +328,8 @@ dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, w
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+# metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
+# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
@@ -338,8 +338,8 @@ markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
 out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
 out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
