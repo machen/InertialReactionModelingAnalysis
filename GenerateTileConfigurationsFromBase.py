@@ -11,13 +11,14 @@ file it should be applied to.
 import os
 from string import Template
 
-baseDir = "..\\..\\Experiments\\2023-2-7-Chemilum_MPRand\\MPD1_D3\\"
+baseDir = "..\\..\\Experiments\\2023-2-25 Chemilum\\MPD1F_D2\\"
 imageDir = "RawData\\" # Directory of images that gives the base image names. Should be the raw data folder
-ext = ".nd2"
+writeLoc = "SplitImg\\" # Where do you want the template files to be put?
+ext = ".nd2" # Extension of the raw data
 os.chdir(baseDir)
 
 # This should be a registered tile configuration produced by stitching a brightfield image.
-tempLoc = "SplitImgs\\TileConfigurationTemplate.txt"
+tempLoc = "SplitImg\\TileConfigurationTemplate.txt"
 with open(tempLoc, 'r') as tempFile:
     tempStr = tempFile.read()
     template = Template(tempStr)
@@ -25,7 +26,7 @@ with open(tempLoc, 'r') as tempFile:
 for imageName in os.listdir(imageDir):
     if imageName.endswith(ext):
         for i in range(0,3):
-            outFileName = imageName+"C={}".format(i)+"TileConfig.txt"
+            outFileName = writeLoc+imageName+"C={}".format(i)+"TileConfig.txt"
             with open(outFileName, 'x') as outFile:
                 outFile.write(template.safe_substitute(baseFile=imageName,
                               channelNo=i))
