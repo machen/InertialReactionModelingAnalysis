@@ -52,34 +52,6 @@ ax2.set_ylim([0.3, 1.05])
 ax2.set_title('Check normalization values')
 
 
-f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-subData100 = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='NS'), :]
-ax4.plot(subData100.ReP,
-         subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
-         marker='o', label="Sim 100um NS")
-subData25 = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='NS'), :]
-ax4.plot(subData25.ReP,
-         subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
-         marker='o', label="Sim 25um NS")
-# Plot stokes data
-subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
-ax4.plot(subData100Stokes.ReP,
-         subData100Stokes.dCdtSum/max(subData100.dCdtSum), ls='--',
-         marker='o', label="Sim 100um Stokes")
-subData25Stokes = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
-ax4.plot(subData25Stokes.ReP,
-         subData25Stokes.dCdtSum/max(subData25.dCdtSum), ls='--',
-         marker='o', label="Sim 25um Stokes")
-
-
-ax4.legend()
-ax4.set_xlabel('Reynolds Number')
-ax4.set_ylabel('sum(dCdt) Normalized to Max (.)')
-
-ax4.set_xlim([-1, 105])
-ax4.set_ylim([0.3, 1.05])
-ax4.set_title('Check normalization values')
-
 # Figure 3: MRT and Scalar Dissipation
 f3, (ax3a, ax3b) = plt.subplots(ncols=1, nrows=2, figsize=(5,10))
 tReact = 1/3E-3/2000  # Half life assuming well mixed and equal reactants
@@ -122,25 +94,65 @@ ax3b.set_yscale('log')
 # ax3c.set_ylabel('Mean Reaction Rate Normalized to Max (.)')
 ax3b.legend()
 
-f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+f4, ax4 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
+subData100 = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='NS'), :]
+ax4.plot(subData100.ReP,
+         subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
+         marker='o', label="Sim 100um NS")
+subData25 = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='NS'), :]
+ax4.plot(subData25.ReP,
+         subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
+         marker='o', label="Sim 25um NS")
+# Plot stokes data
+subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
+ax4.plot(subData100Stokes.ReP,
+         subData100Stokes.dCdtSum/max(subData100.dCdtSum), ls='--',
+         marker='o', label="Sim 100um Stokes")
+subData25Stokes = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
+ax4.plot(subData25Stokes.ReP,
+         subData25Stokes.dCdtSum/max(subData25.dCdtSum), ls='--',
+         marker='o', label="Sim 25um Stokes")
+
+
+ax4.legend()
+ax4.set_xlabel('Reynolds Number')
+ax4.set_ylabel('sum(dCdt) Normalized to Max (.)')
+
+ax4.set_xlim([-1, 105])
+ax4.set_ylim([0.3, 1.05])
+ax4.set_title('Check normalization values')
+
+# Figure of Pe and relevant Da numbers
+f5, (ax5, ax5a) = plt.subplots(1, 2, sharex=True, figsize=(12, 20))
+# ax5a = ax5.twinx()
+
+# Create data sets that give either the adv or diff Da depending on the Pe number
+daAdv100 = subData100.loc[subData100.PePoreThroat>1,'DaAdvPaper']
+daDiff100 = subData100.loc[subData100.PePoreThroat<1, 'DaDiffPaper']
+da100 = daAdv100.append(daDiff100)
+da100.sort_values(axis='index')
+
+daAdv25 = subData25.loc[subData25.PePoreThroat>1,'DaAdvPaper']
+daDiff25 = subData25.loc[subData25.PePoreThroat<1, 'DaDiffPaper']
+da25 = daDiff25.append(daAdv25)
+da25.sort_values(axis='index')
+
+
 ax5.plot(subData100.ReP,
-         subData100.DaAdvPaper, ls='-',
-         marker='o', label="Da I 100um")
-ax5.plot(subData100.ReP,
-         subData100.DaDiffPaper, ls='--',
-         marker='D', label="Da II 100um Pore Throat")
-ax5.plot(subData25.ReP,
-         subData25.DaAdvPaper, ls='-',
-         marker='o', label="Da I 25um")
-ax5.plot(subData25.ReP,
-         subData25.DaDiffPaper, ls='--',
-         marker='o', label="Da II 25um")
-ax5.plot(subData100.ReP,
-         subData100.PePoreThroat, ls='-.',
+         subData100.PePoreThroat, ls='-',
          marker='o', label="Pe 100um Pore Throat")
 ax5.plot(subData25.ReP,
-         subData25.PePoreThroat, ls='-.',
+         subData25.PePoreThroat, ls='--',
          marker='o', label="Pe 25um Pore Throat")
+ax5.plot([subData25.ReP.min(),subData25.ReP.max()],[1,1],color='k',ls='--')
+ax5a.plot(subData100.ReP,
+          da100, ls='-',
+          marker='D', label="Da 100 um")
+ax5a.plot(subData25.ReP,
+          da25, ls='--',
+          marker='D', label="Da 25 um")
+ax5a.plot([subData25.ReP.min(),subData25.ReP.max()],[1,1],color='k',ls='--')
+
 # ax5.plot(subData25.ReP,
 #          subData25.DaAdvNaive, ls='--',
 #          marker='^', label="Da Adv 25um Naive")
@@ -154,9 +166,14 @@ ax5.plot(subData25.ReP,
 #          subData25.DaDiffPoreThroat, ls='--',
 #          marker='^', label="Da Diff 25um Pore Throat")
 ax5.set_xlabel('Reynolds Number')
-ax5.set_ylabel('Non-dimensional number')
+ax5a.set_xlabel('Reynolds Number')
+ax5.set_ylabel('Peclet Number (-)')
+ax5.set_yscale('log')
+ax5a.set_ylabel('Dahmkohler Number (-)')
+ax5a.set_yscale('log')
 ax5.legend()
-sns.despine(f5)
+ax5a.legend()
+#sns.despine(f5)
 
 f6, ax6 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 ax6.plot(subData100.ReP,

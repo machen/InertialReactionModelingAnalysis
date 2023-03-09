@@ -206,18 +206,18 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
     ax7.set_title('Max normalized - check max val')
     ax7.legend(loc=0)
     ax7.set_ylim([0.3, 1.05])
-    ax7.set_xlim([-1, 105])
+    # ax7.set_xlim([-1, 105])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Sum intensity averaged over images')
     ax8.set_title('Max normalized - check meaning of max val')
     ax8.set_ylim([0.3, 1.05])
-    ax8.set_xlim([-1, 105])
+    # ax8.set_xlim([-1, 105])
     ax9.legend(loc=0)
     ax9.set_xlabel(prop)
     ax9.set_ylabel('Sum Intensity averaged over images')
     ax9.set_title('Sum intensities')
-    ax9.set_xlim([-1, 105])
+    # ax9.set_xlim([-1, 105])
     meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
            'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
     out = pd.DataFrame(meanDict)
@@ -230,17 +230,23 @@ plt.rcParams['font.family'] = 'Cambria'
 smooth = False
 window = 10
 prop = 'ReP'
-propLim = 220
+propLim = None
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 1 Aligned 50 bins\\"
-workingDirB = "2023-2-9-Chemilum\\MPD1C_D1\\Pore 3 Aligned 50 bins\\"
-workingDirC = "2023-2-9-Chemilum\\MPD1C_D1\\Top Pore 4 Aligned 50 bins\\"
-workingDirD = "2023-2-9-Chemilum\\MPD1C_D1\\Image 3 Aligned 50 bins\\"
-workingDirE = "2023-2-9-Chemilum\\MPD1C_D1\\Image 4 Aligned 50 bins\\"
+workingDirA = "2023-2-25 Chemilum\\MPD1_D3\\Stitched Aligned Images 50 bins\\"
+workingDirB = "2023-2-25 Chemilum\\MPD1_D3\\Pore 3 Aligned Images 50 bins\\"
+workingDirC = "2023-2-25 Chemilum\\MPD1_D3\\Pore 5 Aligned Images 50 bins\\"
+workingDirD = "2023-2-25 Chemilum\\MPD1_D3\\Pore 11 Aligned Images 50 bins\\"
+workingDirE = "2023-2-25 Chemilum\\MPD1_D3\\Pore 1 Aligned Images 50 bins\\"
 # workingDirF = "2023-2-9-Chemilum\\MPD1C_D1\\Image 5 Aligned 50 bins\\"
+
+dA = "2/25-MPD1_D3"
+dB = "Pore 3"
+dC = "Pore 5"
+dD = "Pore 11"
+dE = "Pore 1"
 
 # workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
 # workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
@@ -271,11 +277,7 @@ workingDirE = "2023-2-9-Chemilum\\MPD1C_D1\\Image 4 Aligned 50 bins\\"
 
 # workingDirA = "2022-3-22-MPD2\\MPD2_P1_A3\\Raw Masked Image 50 bins\\"
 
-dA = "Pore 1"
-dB = "Pore 3"
-dC = "Top Pore 4"
-dD = "Image 3"
-dE = "Image 4"
+
 # dF = "Image 5"
 # dG = "2/9-25 um"
 # dF = "Pore 9"
@@ -319,8 +321,8 @@ metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
 dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
+dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
 # dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
@@ -328,8 +330,8 @@ dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, w
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-# metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
+metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
+metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
 # metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
 # metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
@@ -338,8 +340,8 @@ markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
 out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
 out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
 out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle))])
