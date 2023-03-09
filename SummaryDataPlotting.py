@@ -4,7 +4,7 @@ import seaborn as sns
 import numpy as np
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
-data = pd.read_excel(dataFile, usecols="A:P,V:AA,AX:BA,BH",
+data = pd.read_excel(dataFile, usecols="A:P,V:AA,AX:BB,BI",
                      names=["FileName", "r1", "r2", "d", "k",
                             "c", "Re", "ReP", "FlowCond", "uInlet", "EstRT",
                             "MRT", "MRTerr", "TimeRatio",
@@ -12,7 +12,7 @@ data = pd.read_excel(dataFile, usecols="A:P,V:AA,AX:BA,BH",
                             "scalDisTCPO", "scalDisH2O2",
                             "scalDisProd", "scalDisConserv",
                             "dCdtMean", "dCdtStd", "DaAdvNaive",
-                            "DaAdvPoreThroat","DaDiffNaive",
+                            "DaAdvPoreThroat","DaAdvPaper","DaDiffPaper",
                             "DaDiffPoreThroat","dCdtSum",
                             ],
                      skiprows=2, engine="openpyxl")
@@ -124,31 +124,37 @@ ax3b.legend()
 
 f5, ax5 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 ax5.plot(subData100.ReP,
-         subData100.DaAdvNaive, ls='-',
-         marker='o', label="Da Adv 100um Naive")
+         subData100.DaAdvPaper, ls='-',
+         marker='o', label="Da I 100um")
 ax5.plot(subData100.ReP,
-         subData100.DaAdvPoreThroat, ls='-',
-         marker='o', label="Da Adv 100um Pore Throat")
+         subData100.DaDiffPaper, ls='--',
+         marker='D', label="Da II 100um Pore Throat")
+ax5.plot(subData25.ReP,
+         subData25.DaAdvPaper, ls='-',
+         marker='o', label="Da I 25um")
+ax5.plot(subData25.ReP,
+         subData25.DaDiffPaper, ls='--',
+         marker='o', label="Da II 25um")
 ax5.plot(subData100.ReP,
-         subData100.DaDiffNaive, ls='-',
-         marker='o', label="Da Diff 100um Naive")
-ax5.plot(subData100.ReP,
-         subData100.DaDiffPoreThroat, ls='-',
-         marker='o', label="Da Diff 100um Pore Throat")
-
+         subData100.PePoreThroat, ls='-.',
+         marker='o', label="Pe 100um Pore Throat")
 ax5.plot(subData25.ReP,
-         subData25.DaAdvNaive, ls='--',
-         marker='^', label="Da Adv 25um Naive")
-ax5.plot(subData25.ReP,
-         subData25.DaAdvPoreThroat, ls='--',
-         marker='^', label="Da Adv 25um Pore Throat")
-ax5.plot(subData25.ReP,
-         subData25.DaDiffNaive, ls='--',
-         marker='^', label="Da Diff 25um Naive")
-ax5.plot(subData25.ReP,
-         subData25.DaDiffPoreThroat, ls='--',
-         marker='^', label="Da Diff 25um Pore Throat")
-
+         subData25.PePoreThroat, ls='-.',
+         marker='o', label="Pe 25um Pore Throat")
+# ax5.plot(subData25.ReP,
+#          subData25.DaAdvNaive, ls='--',
+#          marker='^', label="Da Adv 25um Naive")
+# ax5.plot(subData25.ReP,
+#          subData25.DaAdvPoreThroat, ls='--',
+#          marker='^', label="Da Adv 25um Pore Throat")
+# ax5.plot(subData25.ReP,
+#          subData25.DaDiffNaive, ls='--',
+#          marker='^', label="Da Diff 25um Naive")
+# ax5.plot(subData25.ReP,
+#          subData25.DaDiffPoreThroat, ls='--',
+#          marker='^', label="Da Diff 25um Pore Throat")
+ax5.set_xlabel('Reynolds Number')
+ax5.set_ylabel('Non-dimensional number')
 ax5.legend()
 sns.despine(f5)
 
