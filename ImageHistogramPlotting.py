@@ -80,7 +80,7 @@ def extractExpParams(fileName):
 
 
 def loadMetaData(metaFile, caseExt):
-    params = pd.read_csv(metaFile, index_col=1)
+    params = pd.read_csv(metaFile, index_col='fileName')
     params = params.loc[params.caseExt == caseExt]
     return params
 
@@ -235,18 +235,18 @@ propLim = None
 
 mainDir = "..\\..\\Experiments\\"
 
-workingDirA = "2023-2-25 Chemilum\\MPD1_D3\\Stitched Aligned Images 50 bins\\"
-workingDirB = "2023-2-25 Chemilum\\MPD1_D3\\Pore 3 Aligned Images 50 bins\\"
-workingDirC = "2023-2-25 Chemilum\\MPD1_D3\\Pore 5 Aligned Images 50 bins\\"
-workingDirD = "2023-2-25 Chemilum\\MPD1_D3\\Pore 11 Aligned Images 50 bins\\"
-workingDirE = "2023-2-25 Chemilum\\MPD1_D3\\Pore 1 Aligned Images 50 bins\\"
+workingDirA = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 1 50 Bins\\"
+workingDirB = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 2 50 Bins\\"
+workingDirC = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 3 50 Bins\\"
+workingDirD = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 4 50 Bins\\"
+workingDirE = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Whole Channel Aligned 50 Bins\\"
 # workingDirF = "2023-2-9-Chemilum\\MPD1C_D1\\Image 5 Aligned 50 bins\\"
 
-dA = "2/25-MPD1_D3"
-dB = "Pore 3"
-dC = "Pore 5"
-dD = "Pore 11"
-dE = "Pore 1"
+dA = "Image 1"
+dB = "Image 2"
+dC = "Image 3"
+dD = "Image 4"
+dE = "Whole Channel"
 
 # workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
 # workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"

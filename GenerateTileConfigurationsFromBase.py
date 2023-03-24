@@ -11,7 +11,7 @@ file it should be applied to.
 import os
 from string import Template
 
-baseDir = "..\\..\\Experiments\\2023-2-25 Chemilum\\MPD1F_D2\\"
+baseDir = "..\\..\\Experiments\\2023-3-21-Chemilum\\MPD1_D4_Batch2\\"
 imageDir = "RawData\\" # Directory of images that gives the base image names. Should be the raw data folder
 writeLoc = "SplitImg\\" # Where do you want the template files to be put?
 ext = ".nd2" # Extension of the raw data

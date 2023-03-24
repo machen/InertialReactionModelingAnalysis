@@ -115,7 +115,9 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     params['maxInt'] = np.max(data)
     params['meanInt'] = np.mean(data)
     params['stdInt'] = np.std(data)
-    params['sumInt'] = np.sum(data)
+    # Sums on large images can cause overflow issues leading to negative values
+    # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export
+    params['sumInt'] = np.sum(data).astype('uint64')
     params['channel'] = channelName
     params['caseExt'] = f'.{channelName}_hist'
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
@@ -128,20 +130,20 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "..\\..\\Experiments\\2023-2-25 Chemilum\\MPD1F_D2\\SplitRot\\"
+workingDir = "..\\..\\Experiments\\2023-3-21-Chemilum\\MPD1_D4_Batch2\\StitchRot\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-filePat = re.compile('.*(series 1).*\.tif')
-#filePat = re.compile('.*\.tif')
+#filePat = re.compile('.*(series 5).*\.tif')
+filePat = re.compile('.*\.tif')
 bins = 50
 # Remember that tis is supposed to be the frame of the image
-xRange = None  # [940, 975]
-yRange = None # [1030, 1500]
+xRange = [400, 7300]
+yRange = [850, 1700]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 815
-regionName = "Image 1 Aligned Images"
+regionName = "Whole Channel Aligned"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
@@ -150,14 +152,14 @@ outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
                                    regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
-metaData = pd.DataFrame([], columns=['fileName', 'c', 'q'])
+metaData = []
 
 for file in os.listdir():
     if re.match(filePat, file):
         print(file)
         params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
                                   bins=100, xRange=xRange, yRange=yRange)
-        metaData = metaData.append(params, ignore_index=True)
+        metaData.append(params)
         # img = Image.open(file)
         # img.seek(0)
         # bright = np.array(img)
@@ -180,5 +182,5 @@ for file in os.listdir():
         #              'leftBin': fluorLeft, 'rightBin': fluorRight}
         # fluorDF = pd.DataFrame(fluorDict)
         # fluorDF.to_csv(workingDir+file[:-4]+'_fluorescence_histogram.csv')
-
-metaData.to_csv(outFile+"_meta.csv")
+outDF = pd.DataFrame.from_records(metaData, coerce_float=True)
+outDF.to_csv(outFile+"_meta.csv")
