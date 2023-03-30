@@ -130,20 +130,20 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "..\\..\\Experiments\\2023-3-21-Chemilum\\MPD1_D4_Batch2\\StitchRot\\"
+workingDir = "..\\..\\Experiments\\2023-3-21-Chemilum\\MPD1_D4_Batch2\\SplitImg\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-#filePat = re.compile('.*(series 5).*\.tif')
-filePat = re.compile('.*\.tif')
+filePat = re.compile('.*(series 4).*\.tif')
+# filePat = re.compile('.*\.tif')
 bins = 50
 # Remember that tis is supposed to be the frame of the image
-xRange = [400, 7300]
-yRange = [850, 1700]
+xRange = [1113, 1305]
+yRange = [1137, 1569]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 815
-regionName = "Whole Channel Aligned"
+regionName = "Pore 14"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
