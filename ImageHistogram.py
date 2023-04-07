@@ -130,20 +130,26 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "..\\..\\Experiments\\2023-3-21-Chemilum\\MPD1_D4_Batch2\\SplitImg\\"
+workingDir = "..\\..\\Experiments\\2022-3-22-MPD2\\MPD2_P1_A3\\RotMask\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-filePat = re.compile('.*(series 4).*\.tif')
-# filePat = re.compile('.*\.tif')
+filePat = re.compile('.*(series 5).*\\.tif')
+# filePat = re.compile('.*\\.tif')
+
+# Folder of names to further restrict analysis. Uses the actual raw file name as the criteria
+# Set to none to not use
+filterFolder = "..\\RawData\\Sequence 1\\"
+
+
 bins = 50
-# Remember that tis is supposed to be the frame of the image
-xRange = [1113, 1305]
-yRange = [1137, 1569]
+# Remember that its is supposed to be the frame of the image
+xRange = [666, 864]
+yRange = [776, 1178]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
-maxVal = 815
-regionName = "Pore 14"
+maxVal = 1083
+regionName = "S1 Raw Masked Pore Throats"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
@@ -154,33 +160,25 @@ outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
                                    dataRegionY=yRange)
 metaData = []
 
+if filterFolder:
+    filterList = os.listdir(filterFolder)
+else:
+    filterList = None
+
 for file in os.listdir():
-    if re.match(filePat, file):
-        print(file)
-        params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
-                                  bins=100, xRange=xRange, yRange=yRange)
-        metaData.append(params)
-        # img = Image.open(file)
-        # img.seek(0)
-        # bright = np.array(img)
-        # brightPdf, brightVal, brightLeft, brightRight = genPDF(bright, bins)
-        # brightDict = {'normFreq': brightPdf, 'meanVal': brightVal,
-        #               'leftBin': brightLeft, 'rightBin': brightRight}
-        # brightDF = pd.DataFrame(brightDict)
-        # brightDF.to_csv(workingDir+file[:-4]+'_brightfield_histogram.csv')
-        # img.seek(1)
-        # dark = np.array(img)
-        # darkPdf, darkVal, darkLeft, darkRight = genPDF(dark, bins)
-        # darkDict = {'normFreq': darkPdf, 'meanVal': darkVal,
-        #             'leftBin': darkLeft, 'rightBin': darkRight}
-        # darkDF = pd.DataFrame(darkDict)
-        # darkDF.to_csv(workingDir+file[:-4]+'_dark_histogram.csv')
-        # img.seek(2)
-        # fluor = np.array(img)
-        # fluorPdf, fluorVal, fluorLeft, fluorRight = genPDF(fluor, bins)
-        # fluorDict = {'normFreq': fluorPdf, 'meanVal': fluorVal,
-        #              'leftBin': fluorLeft, 'rightBin': fluorRight}
-        # fluorDF = pd.DataFrame(fluorDict)
-        # fluorDF.to_csv(workingDir+file[:-4]+'_fluorescence_histogram.csv')
+    # If you specify a secondary list to filter the items by, this will kick out anything not in that list
+    if filterList:
+        if any(item in file for item in filterList):
+            if re.match(filePat, file):
+                print(file)
+                params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
+                                        bins=100, xRange=xRange, yRange=yRange)
+                metaData.append(params)
+    else:
+        if re.match(filePat, file):
+            print(file)
+            params = produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=maxVal,
+                                    bins=100, xRange=xRange, yRange=yRange)
+            metaData.append(params)
 outDF = pd.DataFrame.from_records(metaData, coerce_float=True)
 outDF.to_csv(outFile+"_meta.csv")
