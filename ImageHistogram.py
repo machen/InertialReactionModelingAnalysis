@@ -139,6 +139,8 @@ filePat = re.compile('.*(series 5).*\\.tif')
 
 # Folder of names to further restrict analysis. Uses the actual raw file name as the criteria
 # Set to none to not use
+with open("Sequence 1.txt",'r') as filterFile:
+    filterList = [item.split() for item in filterFile]
 filterFolder = "..\\RawData\\Sequence 1\\"
 
 
