@@ -135,13 +135,12 @@ workingDir = "..\\..\\Experiments\\2022-3-22-MPD2\\MPD2_P1_A3\\RotMask\\"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
 filePat = re.compile('.*(series 5).*\\.tif')
-# filePat = re.compile('.*\\.tif')
+#filePat = re.compile('.*\\.tif')
 
-# Folder of names to further restrict analysis. Uses the actual raw file name as the criteria
+# Folder of names to further restrict analysis. Uses a text list of filenames
 # Set to none to not use
-with open("Sequence 1.txt",'r') as filterFile:
-    filterList = [item.split() for item in filterFile]
-filterFolder = "..\\RawData\\Sequence 1\\"
+with open("..\\RawData\\Sequence1.txt",'r') as filterFile:
+    filterList = [item.split()[0] for item in filterFile]
 
 
 bins = 50
@@ -151,7 +150,7 @@ yRange = [776, 1178]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 1083
-regionName = "S1 Raw Masked Pore Throats"
+regionName = "S1 Raw Masked Pore Throat 16"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
@@ -161,11 +160,6 @@ outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
 metaData = []
-
-if filterFolder:
-    filterList = os.listdir(filterFolder)
-else:
-    filterList = None
 
 for file in os.listdir():
     # If you specify a secondary list to filter the items by, this will kick out anything not in that list
