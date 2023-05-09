@@ -4,7 +4,7 @@ import re
 import matplotlib.pyplot as plt
 import os
 import seaborn as sns
-import datahelper as dh
+import DataHelper as dh
 # from mpl_toolkits.mplot3d import Axes3D
 
 
@@ -507,7 +507,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 # workingDir = "TestData"
 # workingDir = "..\\Working Data\\ChemData\\RawData\\"
 caseName = "TwoPillar_v6"
-caseName = "TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100"
+#caseName = "TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
 # caseExt = "\.flowdata.txt$"
 calcFlow = False  # Do Pressure/Flow rate fitting? Only valid with flow
@@ -518,24 +518,24 @@ print(workingDir)
 
 #PDF Properties
 
-testMode = True  # Set to true to use only one file, which you have to specify
+testMode = False  # Set to true to use only one file, which you have to specify
 plotData = False
 
 binProp = True  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-5000, 250]
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'TEST'
+regionName = 'Bottom half pillar exclusive'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'dCdt'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'constC'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 estimateRecircCenter = False
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
-halfRegion = None # 'top', 'bot', or None (uses whole region)
+halfRegion = 'bot' # 'top', 'bot', or None (uses whole region)
 includePillar = False
-maxValue = 4.39  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
+maxValue = 3  #  4.39 for dC/dt sim, 100 um pillar gap. 3 for TCPO/product sims. User input value for calculating dCdtMaxNorm, this should be drawn from the highest observed value in simulated cases
 metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
 # Chemistry props

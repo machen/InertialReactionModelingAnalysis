@@ -104,7 +104,10 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     channelPat = re.compile('C=(\d)')
     channel = int(re.search(channelPat, file).group(1))
     channelName = imageDictInv[channel]
-    data = np.array(img)
+    # Sums on large images can cause overflow issues leading to negative values
+    # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export.
+    # TODO: It may be smarter to normalize this to the image bitdepth so that we deal with floats instead.
+    data = np.array(img, dtype='uint64')
     if maxNorm:  # If using maximum normalization, all values scaled to largest value
         if maxVal:
             data = data/maxVal
@@ -115,9 +118,7 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     params['maxInt'] = np.max(data)
     params['meanInt'] = np.mean(data)
     params['stdInt'] = np.std(data)
-    # Sums on large images can cause overflow issues leading to negative values
-    # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export
-    params['sumInt'] = np.sum(data).astype('uint64')
+    params['sumInt'] = np.sum(data)
     params['channel'] = channelName
     params['caseExt'] = f'.{channelName}_hist'
     dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
@@ -125,32 +126,34 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                 'leftBin': dataLeft, 'rightBin': dataRight}
     dataDF = pd.DataFrame(dataDict)
     dataDF.to_csv(outFile+params['fileName']+params['caseExt'])
-    dataImage = Image.fromarray(data)
+    dataImage = Image.fromarray(data.astype('uint16'))
     dataImage.save(outFile+file[:-4]+'.tiff')
     return params
 
 
-workingDir = "..\\..\\Experiments\\2022-3-22-MPD2\\MPD2_P1_A3\\RotMask\\"
+workingDir = "..\\..\\Experiments\\2023-5-5-ChemilumRandMP\\MPD3B_C3\\SplitImgs\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
+sequenceFile = "..\\RawData\\Sequence2.txt"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-filePat = re.compile('.*(series 5).*\\.tif')
+filePat = re.compile('.*(series 2).*\\.tif')
 #filePat = re.compile('.*\\.tif')
 
 # Folder of names to further restrict analysis. Uses a text list of filenames
 # Set to none to not use
-with open("..\\RawData\\Sequence1.txt",'r') as filterFile:
-    filterList = [item.split()[0] for item in filterFile]
+if sequenceFile:
+    with open(sequenceFile, 'r') as filterFile:
+        filterList = [item.split()[0] for item in filterFile]
 
 
 bins = 50
 # Remember that its is supposed to be the frame of the image
-xRange = [666, 864]
-yRange = [776, 1178]
+xRange =  [1383, 1632]
+yRange = [552, 987]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
-maxVal = 1083
-regionName = "S1 Raw Masked Pore Throat 16"
+maxVal = 920
+regionName = "Batch2 Pore A"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
