@@ -131,13 +131,13 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
     return params
 
 
-workingDir = "..\\..\\Experiments\\2023-5-5-ChemilumRandMP\\MPD3B_C3\\SplitImgs\\"
+workingDir = "..\\..\\Experiments\\2023-5-5-ChemilumRandMP\\MPD3B_C3\\StitchSplit\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
-sequenceFile = "..\\RawData\\Sequence2.txt"
+sequenceFile = "..\\RawData\\Sequence1.txt"
 os.chdir(workingDir)
 #"MP_P3_D1_3c_100q.nd2 - MP_P3_D1_3c_100q.nd2 (series 1) - C=0"
-filePat = re.compile('.*(series 2).*\\.tif')
-#filePat = re.compile('.*\\.tif')
+#filePat = re.compile('.*(series 2).*\\.tif')
+filePat = re.compile('.*\\.tif')
 
 # Folder of names to further restrict analysis. Uses a text list of filenames
 # Set to none to not use
@@ -148,12 +148,12 @@ if sequenceFile:
 
 bins = 50
 # Remember that its is supposed to be the frame of the image
-xRange =  [1383, 1632]
-yRange = [552, 987]
+xRange =  [2004, 2331]
+yRange = [1880, 2100]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 920
-regionName = "Batch2 Pore A"
+regionName = "Batch1 Mid Pore B"
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned

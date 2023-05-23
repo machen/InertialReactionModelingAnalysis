@@ -238,13 +238,14 @@ def genOutputFolderAndParams(dataDir, caseName, caseExt, nBins, logBins,
 def calcDilutionIndex(data, prop):
     """ Calculates the dilution index following Kitidanis, 1994.
     Note that we use the discrete case, not the continuous.
-    Notably, the continuous case has a thorny issue where the units
-    don't match that of the discrete case."""
+    The continuous case takes an exponential of a volume which seems wrong,
+    but apparently works out mathematically."""
     dV = data.eleVol.values
     c = data.loc[:, prop].values
     mTot = np.sum(c*dV)
     """ If we define well mixed as the concentration is the same everywhere,
-    the contribution of the "c" term will normalize out
+    the contribution of the "c" term will normalize out and pMax is simply the ratio
+    of the element volume to the total volume
     """
     mTotMax = np.sum(dV)
     p = c*dV/mTot

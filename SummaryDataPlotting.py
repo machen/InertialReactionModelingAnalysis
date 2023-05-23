@@ -1,7 +1,8 @@
 import pandas as pd
 import matplotlib.pyplot as plt
 import seaborn as sns
-import numpy as np
+
+#TODO: Update to pull different items for plotting
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
 data = pd.read_excel(dataFile, usecols="A:P,V:AA,AX:BB,BI",
@@ -123,23 +124,23 @@ ax4.set_ylim([0.3, 1.05])
 ax4.set_title('Check normalization values')
 
 # Figure of Pe and relevant Da numbers
-f5, (ax5, ax5a) = plt.subplots(1, 2, sharex=True, figsize=(12, 20))
-# ax5a = ax5.twinx()
+f5, ax5 = plt.subplots(1, 1, sharex=True, figsize=(12, 20))
+ax5a = ax5.twinx()
 
 # Create data sets that give either the adv or diff Da depending on the Pe number
-daAdv100 = subData100.loc[subData100.PePoreThroat>1,'DaAdvPaper']
-daDiff100 = subData100.loc[subData100.PePoreThroat<1, 'DaDiffPaper']
+daAdv100 = subData100.loc[subData100.PePoreThroat > 1,'DaAdvPoreThroat']
+daDiff100 = subData100.loc[subData100.PePoreThroat < 1, 'DaDiffPoreThroat']
 da100 = daAdv100.append(daDiff100)
 da100.sort_values(axis='index')
 
-daAdv25 = subData25.loc[subData25.PePoreThroat>1,'DaAdvPaper']
-daDiff25 = subData25.loc[subData25.PePoreThroat<1, 'DaDiffPaper']
+daAdv25 = subData25.loc[subData25.PePoreThroat>1,'DaAdvPoreThroat']
+daDiff25 = subData25.loc[subData25.PePoreThroat<1, 'DaDiffPoreThroat']
 da25 = daDiff25.append(daAdv25)
 da25.sort_values(axis='index')
 
 
 ax5.plot(subData100.ReP,
-         subData100.PePoreThroat, ls='-',
+         subData100.PePoreThroat, ls='--',
          marker='o', label="Pe 100um Pore Throat")
 ax5.plot(subData25.ReP,
          subData25.PePoreThroat, ls='--',
@@ -149,9 +150,9 @@ ax5a.plot(subData100.ReP,
           da100, ls='-',
           marker='D', label="Da 100 um")
 ax5a.plot(subData25.ReP,
-          da25, ls='--',
+          da25, ls='-',
           marker='D', label="Da 25 um")
-ax5a.plot([subData25.ReP.min(),subData25.ReP.max()],[1,1],color='k',ls='--')
+ax5a.plot([subData25.ReP.min(),subData25.ReP.max()],[1,1],color='k',ls='-')
 
 # ax5.plot(subData25.ReP,
 #          subData25.DaAdvNaive, ls='--',
