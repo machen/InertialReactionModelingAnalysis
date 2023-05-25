@@ -25,7 +25,7 @@ sns.despine(f1)
 f2,ax2 = plt.subplots(1,1)
 ax2.plot(Da,k*cB0*cA/(k*cB0*cA0))
 plt.xlabel('Dahmkohler Number')
-plt.ylabel('Reaction Rate (M/s)')
+plt.ylabel('Normalized Reaction Rate (-)')
 plt.xscale('log')
 sns.despine(f2)
 
