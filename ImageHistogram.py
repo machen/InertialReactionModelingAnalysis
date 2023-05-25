@@ -5,6 +5,9 @@ from matplotlib import pyplot as plt
 import os
 import re
 import seaborn as sns
+import DataHelper as dh
+
+
 """ Should read in images (which should be in the order brightfield, dark, GFP)
 and then produce a PDF of that image.
 
@@ -24,27 +27,6 @@ plt.rcParams['svg.fonttype'] = 'none'
 sns.set_context('talk')
 
 
-def extractParams(fileName):
-    # Produces a dictionary of experimental parameters
-    cPat = re.compile('(\d+\.?\d*)c')
-    qPat = re.compile('(\d*\.?\d*)q')
-    repPat = re.compile('(\d{0,3}).nd2')
-    qVal = re.search(qPat, fileName).group(1)
-    try:
-        repVal = re.search(repPat, fileName).group(1)
-    except AttributeError:
-        repVal = 0
-    try:
-        cVal = re.search(cPat, fileName).group(1)
-    except AttributeError:
-        print('Assuming 3 mM concentration. CHECK.')
-        cVal = 3
-    if not repVal:
-        repVal = 0
-    res = {'q': float(qVal), 'replicate': int(repVal), 'c': float(cVal)}
-    return res
-
-
 def genPDF(image, bins):
     pdf, edges = np.histogram(image, density=True, bins=bins)
     edgeVal = (edges[:-1]+edges[1:])/2
@@ -56,19 +38,6 @@ def pdfStats(data):
     eVal = np.sum(data.valMean*data.normFreq*dx)
     varVal = np.sum(data.normFreq*(data.valMean-eVal)**2*dx)
     return eVal, varVal
-
-
-def subSelectData(data, xRange=None, yRange=None):
-    """Assumes that each of the inputs to the function is a tuple containing
-     max and min values of x, y, and z that we wish to include.
-
-     Assumes that we're working with images. You should 100% pre run without any
-     subselection of data to determine the correct area"""
-    if xRange:
-        data = data[:, xRange[0]:xRange[1]]
-    if yRange:
-        data = data[yRange[0]:yRange[1], :]
-    return data
 
 
 def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
@@ -98,7 +67,7 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
 def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                      xRange=None, yRange=None):
     # Single image. No background subtraction for the moment.
-    params = extractParams(file)
+    params = dh.extractExptParams(file)
     img = Image.open(file)
     imageDictInv = {v: k for k, v in imageDict.items()}
     channelPat = re.compile('C=(\d)')
@@ -113,7 +82,7 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
             data = data/maxVal
         else:
             data = data/np.max(data)
-    data = subSelectData(data, xRange=xRange, yRange=yRange)
+    data = dh.subSelectExptData(data, xRange=xRange, yRange=yRange)
     params['fileName'] = os.path.splitext(file)[0]
     params['maxInt'] = np.max(data)
     params['meanInt'] = np.mean(data)

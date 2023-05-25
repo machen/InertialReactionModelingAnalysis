@@ -127,3 +127,39 @@ def pillarGapCalculation(r1, r2, d, includePillar=True, halfRegion=None):
         y1 = yPil+d/2
         y2 = yPil-d/2
     return [x1, x2], [y1, y2]
+
+
+def extractExptParams(fileName):
+    """Extract experimental params from given fileName.
+    Returns dictionary of parameters."""
+    # Produces a dictionary of experimental parameters
+    cPat = re.compile('(\d+\.?\d*)c')
+    qPat = re.compile('(\d*\.?\d*)q')
+    repPat = re.compile('(\d{0,3}).nd2')
+    qVal = re.search(qPat, fileName).group(1)
+    try:
+        repVal = re.search(repPat, fileName).group(1)
+    except AttributeError:
+        repVal = 0
+    try:
+        cVal = re.search(cPat, fileName).group(1)
+    except AttributeError:
+        print('Assuming 3 mM concentration. CHECK.')
+        cVal = 3
+    if not repVal:
+        repVal = 0
+    res = {'q': float(qVal), 'replicate': int(repVal), 'c': float(cVal)}
+    return res
+
+
+def subSelectExptData(data, xRange=None, yRange=None):
+    """Image sub-selection script which subselects based on the indices of the image. Determine using FIJI.
+    xRange: None or length 2 list-like containing the min and max indicies to use for the x coordinate
+    yRange: None or length 2 list-like containing the min and max indicies to use for the y coordinate
+    Return: Data that has been cut down
+    """
+    if xRange:
+        data = data[:, xRange[0]:xRange[1]]
+    if yRange:
+        data = data[yRange[0]:yRange[1], :]
+    return data
