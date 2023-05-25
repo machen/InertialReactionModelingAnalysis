@@ -68,36 +68,37 @@ def produceSinglePDF(file, imageDict, outFile, maxNorm, maxVal=None, bins=100,
                      xRange=None, yRange=None):
     # Single image. No background subtraction for the moment.
     params = dh.extractExptParams(file)
-    img = Image.open(file)
-    imageDictInv = {v: k for k, v in imageDict.items()}
-    channelPat = re.compile('C=(\d)')
-    channel = int(re.search(channelPat, file).group(1))
-    channelName = imageDictInv[channel]
-    # Sums on large images can cause overflow issues leading to negative values
-    # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export.
-    # TODO: It may be smarter to normalize this to the image bitdepth so that we deal with floats instead.
-    data = np.array(img, dtype='uint64')
-    if maxNorm:  # If using maximum normalization, all values scaled to largest value
-        if maxVal:
-            data = data/maxVal
-        else:
-            data = data/np.max(data)
-    data = dh.subSelectExptData(data, xRange=xRange, yRange=yRange)
-    params['fileName'] = os.path.splitext(file)[0]
-    params['maxInt'] = np.max(data)
-    params['meanInt'] = np.mean(data)
-    params['stdInt'] = np.std(data)
-    params['sumInt'] = np.sum(data)
-    params['channel'] = channelName
-    params['caseExt'] = f'.{channelName}_hist'
-    dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
-    dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
-                'leftBin': dataLeft, 'rightBin': dataRight}
-    dataDF = pd.DataFrame(dataDict)
-    dataDF.to_csv(outFile+params['fileName']+params['caseExt'])
-    dataImage = Image.fromarray(data.astype('uint16'))
-    dataImage.save(outFile+file[:-4]+'.tiff')
-    return params
+    with Image.open(file) as img:
+        #TODO: Swaps the keys of the channel definition dictionary. WHY NOT JUST FLIP IT IN THE FIRST PLACE?
+        imageDictInv = {v: k for k, v in imageDict.items()}
+        channelPat = re.compile('C=(\d)')
+        channel = int(re.search(channelPat, file).group(1))
+        channelName = imageDictInv[channel]
+        # Sums on large images can cause overflow issues leading to negative values
+        # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export.
+        # TODO: It may be smarter to normalize this to the image bitdepth so that we deal with floats instead.
+        data = np.array(img, dtype='uint64')
+        if maxNorm:  # If using maximum normalization, all values scaled to largest value
+            if maxVal:
+                data = data/maxVal
+            else:
+                data = data/np.max(data)
+        data = dh.subSelectExptData(data, xRange=xRange, yRange=yRange)
+        params['fileName'] = os.path.splitext(file)[0]
+        params['maxInt'] = np.max(data)
+        params['meanInt'] = np.mean(data)
+        params['stdInt'] = np.std(data)
+        params['sumInt'] = np.sum(data)
+        params['channel'] = channelName
+        params['caseExt'] = f'.{channelName}_hist'
+        dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
+        dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
+                    'leftBin': dataLeft, 'rightBin': dataRight}
+        dataDF = pd.DataFrame(dataDict)
+        dataDF.to_csv(outFile+params['fileName']+params['caseExt'])
+        dataImage = Image.fromarray(data.astype('uint16'))
+        dataImage.save(outFile+file[:-4]+'.tiff')
+        return params
 
 
 workingDir = "..\\..\\Experiments\\2023-5-5-ChemilumRandMP\\MPD3B_C3\\StitchSplit\\"
