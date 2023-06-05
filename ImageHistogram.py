@@ -41,6 +41,7 @@ def pdfStats(data):
 
 
 def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
+                             intMax, intBkg, cMax, cUnit,
                              imageDict=None,
                              regionName='Result', dataRegionX=None,
                              dataRegionY=None, dataRegionZ=None):
@@ -58,6 +59,8 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
         outFile.write("Number of bins: {}\n".format(nBins))
         outFile.write("Image key: {}\n".format(imageDict))
         outFile.write("Maximum Normalization: {}, Value: {}\n".format(maxNorm, maxVal))
+        outFile.write("Defined max concentration: {} {}\n".format(cMax, cUnit))
+        outFile.write("Intensities for conc. cal: {}, {}".format(intBkg,intMax))
         outFile.write("X Region: {}\n".format(dataRegionX))
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
@@ -173,11 +176,18 @@ maxNorm = False
 maxVal = 920
 regionName = "Bottom half"
 
+# Params for conc. conversion
+intBkg =
+intMax =
+cMax =
+cUnit = 'mM'
+
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 #imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
 imageDict = {'bright': 0, 'fluor': 1}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
+                                   intMax,intBkg,cMax,cUnit,
                                    regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
@@ -189,14 +199,18 @@ for file in os.listdir():
         if any(item in file for item in filterList):
             if re.match(filePat, file):
                 print(file)
-                params = processSingleImage(file, imageDict, outFile, maxNorm, maxVal=maxVal,
-                                         bins=100, xRange=xRange, yRange=yRange)
+                params = processSingleImage(file, imageDict, outFile, maxNorm,
+                                            intMax, intBkg, cMax=cMax,
+                                            maxVal=maxVal,
+                                            bins=100, xRange=xRange, yRange=yRange)
                 metaData.append(params)
     else:
         if re.match(filePat, file):
             print(file)
-            params = processSingleImage(file, imageDict, outFile, maxNorm, maxVal=maxVal,
-                                    bins=100, xRange=xRange, yRange=yRange)
+            params = processSingleImage(file, imageDict, outFile, maxNorm,
+                                        intMax, intBkg, cMax=cMax,
+                                        maxVal=maxVal,
+                                        bins=100, xRange=xRange, yRange=yRange)
             metaData.append(params)
 outDF = pd.DataFrame.from_records(metaData, coerce_float=True)
 outDF.to_csv(outFile+"_meta.csv")
