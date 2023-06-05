@@ -256,9 +256,9 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirD = "2023-2-25 Chemilum\\MPD1_D4\\Image 4 Aligned Images 50 Bins\\"
 # workingDirE = "2023-2-25 Chemilum\\MPD1_D4\\Stitched Aligned Images 50 Bins\\"
 
-workingDirA = "2023-5-5-ChemilumRandMP\\MPD3B_C3\\Batch1 Inlet Pore A 50 bins\\"
-workingDirB = "2023-5-5-ChemilumRandMP\\MPD3B_C3\\Batch1 Inlet Pore B 50 bins\\"
-workingDirC = "2023-5-5-ChemilumRandMP\\MPD3B_C3\\Batch1 Inlet Pore C 50 bins\\"
+workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Top half 50 bins\\"
+workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Bottom half 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Whole region 50 bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 6 50 bins\\"
 # workingDirH = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 7 50 bins\\"
 # workingDirI = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 8 50 bins\\"
@@ -271,9 +271,9 @@ workingDirC = "2023-5-5-ChemilumRandMP\\MPD3B_C3\\Batch1 Inlet Pore C 50 bins\\"
 # workingDirP = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 15 50 bins\\"
 # workingDirQ = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 16 50 bins\\"
 
-dA = "Batch1 Inlet Pore A"
-dB = "Batch1 Inlet Pore B"
-dC = "Batch1 Inlet Pore C"
+dA = "Top half"
+dB = "Bottom half"
+dC = "Whole channel"
 dD = "Batch1 Mid Pore B"
 dE = "Batch1 Inlet Pore C"
 dF = "Batch 1 Inlet Pores"
@@ -337,7 +337,7 @@ dF = "Batch 1 Inlet Pores"
 
 os.chdir(mainDir)
 caseNameA = ''
-caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
+caseExtA = r".fluor_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
 
