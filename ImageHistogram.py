@@ -41,7 +41,7 @@ def pdfStats(data):
 
 
 def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
-                             intMax, intBkg, cMax, cUnit,
+                             intMax, intBkg, cMax, cUnit, calcConc,
                              imageDict=None,
                              regionName='Result', dataRegionX=None,
                              dataRegionY=None, dataRegionZ=None):
@@ -58,9 +58,12 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
         outFile.write("Case extension: {}\n".format(case))
         outFile.write("Number of bins: {}\n".format(nBins))
         outFile.write("Image key: {}\n".format(imageDict))
-        outFile.write("Maximum Normalization: {}, Value: {}\n".format(maxNorm, maxVal))
+        outFile.write("Maximum Normalization: {}, Value: {}\n".format(maxNorm,
+                                                                      maxVal))
         outFile.write("Defined max concentration: {} {}\n".format(cMax, cUnit))
-        outFile.write("Intensities for conc. cal: {}, {}".format(intBkg,intMax))
+        outFile.write("Intensities for conc. cal: {}, {}\n".format(intBkg,
+                                                                   intMax))
+        outFile.write("Values are concentration? {}\n".format(calcConc))
         outFile.write("X Region: {}\n".format(dataRegionX))
         outFile.write("Y Region: {}\n".format(dataRegionY))
         outFile.write("Z Region: {}\n".format(dataRegionZ))
@@ -69,7 +72,8 @@ def genOutputFolderAndParams(dataDir, case, nBins, maxNorm, maxVal,
 
 def processSingleImage(file, imageDict, outFile, maxNorm,
                        intMax, intBkgd, cMax=1, maxVal=None,
-                       bins=100, xRange=None, yRange=None, bitDepth=2**16-1):
+                       bins=100, xRange=None, yRange=None, bitDepth=2**16-1,
+                       calcConc=False):
     # Single image. No background subtraction for the moment.
     params = dh.extractExptParams(file)
     with Image.open(file) as img:
@@ -88,6 +92,9 @@ def processSingleImage(file, imageDict, outFile, maxNorm,
             else:
                 data = data/np.max(data)
         data = dh.subSelectExptData(data, xRange=xRange, yRange=yRange)
+        concData = intensityToConc(data, intMax/bitDepth, intBkgd/bitDepth, cMax)
+        if calcConc:
+            data = concData
         params['fileName'] = os.path.splitext(file)[0]
         params['maxInt'] = np.max(data)
         params['meanInt'] = np.mean(data)
@@ -95,7 +102,6 @@ def processSingleImage(file, imageDict, outFile, maxNorm,
         params['sumInt'] = np.sum(data)
         params['channel'] = channelName
         params['caseExt'] = f'.{channelName}_hist'
-        concData = intensityToConc(data, intMax, intBkgd, cMax)
         params['reactorRatio'] = calcImReactor(concData)
         dataPdf, dataVal, dataLeft, dataRight = genPDF(data, bins)
         dataDict = {'normFreq': dataPdf, 'valMean': dataVal,
@@ -158,6 +164,25 @@ os.chdir(workingDir)
 #filePat = re.compile('.*(series 2).*\\.tif')
 filePat = re.compile('.*\\.tif')
 
+# Params for conc. conversion
+# TODO: Script uses these numbers for all channels, which is incorrect
+calcConc = True
+intBkg = 8000
+intMax = 15000
+cMax = 150
+cUnit = 'uM'
+
+bins = 50
+# Remember that its is supposed to be the frame of the image
+xRange = None  # [2004, 2331]
+yRange = [740, 1066]
+maxNorm = False
+# Set to none to use max observed in image, otherwise use well mixed value
+maxVal = 920
+regionName = "Top half Conc"
+
+
+
 # Folder of names to further restrict analysis. Uses a text list of filenames
 # Set to none to not use
 if sequenceFile:
@@ -166,28 +191,12 @@ if sequenceFile:
 else:
     filterList = None
 
-
-bins = 50
-# Remember that its is supposed to be the frame of the image
-xRange = None  # [2004, 2331]
-yRange = [1066, 1377]
-maxNorm = False
-# Set to none to use max observed in image, otherwise use well mixed value
-maxVal = 920
-regionName = "Bottom half"
-
-# Params for conc. conversion
-intBkg =
-intMax =
-cMax =
-cUnit = 'mM'
-
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
 #imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
 imageDict = {'bright': 0, 'fluor': 1}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
-                                   intMax,intBkg,cMax,cUnit,
+                                   intMax, intBkg, cMax, cUnit, calcConc,
                                    regionName=regionName,
                                    imageDict=imageDict, dataRegionX=xRange,
                                    dataRegionY=yRange)
@@ -202,7 +211,8 @@ for file in os.listdir():
                 params = processSingleImage(file, imageDict, outFile, maxNorm,
                                             intMax, intBkg, cMax=cMax,
                                             maxVal=maxVal,
-                                            bins=100, xRange=xRange, yRange=yRange)
+                                            bins=100, xRange=xRange, yRange=yRange,
+                                            calcConc=calcConc)
                 metaData.append(params)
     else:
         if re.match(filePat, file):

@@ -175,16 +175,17 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
         stdData = subData.groupby(prop).std()
         ax4.plot(subData.loc[:, prop], subData.sumInt, ls='none', marker=marker,
                  label=val)
-        ax5.plot(subData.loc[:, prop], subData.loc[:, 'meanInt'],
+        ax5.plot(subData.loc[:, prop], subData.loc[:, 'reactorRatio'],
                  ls='none', marker=marker, label=val)
-        maxLoc = meanData.loc[meanData.PDFmean==meanData.PDFmean.max(), 'q'].values
-        ax6.errorbar(meanData.index, meanData.loc[:,'PDFmean'],
-                     yerr=stdData.loc[:,'PDFstd'], ls='none', marker=marker,
-                     capsize=2, label= "{} max val q: {}".format(val,float(maxLoc)))
+        maxLoc = meanData.loc[meanData.meanInt ==
+                              meanData.meanInt.max(), 'q'].values
+        ax6.errorbar(meanData.index, meanData.loc[:, 'meanInt'],
+                     yerr=stdData.loc[:,'stdInt'], ls='none', marker=marker,
+                     capsize=2, label="{} max val q: {}".format(val,
+                                                                float(maxLoc)))
         maxVal = meanData.PDFmean.max()
-        ax7.errorbar(meanData.index, meanData.loc[:,'PDFmean']/maxVal,
-                     yerr=stdData.loc[:, 'PDFstd']/maxVal, ls='none', marker=marker,
-                     capsize=2, label= "{} max val: {}".format(val, maxVal))
+        ax7.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+                 ls='none', marker=marker, label=val)
         maxVal = meanData.sumInt.max()
         ax8.errorbar(meanData.index, meanData.sumInt/maxVal,
                      yerr=stdData.sumInt/maxVal, ls='-',
@@ -195,18 +196,15 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
     ax4.set_ylabel('Sum intensity individual image')
     ax4.legend(loc=0)
     ax5.set_xlabel(prop)
-    ax5.set_ylabel('Mean intensity')
+    ax5.set_ylabel('Reactor ratio')
     ax5.legend(loc=0)
     ax6.set_xlabel(prop)
-    ax6.set_ylabel('Mean of PDF')
+    ax6.set_ylabel('Mean Int')
     ax6.set_title('Averaged Results')
     ax6.legend(loc=0)
     ax7.set_xlabel(prop)
-    ax7.set_ylabel('Mean of PDF')
-    ax7.set_title('Max normalized - check max val')
+    ax7.set_ylabel('Reactor ratio, averaged over images')
     ax7.legend(loc=0)
-    ax7.set_ylim([0.3, 1.05])
-    # ax7.set_xlim([-1, 105])
     ax8.legend(loc=0)
     ax8.set_xlabel(prop)
     ax8.set_ylabel('Sum intensity averaged over images')
@@ -256,9 +254,9 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirD = "2023-2-25 Chemilum\\MPD1_D4\\Image 4 Aligned Images 50 Bins\\"
 # workingDirE = "2023-2-25 Chemilum\\MPD1_D4\\Stitched Aligned Images 50 Bins\\"
 
-workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Top half 50 bins\\"
-workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Bottom half 50 bins\\"
-workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Whole region 50 bins\\"
+workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Top half Conc 50 bins\\"
+workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Bottom half Conc 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Whole region Conc 50 bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 6 50 bins\\"
 # workingDirH = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 7 50 bins\\"
 # workingDirI = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 8 50 bins\\"
