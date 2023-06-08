@@ -190,6 +190,8 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
         ax8.errorbar(meanData.index, meanData.sumInt/maxVal,
                      yerr=stdData.sumInt/maxVal, ls='-',
                      marker=marker, capsize=2, label=val)
+        ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+                 ls='none', marker=marker, label=val)
         ax9.errorbar(meanData.index, meanData.sumInt, yerr=stdData.sumInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
@@ -254,9 +256,9 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirD = "2023-2-25 Chemilum\\MPD1_D4\\Image 4 Aligned Images 50 Bins\\"
 # workingDirE = "2023-2-25 Chemilum\\MPD1_D4\\Stitched Aligned Images 50 Bins\\"
 
-workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Top half Conc 50 bins\\"
-workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Bottom half Conc 50 bins\\"
-workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Whole region Conc 50 bins\\"
+workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top half Intensity 50 bins\\"
+workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Bottom half Intensity 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 6 50 bins\\"
 # workingDirH = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 7 50 bins\\"
 # workingDirI = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 8 50 bins\\"
@@ -359,8 +361,8 @@ f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12, 10))
 
 metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
 # dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
 # dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
@@ -378,8 +380,8 @@ dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, w
 
 
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
-metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
-metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
+# metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
+# metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 # metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
 # metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
@@ -397,8 +399,8 @@ metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 
 markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
 out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
-out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
+# out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])

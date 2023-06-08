@@ -156,7 +156,7 @@ def intensityToConc(imageVals, maxVal, bkgdVal, cMax=1):
     return cVals
 
 
-workingDir = "..\\..\\Experiments\\2023-5-26-Tracer_Chemilum\\Tracer\\SplitRot\\"
+workingDir = "..\\..\\Experiments\\2023-5-26-Tracer_Chemilum\\Tracer\\RotMask\\"
 #workingDir = "C:\\Users\\mache\\Google Drive Workspace\\2022-1-15-Chemilum 100 um\\100 um Gap\\SplitImgs\\"
 sequenceFile = "..\\Sequence1.txt"
 os.chdir(workingDir)
@@ -166,7 +166,7 @@ filePat = re.compile('.*\\.tif')
 
 # Params for conc. conversion
 # TODO: Script uses these numbers for all channels, which is incorrect
-calcConc = True
+calcConc = True  # Convert all intensities to concentrations
 intBkg = 8000
 intMax = 15000
 cMax = 150
@@ -175,11 +175,11 @@ cUnit = 'uM'
 bins = 50
 # Remember that its is supposed to be the frame of the image
 xRange = None  # [2004, 2331]
-yRange = [740, 1066]
+yRange = [1065, 1380]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 920
-regionName = "Top half Conc"
+regionName = "Mask Bottom Half Conc"
 
 
 
