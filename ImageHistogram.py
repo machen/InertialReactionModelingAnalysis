@@ -85,6 +85,7 @@ def processSingleImage(file, imageDict, outFile, maxNorm,
         # Sums on large images can cause overflow issues leading to negative values
         # Forcing type to uInt64 ensures pandas correctly reads the value when converting to dataframe for export.
         # TODO: It may be smarter to normalize this to the image bitdepth so that we deal with floats instead.
+        # TODO: Why does this make the data array LARGER?
         data = np.array(img)/bitDepth
         if maxNorm:  # If using maximum normalization, all values scaled to largest value
             if maxVal:
@@ -166,7 +167,7 @@ filePat = re.compile('.*\\.tif')
 
 # Params for conc. conversion
 # TODO: Script uses these numbers for all channels, which is incorrect
-calcConc = True  # Convert all intensities to concentrations
+calcConc = False  # Convert all intensities to concentrations
 intBkg = 8000
 intMax = 15000
 cMax = 150
@@ -174,12 +175,14 @@ cUnit = 'uM'
 
 bins = 50
 # Remember that its is supposed to be the frame of the image
-xRange = None  # [2004, 2331]
-yRange = [1065, 1380]
+xRange = [88, 469]
+yRange = [918, 1173]
 maxNorm = False
 # Set to none to use max observed in image, otherwise use well mixed value
 maxVal = 920
-regionName = "Mask Bottom Half Conc"
+regionName = "Chemilum Region"
+imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
+imageDict = {'bright': 0, 'fluor': 1}
 
 
 
@@ -193,8 +196,6 @@ else:
 
 fileList = os.listdir()
 # Links identifier to stack position, also calls what images will be binned
-#imageDict = {'bright': 0, 'dark': 1, 'fluor': 2}
-imageDict = {'bright': 0, 'fluor': 1}
 outFile = genOutputFolderAndParams(workingDir, filePat, bins, maxNorm, maxVal,
                                    intMax, intBkg, cMax, cUnit, calcConc,
                                    regionName=regionName,

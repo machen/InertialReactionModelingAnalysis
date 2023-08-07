@@ -189,9 +189,10 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
         maxVal = meanData.sumInt.max()
         ax8.errorbar(meanData.index, meanData.sumInt/maxVal,
                      yerr=stdData.sumInt/maxVal, ls='-',
-                     marker=marker, capsize=2, label=val)
-        ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
-                 ls='none', marker=marker, label=val)
+                     marker=marker, capsize=2, label=val+" Intensity")
+        #TODO: Add flag to plot reactor ratio alongside other images
+        # ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+        #          ls='none', marker=marker, label=val+" Reactor Ratio")
         ax9.errorbar(meanData.index, meanData.sumInt, yerr=stdData.sumInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
@@ -230,7 +231,7 @@ plt.rcParams['font.family'] = 'Cambria'
 smooth = False
 window = 10
 prop = 'ReP'
-propLim = None
+propLim = 200
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
@@ -256,9 +257,18 @@ mainDir = "..\\..\\Experiments\\"
 # workingDirD = "2023-2-25 Chemilum\\MPD1_D4\\Image 4 Aligned Images 50 Bins\\"
 # workingDirE = "2023-2-25 Chemilum\\MPD1_D4\\Stitched Aligned Images 50 Bins\\"
 
-workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top half Intensity 50 bins\\"
-workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Bottom half Intensity 50 bins\\"
-workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\"
+# workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top half Intensity 50 bins\\"
+# workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Bottom half Intensity 50 bins\\"
+# workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\"
+workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins\\"
+workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
+# workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top Half Intensity 50 bins\\"
+# workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Upstream Half 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Region 50 bins\\"
+workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Pore A 50 bins\\"
+# workingDirA = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Whole Device 50 Bins\\"
+# workingDirB = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 1 Whole Device 50 Bins\\"
+workingDirC = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 2 Whole Device 50 Bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 6 50 bins\\"
 # workingDirH = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 7 50 bins\\"
 # workingDirI = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 8 50 bins\\"
@@ -270,13 +280,22 @@ workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\
 # workingDirO = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 14 50 bins\\"
 # workingDirP = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 15 50 bins\\"
 # workingDirQ = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 16 50 bins\\"
+caseNameA = ''
+caseExtA = r".dark_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
+caseExtC = r".fluor_hist"
 
-dA = "Top half"
-dB = "Bottom half"
-dC = "Whole channel"
-dD = "Batch1 Mid Pore B"
-dE = "Batch1 Inlet Pore C"
-dF = "Batch 1 Inlet Pores"
+# dA = "Tracer top half"
+# dB = "Tracer bottom half"
+# dC = "Tracer whole deFvice"
+dA = "Inlet Region Chemilum"
+dB = "Pore A Chemilum"
+dC = "Whole device"
+# dA = "Batch 2 Whole Device"
+# dB = "Batch 2 Seq 1"
+# dC = "Batch 2 Seq 2"
+dD = "Pore A Tracer"
+dE = "Chemilum Region"
+# dF = "Batch 1 Inlet Pores"
 # dG = "Pore 6"
 # dH = "Pore 7"
 # dI = "Pore 8"
@@ -336,8 +355,6 @@ dF = "Batch 1 Inlet Pores"
 # workingDirH = "2022-1-6-Chemilum\\100 um Gap\\Raw Aligned Image Pillar Gap 50 bins\\"
 
 os.chdir(mainDir)
-caseNameA = ''
-caseExtA = r".fluor_hist" # TODO: YOU NEED TO DROP METADATA BASED ON WHICH CHANNEL YOU ARE SELECTING
 
 # You must set these to the correct pillar gaps of the experiment
 
@@ -359,11 +376,10 @@ f8, ax8 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIn
 f9, ax9 = plt.subplots(1, 1, sharex='col', figsize=(12, 10)) # Plot using meanIntensity rather than mean of the PDF
 f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12, 10))
 
-metaData = pd.DataFrame([], columns=['q', 'replicate', 'PDFmean', 'PDFstd'])
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
-# dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-# dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
+dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
+dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
+# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtC, smooth, window)
 # dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
 # dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
 # dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
@@ -380,8 +396,8 @@ dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, w
 
 
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
-# metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
-# metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
+metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
+metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
 # metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
 # metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
 # metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
@@ -399,8 +415,8 @@ metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 
 markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
 out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
-# out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
 # out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
