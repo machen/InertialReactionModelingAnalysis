@@ -59,8 +59,6 @@ class DataSet:
             keyBase = re.search(extRe, key).group(1)+'.tif'
 
 
-
-
 def flowRateConversion(q, width, height, charLen, nu=0.43):
     # Base nu is in mm2/s, so you should report this in mm and seconds as units
     reyn = q/width/height*charLen/nu
@@ -159,12 +157,15 @@ def genGaussian(mu, variance):
     return x, y
 
 
-def metaPlot(metaData, prop='q', marker='o', propLim=None):
+def metaPlot(metaData, prop='q', marker='o', propLim=None, width=250E-3,
+             height=100E-3, charLenChan=250E-3, charLenPil=100E-3):
     # Change me to work with the image histograms and metadata
     if prop == 'Re':
-        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 250E-3)
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, width,
+                                                   height, charLenChan)
     elif prop == 'ReP':
-        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, 250E-3, 100E-3, 100E-3)
+        metaData.loc[:, prop] = flowRateConversion(metaData.q/60.0, width,
+                                                   height, charLenPil)
     metaData.sort_values(by=prop)
     traceList = metaData.d.unique()
     for val in traceList:
@@ -191,8 +192,8 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None):
                      yerr=stdData.sumInt/maxVal, ls='-',
                      marker=marker, capsize=2, label=val+" Intensity")
         #TODO: Add flag to plot reactor ratio alongside other images
-        # ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
-        #          ls='none', marker=marker, label=val+" Reactor Ratio")
+        ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+                 ls='none', marker=marker, label=val+" Reactor Ratio")
         ax9.errorbar(meanData.index, meanData.sumInt, yerr=stdData.sumInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
@@ -236,6 +237,14 @@ propLim = 200
 
 mainDir = "..\\..\\Experiments\\"
 
+# CONFIRM CHANNEL PARAMETERS
+width = 1  # mm, should be width of one inlet channel in Y system
+height = 100E-3   # mm, channel depth
+charLenChan = 250E-3  # mm, should be, again, width of one inlet channel
+charLenPillar = 100E-3  # mm, choose approporiately based on pillar
+
+
+
 # workingDirA = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 1 50 Bins\\"
 # workingDirB = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 2 50 Bins\\"
 # workingDirC = "2023-3-21-Chemilum\\MPD1_D4_Batch2\\Image 3 50 Bins\\"
@@ -264,11 +273,11 @@ workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins
 workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
 # workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top Half Intensity 50 bins\\"
 # workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Upstream Half 50 bins\\"
-workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Region 50 bins\\"
-workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Pore A 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Reaction Band 50 bins\\"
+# workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Pore A 50 bins\\"
 # workingDirA = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Whole Device 50 Bins\\"
 # workingDirB = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 1 Whole Device 50 Bins\\"
-workingDirC = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 2 Whole Device 50 Bins\\"
+# workingDirC = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 2 Whole Device 50 Bins\\"
 # workingDirG = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 6 50 bins\\"
 # workingDirH = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 7 50 bins\\"
 # workingDirI = "2022-3-22-MPD2\\MPD2_P1_A3\\S1 Raw Masked Pore Throat 8 50 bins\\"
@@ -289,7 +298,7 @@ caseExtC = r".fluor_hist"
 # dC = "Tracer whole deFvice"
 dA = "Inlet Region Chemilum"
 dB = "Pore A Chemilum"
-dC = "Whole device"
+dC = "Reaction band Tracer"
 # dA = "Batch 2 Whole Device"
 # dB = "Batch 2 Seq 1"
 # dC = "Batch 2 Seq 2"
@@ -378,68 +387,34 @@ f10, ax10 = plt.subplots(1,1, sharex='col', figsize=(12, 10))
 
 dataSetA, metaDataA = dataExtraction(workingDirA, caseNameA, caseExtA, smooth, window)
 dataSetB, metaDataB = dataExtraction(workingDirB, caseNameA, caseExtA, smooth, window)
-dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtA, smooth, window)
-# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtC, smooth, window)
-# dataSetE, metaDataE = dataExtraction(workingDirE, caseNameA, caseExtA, smooth, window)
-# dataSetF, metaDataF = dataExtraction(workingDirF, caseNameA, caseExtA, smooth, window)
-# dataSetG, metaDataG = dataExtraction(workingDirG, caseNameA, caseExtA, smooth, window)
-# dataSetH, metaDataH = dataExtraction(workingDirH, caseNameA, caseExtA, smooth, window)
-# dataSetI, metaDataI = dataExtraction(workingDirI, caseNameA, caseExtA, smooth, window)
-# dataSetJ, metaDataJ = dataExtraction(workingDirJ, caseNameA, caseExtA, smooth, window)
-# dataSetK, metaDataK = dataExtraction(workingDirK, caseNameA, caseExtA, smooth, window)
-# dataSetL, metaDataL = dataExtraction(workingDirL, caseNameA, caseExtA, smooth, window)
-# dataSetM, metaDataM = dataExtraction(workingDirM, caseNameA, caseExtA, smooth, window)
-# dataSetN, metaDataN = dataExtraction(workingDirN, caseNameA, caseExtA, smooth, window)
-# dataSetO, metaDataO = dataExtraction(workingDirO, caseNameA, caseExtA, smooth, window)
-# dataSetP, metaDataP = dataExtraction(workingDirP, caseNameA, caseExtA, smooth, window)
-# dataSetQ, metaDataQ = dataExtraction(workingDirQ, caseNameA, caseExtA, smooth, window)
-
+dataSetC, metaDataC = dataExtraction(workingDirC, caseNameA, caseExtC, smooth, window)
+# dataSetD, metaDataD = dataExtraction(workingDirD, caseNameA, caseExtA, smooth, window)
 
 metaDataA = dataSetPlot(dataSetA, metaDataA, dA, smooth=window)
 metaDataB = dataSetPlot(dataSetB, metaDataB, dB, smooth=window)
 metaDataC = dataSetPlot(dataSetC, metaDataC, dC, smooth=window)
-# metaDataD = dataSetPlot(dataSetD, metaDataD, dD, smooth=window)
-# metaDataE = dataSetPlot(dataSetE, metaDataE, dE, smooth=window)
-# metaDataF = dataSetPlot(dataSetF, metaDataF, dF, smooth=window)
-# metaDataG = dataSetPlot(dataSetG, metaDataG, dG, smooth=window)
-# metaDataH = dataSetPlot(dataSetH, metaDataH, dH, smooth=window)
-# metaDataI = dataSetPlot(dataSetI, metaDataI, dI, smooth=window)
-# metaDataJ = dataSetPlot(dataSetJ, metaDataJ, dJ, smooth=window)
-# metaDataK = dataSetPlot(dataSetK, metaDataK, dK, smooth=window)
-# metaDataL = dataSetPlot(dataSetL, metaDataL, dL, smooth=window)
-# metaDataM = dataSetPlot(dataSetM, metaDataM, dM, smooth=window)
-# metaDataN = dataSetPlot(dataSetN, metaDataN, dN, smooth=window)
-# metaDataO = dataSetPlot(dataSetO, metaDataO, dO, smooth=window)
-# metaDataP = dataSetPlot(dataSetP, metaDataP, dP, smooth=window)
-# metaDataQ = dataSetPlot(dataSetQ, metaDataQ, dQ, smooth=window)
+# metaDataD = dataSetPlot(dataSetD, metaDataC, dD, smooth=window)
 
 markerCycle = cycle(['o', 'd', 's', '^', 'D', 'h', 'X'])
-out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim)
-out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle), propLim=propLim)])
-out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataE, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataF, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataG, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataH, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataI, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataJ, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataK, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataL, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataM, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataN, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataO, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataP, prop=prop, marker=next(markerCycle), propLim=propLim)])
-# out = pd.concat([out, metaPlot(metaDataQ, prop=prop, marker=next(markerCycle), propLim=propLim)])
+out = metaPlot(metaDataA, prop=prop, marker=next(markerCycle), propLim=propLim,
+               width=width, height=height,
+               charLenChan=charLenChan, charLenPil=charLenPillar)
+out = pd.concat([out, metaPlot(metaDataB, prop=prop, marker=next(markerCycle),
+                               propLim=propLim, width=width, height=height,
+                               charLenChan=charLenChan,
+                               charLenPil=charLenPillar)])
+out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle),
+                               propLim=propLim, width=width, height=height,
+                               charLenChan=charLenChan,
+                               charLenPil=charLenPillar)])
+# out = pd.concat([out, metaPlot(metaDataD, prop=prop, marker=next(markerCycle),
+#                                propLim=propLim, width=width, height=height,
+#                                charLenChan=charLenChan,
+#                                charLenPil=charLenPillar)])
 
-
-
-
-# metaPlot(metaDataG, prop=prop, marker=next(markerCycle))
-# metaPlot(metaDataH, prop=prop, marker=next(markerCycle))
 
 out = out.dropna()
-out.loc[:,'ReP'] = flowRateConversion(out.q/60.0, 250E-3, 100E-3, 100E-3)
+out.loc[:, 'ReP'] = flowRateConversion(out.q/60.0, width, height, charLenPillar)
 traceAvg = out.dropna().groupby('q').mean()
 traceStd = out.dropna().groupby('q').std()
 ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt, color='k', marker='o')
