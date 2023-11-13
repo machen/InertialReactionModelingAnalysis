@@ -295,6 +295,20 @@ labelB = "25 um"
 # caseExtC = "d100_Re.*\.chemdata_histogram\.csv"
 # labelC = "H2O2"
 
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC-100 linear bins\\"
+caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
+caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
+labelA = "100 um constC-ReactAvail"
+
+workingDirB = "..\\Bottom half pillar exclusive-tcpo-100 linear bins"
+caseNameB = caseNameA
+caseExtB = caseExtA
+labelB = "100 um TCPO-steadyReactant"
+
+workingDirC = "..\\Bottom half pillar exclusive-reactCompl-100 linear bins"
+caseNameC = caseNameA
+caseExtC = caseExtA
+labelC = "100 um Reactant Completion: cProd/cConst"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -315,18 +329,18 @@ metaDataA = dataSetPlot(dataSetA, metaData, smooth=window, linestyle='-')
 dataSetB = dataExtraction(workingDirB, caseNameB, caseExtB, smooth, window)
 metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='--')
 
-# dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
-# metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
+dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
+metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
 
 markerCycle = cycle(['o', 'o', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
 metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
-# metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
     metaPlot(metaDataB, prop=prop2, flowCond='NS', label=labelB+' '+prop2)
-    # metaPlot(metaDataC, prop=prop2, flowCond='NS', label=labelC+' '+prop2)
+    metaPlot(metaDataC, prop=prop2, flowCond='NS', label=labelC+' '+prop2)
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
 ax3.set_title("Differentiated PDF")

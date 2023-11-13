@@ -25,7 +25,7 @@ plt.rcParams['svg.fonttype'] = 'none'
 
 # Color palettes. 1 is full color, 2 is muted
 pal1 = sns.color_palette(as_cmap=True)
-pal2 = sns.color_palette('pastel', as_cmap=True)
+pal2 = sns.color_palette('muted', as_cmap=True)
 
 subData100 = data.loc[(data.d == 100) & (data.k == 2000) &
                       (data.FlowCond == 'NS'), :]
@@ -97,7 +97,7 @@ ax3.legend()
 sns.despine(f3)
 
 # Figure of Pe and relevant Da numbers
-f4, ax4 = plt.subplots(1, 1, sharex=True, figsize=(14, 20))
+f4, ax4 = plt.subplots(1, 1, sharex=True, figsize=(12, 10))
 ax4a = ax4.twinx()
 
 # Create data sets that give either the adv or diff Da depending on the Pe number
@@ -111,26 +111,39 @@ daDiff25 = subData25.loc[subData25.PePoreThroat<1, 'DaDiffPoreThroat']
 da25 = daDiff25.append(daAdv25)
 da25.sort_values(axis='index')
 
+color1 = pal1[9]
+color1desat = pal2[9]
+color2 = pal1[3]
+color2desat = pal2[3]
 
 ax4.plot(subData100.ReP,
-         subData100.PePoreThroat, ls='--',
+         subData100.PePoreThroat, ls='-',
          marker='o', label="Pe 100um",
-         color=pal2[0])
+         color=color1)
 ax4.plot(subData25.ReP,
          subData25.PePoreThroat, ls='--',
-         marker='o', label="Pe 25um",
-         color=pal2[1])
+         marker='s', label="Pe 25um",
+         color=color1desat)
 ax4.plot([subData25.ReP.min(), subData25.ReP.max()],
-         [1, 1], color=sns.desaturate('black', 0.8), ls='--')
+         [1, 1], color=color1, ls=':')
 ax4a.plot(subData100.ReP,
-          da100, ls='-', color=pal1[0],
+          da100, ls='-.', color=color2,
           marker='D', label="Da 100 um")
 ax4a.plot(subData25.ReP,
-          da25, ls='-', color=pal1[1],
-          marker='D', label="Da 25 um")
+          da25, ls=(0, (3, 1, 1, 1, 1, 1)), color=color2desat,
+          marker='^', label="Da 25 um")
 ax4a.plot([subData25.ReP.min(), subData25.ReP.max()],
-          [1, 1], color='k', ls='-')
+          [1, 1], color=color2, ls=':')
 
+# Also set axis properties
+ax4.spines['left'].set_color(color1)
+ax4a.spines['left'].set_color(color1)
+ax4.tick_params(axis='y', colors=color1, which='both')
+ax4.yaxis.label.set_color(color1)
+
+ax4a.spines['right'].set_color(color2)
+ax4a.tick_params(axis='y',colors=color2, which='both')
+ax4a.yaxis.label.set_color(color2)
 # ax4.plot(subData25.ReP,
 #          subData25.DaAdvNaive, ls='--',
 #          marker='^', label="Da Adv 25um Naive")
@@ -163,7 +176,7 @@ ax5.plot(subData100.ReP, subData100.reacConsvLim, ls='-',
 ax5.plot(subData25.ReP, subData25.reacConsvLim, ls='-',
          marker='o', label="25 um",
          color=pal1[1])
-ax5.set_xlabel('Reyonolds Number')
+ax5.set_xlabel('Reynolds Number')
 ax5.set_ylabel('Reactor Ratio')
 sns.despine(f5)
 

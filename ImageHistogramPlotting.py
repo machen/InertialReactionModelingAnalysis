@@ -176,8 +176,8 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None, width=250E-3,
         stdData = subData.groupby(prop).std()
         ax4.plot(subData.loc[:, prop], subData.sumInt, ls='none', marker=marker,
                  label=val)
-        ax5.plot(subData.loc[:, prop], subData.loc[:, 'reactorRatio'],
-                 ls='none', marker=marker, label=val)
+        # ax5.plot(subData.loc[:, prop], subData.loc[:, 'reactorRatio'],
+        #          ls='none', marker=marker, label=val)
         maxLoc = meanData.loc[meanData.meanInt ==
                               meanData.meanInt.max(), 'q'].values
         ax6.errorbar(meanData.index, meanData.loc[:, 'meanInt'],
@@ -185,15 +185,15 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None, width=250E-3,
                      capsize=2, label="{} max val q: {}".format(val,
                                                                 float(maxLoc)))
         maxVal = meanData.PDFmean.max()
-        ax7.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
-                 ls='none', marker=marker, label=val)
+        # ax7.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+        #          ls='none', marker=marker, label=val)
         maxVal = meanData.sumInt.max()
         ax8.errorbar(meanData.index, meanData.sumInt/maxVal,
                      yerr=stdData.sumInt/maxVal, ls='-',
                      marker=marker, capsize=2, label=val+" Intensity")
         #TODO: Add flag to plot reactor ratio alongside other images
-        ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
-                 ls='none', marker=marker, label=val+" Reactor Ratio")
+        # ax8.plot(meanData.index, meanData.loc[:, 'reactorRatio'],
+        #          ls='none', marker=marker, label=val+" Reactor Ratio")
         ax9.errorbar(meanData.index, meanData.sumInt, yerr=stdData.sumInt, ls='none',
                      marker=marker, capsize=2, label=val)
     ax4.set_xlabel(prop)
@@ -221,7 +221,7 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None, width=250E-3,
     ax9.set_title('Sum intensities')
     # ax9.set_xlim([-1, 105])
     meanDict = {'q':meanData.q.values,'meanInt':meanData.meanInt.values,'stdMeanInt':stdData.meanInt.values,
-           'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
+                'normMeanInt':meanData.meanInt.values/maxVal, 'stdNormMeanInt':stdData.meanInt.values/maxVal}
     out = pd.DataFrame(meanDict)
     out.loc[:,'ID'] = val
     return out
@@ -232,13 +232,13 @@ plt.rcParams['font.family'] = 'Cambria'
 smooth = False
 window = 10
 prop = 'ReP'
-propLim = 200
+propLim = 160
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
 
 # CONFIRM CHANNEL PARAMETERS
-width = 1  # mm, should be width of one inlet channel in Y system
+width = 0.25  # mm, should be width of one inlet channel in Y system
 height = 100E-3   # mm, channel depth
 charLenChan = 250E-3  # mm, should be, again, width of one inlet channel
 charLenPillar = 100E-3  # mm, choose approporiately based on pillar
@@ -269,11 +269,11 @@ charLenPillar = 100E-3  # mm, choose approporiately based on pillar
 # workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top half Intensity 50 bins\\"
 # workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Bottom half Intensity 50 bins\\"
 # workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\"
-workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins\\"
-workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
-# workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top Half Intensity 50 bins\\"
-# workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Upstream Half 50 bins\\"
-workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Reaction Band 50 bins\\"
+# workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins\\"
+# workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
+# # workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top Half Intensity 50 bins\\"
+# # workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Upstream Half 50 bins\\"
+# workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Reaction Band 50 bins\\"
 # workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Pore A 50 bins\\"
 # workingDirA = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Whole Device 50 Bins\\"
 # workingDirB = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 1 Whole Device 50 Bins\\"
@@ -318,9 +318,9 @@ dE = "Chemilum Region"
 # dQ = "Pore 16"
 
 
-# workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
-# workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
-# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
+workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
+workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
+workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirF = "2021-11-18-Chemilum-25um\\2PD3_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
