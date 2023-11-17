@@ -169,4 +169,26 @@ ax5.set_xlabel('Reynolds Number')
 ax5.set_ylabel('Reactor Ratio')
 sns.despine(f5)
 
+# Figure: Product in region where TCPO has crossed the boundary
+
+f6, ax6 = plt.subplots(1, 1, figsize=(12,10))
+ax6.plot(subData100.ReP, subData100.cTCPOLim, ls='-', marker='o', label='100 um', color=pal1[0])
+ax6.plot(subData25.ReP, subData25.cTCPOLim, ls='-',
+         marker='o', label="25 um",
+         color=pal1[1])
+ax6.set_xlabel('Reynolds Number')
+ax6.set_ylabel('Product (mM)')
+ax6.set_title('Region where TCPO has crossed reactant boundary')
+ax6.legend()
+
+f7, ax7 = plt.subplots(1, 1, figsize=(12,10))
+ax7.plot(subData100.ReP, subData100.cProdLim/subData100.cLim,
+         ls='-', marker='o', label='100 um', color=pal1[0])
+ax7.plot(subData25.ReP, subData25.cProdLim/subData25.cLim,
+         ls='-', marker='o', label="25 um",
+         color=pal1[1])
+ax7.set_xlabel('Reynolds Number')
+ax7.set_ylabel('Availability Normalized Reaction Completion (-)')
+ax7.set_title('Region where TCPO has crossed reactant boundary')
+sns.despine(f7)
 plt.show()
