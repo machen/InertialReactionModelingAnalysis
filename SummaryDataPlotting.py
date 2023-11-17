@@ -100,16 +100,16 @@ f4, ax4 = plt.subplots(1, 1, sharex=True, figsize=(12, 10))
 ax4a = ax4.twinx()
 
 # Create data sets that give either the adv or diff Da depending on the Pe number
-# TODO: This no longer works with the pandas updates
+# TODO: This relies on Pe increasing monotonically from diffusive to advective and is really hacky. Should work aribitrarily. Maybe I should be actually just creating a "net Da" column
 daAdv100 = subData100.loc[subData100.PePoreThroat > 1,'DaAdvPoreThroat']
 daDiff100 = subData100.loc[subData100.PePoreThroat < 1, 'DaDiffPoreThroat']
-da100 = pd.concat([daAdv100, daDiff100])
+da100 = pd.concat([daDiff100, daAdv100])
 da100.sort_values(axis='index')
 
-daAdv25 = subData25.loc[subData25.PePoreThroat>1,['ReP','DaAdvPoreThroat']]
-daDiff25 = subData25.loc[subData25.PePoreThroat<1,['ReP','DaAdvPoreThroat']]
-da25 = pd.concat([daAdv25, daDiff25])
-da25.sort_values(by='ReP', axis='index', inplace=True)
+daAdv25 = subData25.loc[subData25.PePoreThroat > 1, 'DaAdvPoreThroat']
+daDiff25 = subData25.loc[subData25.PePoreThroat < 1, 'DaDiffPoreThroat']
+da25 = pd.concat([daDiff25, daAdv25])
+da25.sort_values(axis='index')
 
 color1 = pal1[9]
 color1desat = pal2[9]
