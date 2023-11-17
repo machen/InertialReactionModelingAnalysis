@@ -5,17 +5,16 @@ import seaborn as sns
 #TODO: Update to pull different items for plotting
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
-data = pd.read_excel(dataFile, usecols="A:P,Z:AA,AK,AP,AX:BB,BI,BJ,BL",
+data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,BE,BL,BM,BO",
                      names=["FileName", "r1", "r2", "d", "k",
                             "c", "Re", "ReP", "FlowCond", "uInlet", "EstRT",
                             "MRT", "MRTerr", "TimeRatio",
                             "PeNaive", "PePoreThroat",
-                            "dCdtMean", "dCdtStd", "cLim","cTCPOLim",
-                            "DaAdvNaive", "DaAdvPoreThroat","DaAdvPaper",
-                            "DaDiffPaper", "DaDiffPoreThroat","dCdtSum",
+                            "dCdtMean", "dCdtStd", "cLim","cTCPOLim", "cProdLim",
+                            "DaAdvPoreThroat", "DaDiffPoreThroat",
+                            "dCdtSum",
                             "dilConsLim","reacConsvLim"
-                            ],
-                     skiprows=2, engine="openpyxl")
+                            ], skiprows=2)
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
 plt.ion()
@@ -101,15 +100,16 @@ f4, ax4 = plt.subplots(1, 1, sharex=True, figsize=(12, 10))
 ax4a = ax4.twinx()
 
 # Create data sets that give either the adv or diff Da depending on the Pe number
+# TODO: This no longer works with the pandas updates
 daAdv100 = subData100.loc[subData100.PePoreThroat > 1,'DaAdvPoreThroat']
 daDiff100 = subData100.loc[subData100.PePoreThroat < 1, 'DaDiffPoreThroat']
-da100 = daAdv100.append(daDiff100)
+da100 = pd.concat([daAdv100, daDiff100])
 da100.sort_values(axis='index')
 
-daAdv25 = subData25.loc[subData25.PePoreThroat>1,'DaAdvPoreThroat']
-daDiff25 = subData25.loc[subData25.PePoreThroat<1, 'DaDiffPoreThroat']
-da25 = daDiff25.append(daAdv25)
-da25.sort_values(axis='index')
+daAdv25 = subData25.loc[subData25.PePoreThroat>1,['ReP','DaAdvPoreThroat']]
+daDiff25 = subData25.loc[subData25.PePoreThroat<1,['ReP','DaAdvPoreThroat']]
+da25 = pd.concat([daAdv25, daDiff25])
+da25.sort_values(by='ReP', axis='index', inplace=True)
 
 color1 = pal1[9]
 color1desat = pal2[9]
@@ -144,18 +144,7 @@ ax4.yaxis.label.set_color(color1)
 ax4a.spines['right'].set_color(color2)
 ax4a.tick_params(axis='y',colors=color2, which='both')
 ax4a.yaxis.label.set_color(color2)
-# ax4.plot(subData25.ReP,
-#          subData25.DaAdvNaive, ls='--',
-#          marker='^', label="Da Adv 25um Naive")
-# ax4.plot(subData25.ReP,
-#          subData25.DaAdvPoreThroat, ls='--',
-#          marker='^', label="Da Adv 25um Pore Throat")
-# ax4.plot(subData25.ReP,
-#          subData25.DaDiffNaive, ls='--',
-#          marker='^', label="Da Diff 25um Naive")
-# ax4.plot(subData25.ReP,
-#          subData25.DaDiffPoreThroat, ls='--',
-#          marker='^', label="Da Diff 25um Pore Throat")
+
 ax4.set_xlabel('Reynolds Number')
 ax4a.set_xlabel('Reynolds Number')
 ax4.set_ylabel('Peclet Number (-)')

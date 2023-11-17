@@ -273,7 +273,7 @@ prop2 = None # #'posMRT' # Lets you plot multiple properties vs Re, beware axis 
 # fitRange = np.array([65, 85])
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RecircZoneBasic-velMag-100 linear bins\\"
 #workingDirA = "..\\Comsol5.5\\TwoPillars\\ExF\\FlowDatawVorticity\\Pillar Gap-angle-180 linear bins"
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC\\"
 # workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Pillar gap pillar exclusive-cProduct-100 linear bins\\"
 # workingDir = "."
 caseNameA = "TwoPillar_v6_ExF_"
@@ -295,20 +295,35 @@ labelB = "25 um"
 # caseExtC = "d100_Re.*\.chemdata_histogram\.csv"
 # labelC = "H2O2"
 
-workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC-100 linear bins\\"
+workingDirA = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\Bottom half pillar exclusive-constC\\"
 caseNameA = "TwoPillar_v6_ExF_c3_k2000_"
 caseExtA = "d100_Re.*\.chemdata_histogram\.csv"
 labelA = "100 um constC-ReactAvail"
 
-workingDirB = "..\\Bottom half pillar exclusive-tcpo-100 linear bins"
+workingDirB = "..\\Bottom half pillar exclusive-tcpo"
 caseNameB = caseNameA
 caseExtB = caseExtA
 labelB = "100 um TCPO-steadyReactant"
 
-workingDirC = "..\\Bottom half pillar exclusive-reactCompl-100 linear bins"
+workingDirC = "..\\Bottom half pillar exclusive-cProduct"
 caseNameC = caseNameA
 caseExtC = caseExtA
-labelC = "100 um Reactant Completion: cProd/cConst"
+labelC = "100 um: cProd"
+
+workingDirD = "..\\Bottom half pillar exclusive-constC\\"
+caseNameD = "TwoPillar_v6_ExF_c3_k2000_"
+caseExtD = "d25_Re.*\.chemdata_histogram\.csv"
+labelD = "25 um constC-ReactAvail"
+
+workingDirE = "..\\Bottom half pillar exclusive-tcpo"
+caseNameE = caseNameD
+caseExtE= caseExtD
+labelE = "25 um TCPO-steadyReactant"
+
+workingDirF = "..\\Bottom half pillar exclusive-cProduct"
+caseNameF = caseNameD
+caseExtF = caseExtD
+labelF = "25 um Reactant Completion: cProd"
 
 # Plot for everything
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
@@ -332,10 +347,24 @@ metaDataB = dataSetPlot(dataSetB, metaData, smooth=window,linestyle='--')
 dataSetC = dataExtraction(workingDirC, caseNameC, caseExtC, smooth, window)
 metaDataC = dataSetPlot(dataSetC, metaData, smooth=window,linestyle='-')
 
+dataSetD = dataExtraction(workingDirD, caseNameD, caseExtD, smooth, window)
+metaDataD = dataSetPlot(dataSetD, metaData, smooth=window, linestyle='-')
+
+dataSetE = dataExtraction(workingDirE, caseNameE, caseExtE, smooth, window)
+metaDataE = dataSetPlot(dataSetE, metaData, smooth=window,linestyle='--')
+
+dataSetF = dataExtraction(workingDirF, caseNameF, caseExtF, smooth, window)
+metaDataF = dataSetPlot(dataSetF, metaData, smooth=window,linestyle='-')
+
+
 markerCycle = cycle(['o', 'o', 's', 'd', 'D'])
 metaPlot(metaDataA, prop=prop, flowCond='NS', label=labelA+' '+prop, marker=next(markerCycle))
 metaPlot(metaDataB, prop=prop, flowCond='NS', label=labelB+' '+prop, marker=next(markerCycle))
 metaPlot(metaDataC, prop=prop, flowCond='NS', label=labelC+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataD, prop=prop, flowCond='NS', label=labelD+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataE, prop=prop, flowCond='NS', label=labelE+' '+prop, marker=next(markerCycle))
+metaPlot(metaDataF, prop=prop, flowCond='NS', label=labelF+' '+prop, marker=next(markerCycle))
+
 
 if prop2:
     metaPlot(metaDataA, prop=prop2, flowCond='NS', label=labelA+' '+prop2)
