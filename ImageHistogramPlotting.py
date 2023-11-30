@@ -103,6 +103,7 @@ def dataExtraction(workingDir, caseName, caseExt, smooth=False, window=5):
 
 
 def dataSetPlot(dataSets, metaData, d, linestyle='-', smooth=0):
+    metaData.loc[:, 'd']=None # Clear warning about d being a string
     for key in dataSets:
         data = dataSets[key]
         dataMean, dataVar = pdfStats(data)
@@ -169,7 +170,8 @@ def metaPlot(metaData, prop='q', marker='o', propLim=None, width=250E-3,
     metaData.sort_values(by=prop)
     traceList = metaData.d.unique()
     for val in traceList:
-        subData = metaData.loc[metaData.d == val, :]
+        # Need to select columns with only numeric data for averaging
+        subData = metaData.loc[metaData.d == val, ['c','q','maxInt','meanInt','replicate','stdInt','sumInt','ReP','PDFmean','PDFstd']]
         if propLim:
             subData = subData.loc[subData.loc[:, prop] < propLim, :]
         meanData = subData.groupby(prop).mean()
@@ -232,13 +234,14 @@ plt.rcParams['font.family'] = 'Cambria'
 smooth = False
 window = 10
 prop = 'ReP'
-propLim = 160
+propLim = 50
 # Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
 
 # CONFIRM CHANNEL PARAMETERS
 width = 0.25  # mm, should be width of one inlet channel in Y system
+width= 1 # For randomized porous media
 height = 100E-3   # mm, channel depth
 charLenChan = 250E-3  # mm, should be, again, width of one inlet channel
 charLenPillar = 100E-3  # mm, choose approporiately based on pillar
@@ -269,11 +272,11 @@ charLenPillar = 100E-3  # mm, choose approporiately based on pillar
 # workingDirA = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top half Intensity 50 bins\\"
 # workingDirB = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Bottom half Intensity 50 bins\\"
 # workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Whole Intensity 50 bins\\"
-# workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins\\"
-# workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
+workingDirA = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Whole Region 50 bins\\"
+workingDirB = "2023-5-26-Tracer_Chemilum\\Chemilum\\Batch 0 Pore AX 50 bins\\"
 # # workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Mask Top Half Intensity 50 bins\\"
 # # workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Upstream Half 50 bins\\"
-# workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Reaction Band 50 bins\\"
+workingDirC = "2023-5-26-Tracer_Chemilum\\Tracer\\Reaction Band 50 bins\\"
 # workingDirD = "2023-5-26-Tracer_Chemilum\\Tracer\\Chemilum Pore A 50 bins\\"
 # workingDirA = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Whole Device 50 Bins\\"
 # workingDirB = "2023-4-24-Chemilum-RandPM\\MPD3B_C1\\Batch 2 Seq 1 Whole Device 50 Bins\\"
@@ -318,9 +321,9 @@ dE = "Chemilum Region"
 # dQ = "Pore 16"
 
 
-workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
-workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
-workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirA = "2022-5-19-Chemilum\\2PD4_P7_A2\\Pillar Gap Exclusive 50 bins\\"
+# workingDirB = "2022-1-15-Chemilum 100 um\\100 um Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
+# workingDirC = "2021-10-20-Chemilum-100um\\A3-100um\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirD = "2022-2-1-Chemilum\\2PD1_P7_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirE = "2021-10-05-Chemilum-100um\\100 um Pillar Gap\\Pillar Gap Exclusive Aligned 50 bins\\"
 # workingDirF = "2021-11-18-Chemilum-25um\\2PD3_A2\\Pillar Gap Exclusive Aligned 50 bins\\"
@@ -412,17 +415,17 @@ out = pd.concat([out, metaPlot(metaDataC, prop=prop, marker=next(markerCycle),
 #                                charLenChan=charLenChan,
 #                                charLenPil=charLenPillar)])
 
-
-out = out.dropna()
-out.loc[:, 'ReP'] = flowRateConversion(out.q/60.0, width, height, charLenPillar)
-traceAvg = out.dropna().groupby('q').mean()
-traceStd = out.dropna().groupby('q').std()
-ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt, color='k', marker='o')
-ax10.set_title('Averaged Traces')
-ax10.set_xlabel('Reynolds Number')
-ax10.set_ylabel('Normalized Intensity (.)')
-ax10.set_ylim([0.3, 1.05])
-ax10.set_xlim([-1, 105])
+# TODO: This no longer works due to Pandas update
+# out = out.dropna()
+# out.loc[:, 'ReP'] = flowRateConversion(out.q/60.0, width, height, charLenPillar)
+# traceAvg = out.dropna().groupby('q').mean()
+# traceStd = out.dropna().groupby('q').std()
+# ax10.errorbar(traceAvg.ReP, traceAvg.normMeanInt, traceStd.normMeanInt, color='k', marker='o')
+# ax10.set_title('Averaged Traces')
+# ax10.set_xlabel('Reynolds Number')
+# ax10.set_ylabel('Normalized Intensity (.)')
+# ax10.set_ylim([0.3, 1.05])
+# ax10.set_xlim([-1, 105])
 
 ax1.set_title("PDFs")
 ax2.set_title("PDFs")
