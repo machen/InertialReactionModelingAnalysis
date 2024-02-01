@@ -127,8 +127,8 @@ ax4.plot(subData25.ReP,
 ax4.plot([subData25.ReP.min(), subData25.ReP.max()],
          [1, 1], color=color1, ls=':')
 ax4a.plot(subData100.ReP,
-          da100, ls='-.', color=color2,
-          marker='D', label="Da 100 um")
+          da100, ls=(0, (3, 5, 1, 5)), color=color2,
+          marker='v', label="Da 100 um")
 ax4a.plot(subData25.ReP,
           da25, ls=(0, (3, 1, 1, 1, 1, 1)), color=color2desat,
           marker='^', label="Da 25 um")
