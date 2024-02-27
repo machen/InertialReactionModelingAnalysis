@@ -9,3 +9,5 @@ workspace.code-workspace
 *.pyc
 LinePlotting.py
 !SliceTemplate.csv
+!FlowData*Format.txt
+!ChemDataFormat.txt

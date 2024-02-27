@@ -1,0 +1,12 @@
+meshelement "" "Mesh element number"
+meshvol m^3 "Element volume"
+u m/s "Velocity field, x component"
+v m/s "Velocity field, y component"
+w m/s "Velocity field, z component"
+p Pa Pressure
+spf.U m/s "Velocity magnitude"
+spf.out1.Mflow kg/s "Mass flow"
+spf.vorticityx 1/s "Vorticity field, x component"
+spf.vorticityy 1/s "Vorticity field, y component"
+spf.vorticityz 1/s "Vorticity field, z component"
+spf.vort_magn 1/s "Vorticity magnitude"

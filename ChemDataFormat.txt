@@ -1,0 +1,12 @@
+meshelement "" "Mesh element number"
+meshvol m^3 "Element volume"
+u m/s "Velocity field, x component"
+v m/s "Velocity field, y component"
+w m/s "Velocity field, z component"
+p Pa Pressure
+spf.U m/s "Velocity magnitude"
+spf.out1.Mflow kg/s "Mass flow"
+c_H2O2 mol/m^3 Concentration
+c_TCPO mol/m^3 Concentration
+c_product mol/m^3 Concentration
+k m^3/(s*mol) "Rxn constant derived from char. time. Second order."
