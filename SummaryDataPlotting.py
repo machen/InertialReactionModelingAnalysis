@@ -5,7 +5,7 @@ import seaborn as sns
 #TODO: Update to pull different items for plotting
 
 dataFile = "..\\SimulationSummaryData_v6.xlsx"
-data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,BE,BL,BM,BO",
+data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,BE,BL,BM,BO,BS,BU",
                      names=["FileName", "r1", "r2", "d", "k",
                             "c", "Re", "ReP", "FlowCond", "uInlet", "EstRT",
                             "MRT", "MRTerr", "TimeRatio",
@@ -13,7 +13,9 @@ data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,B
                             "dCdtMean", "dCdtStd", "cLim","cTCPOLim", "cProdLim",
                             "DaAdvPoreThroat", "DaDiffPoreThroat",
                             "dCdtSum",
-                            "dilConsLim","reacConsvLim"
+                            "dilConsLim","reacConsvLim",
+                            "ReHd",
+                            "ReDarcy"
                             ], skiprows=2)
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
@@ -32,20 +34,22 @@ subData25 = data.loc[(data.d == 25) & (data.k == 2000) &
                      (data.FlowCond == 'NS'), :]
 # For Figure 2: Normalized Sum dCdt results, NS
 
+rePlot = 'ReP'
+
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
-ax1.plot(subData100.ReP,
+ax1.plot(subData100[rePlot],
          subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
          marker='o', label="Sim 100um NS")
-ax1.plot(subData25.ReP,
+ax1.plot(subData25[rePlot],
          subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
          marker='o', label="Sim 25um NS")
 # # Plot stokes data
 # subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
-# ax1.plot(subData100Stokes.ReP,
+# ax1.plot(subData100Stokes[rePlot],
 #          subData100Stokes.dCdtSum/max(subData100.dCdtSum), ls='--',
 #          marker='o', label="Sim 100um Stokes")
 # subData25Stokes = data.loc[(data.d == 25) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
-# ax1.plot(subData25Stokes.ReP,
+# ax1.plot(subData25Stokes[rePlot],
 #          subData25Stokes.dCdtSum/max(subData25.dCdtSum), ls='--',
 #          marker='o', label="Sim 25um Stokes")
 
@@ -53,23 +57,23 @@ ax1.legend()
 ax1.set_xlabel('Reynolds Number')
 ax1.set_ylabel('sum(dCdt) Normalized to Max (.)')
 
-ax1.set_xlim([-1, 105])
-ax1.set_ylim([0.3, 1.05])
+# ax1.set_xlim([-1, 105])
+# ax1.set_ylim([0.3, 1.05])
 # ax1.set_title('Check normalization values')
 sns.despine(f1)
 
 # For figure 3: Plots in mean tracer
 f2, ax2 = plt.subplots(1, 1, sharex='col', figsize=(12, 20))
-ax2.plot(subData100.ReP, subData100.cLim, ls='-',
+ax2.plot(subData100[rePlot], subData100.cLim, ls='-',
          marker='o', label="C_lim Tracer 100 um",
          color=pal1[0])
-ax2.plot(subData100.ReP, subData100.cTCPOLim, ls='--',
+ax2.plot(subData100[rePlot], subData100.cTCPOLim, ls='--',
          marker='s', label="Mean TCPO 100 um",
          color=pal2[0])
-ax2.plot(subData25.ReP, subData25.cLim, ls='-',
+ax2.plot(subData25[rePlot], subData25.cLim, ls='-',
          marker='o', label="C_lim Tracer 25 um",
          color=pal1[1])
-ax2.plot(subData25.ReP, subData25.cTCPOLim, ls='--',
+ax2.plot(subData25[rePlot], subData25.cTCPOLim, ls='--',
          marker='s', label="Mean TCPO 25 um",
          color=pal2[1])
 
@@ -84,9 +88,9 @@ sns.despine(f2)
 f3, ax3 = plt.subplots(ncols=1, nrows=1, figsize=(12, 10))
 tReact = 1/3E-3/2000  # Half life assuming well mixed and equal reactants
 # ax3c = ax3b.twinx()
-ax3.plot(subData100.ReP, subData100.MRT, marker="o",
+ax3.plot(subData100[rePlot], subData100.MRT, marker="o",
          ls='none', label="100 um Gap")
-ax3.plot(subData25.ReP, subData25.MRT, marker="o",
+ax3.plot(subData25[rePlot], subData25.MRT, marker="o",
          ls='none', label="25 um Gap")
 ax3.set_xlabel('Reynolds Number')
 ax3.set_ylabel('Mean residence time (s)')
@@ -116,23 +120,23 @@ color1desat = pal2[9]
 color2 = pal1[3]
 color2desat = pal2[3]
 
-ax4.plot(subData100.ReP,
+ax4.plot(subData100[rePlot],
          subData100.PePoreThroat, ls='-',
          marker='o', label="Pe 100um",
          color=color1)
-ax4.plot(subData25.ReP,
+ax4.plot(subData25[rePlot],
          subData25.PePoreThroat, ls='--',
          marker='s', label="Pe 25um",
          color=color1desat)
-ax4.plot([subData25.ReP.min(), subData25.ReP.max()],
+ax4.plot([subData25[rePlot].min(), subData25[rePlot].max()],
          [1, 1], color=color1, ls=':')
-ax4a.plot(subData100.ReP,
+ax4a.plot(subData100[rePlot],
           da100, ls=(0, (3, 5, 1, 5)), color=color2,
           marker='v', label="Da 100 um")
-ax4a.plot(subData25.ReP,
+ax4a.plot(subData25[rePlot],
           da25, ls=(0, (3, 1, 1, 1, 1, 1)), color=color2desat,
           marker='^', label="Da 25 um")
-ax4a.plot([subData25.ReP.min(), subData25.ReP.max()],
+ax4a.plot([subData25[rePlot].min(), subData25[rePlot].max()],
           [1, 1], color=color2, ls=':')
 
 # Also set axis properties
@@ -159,10 +163,10 @@ sns.despine(f4, right=False)
 
 # Dilution Index
 f5, ax5 = plt.subplots(1, 1,figsize=(12,10))
-ax5.plot(subData100.ReP, subData100.reacConsvLim, ls='-',
+ax5.plot(subData100[rePlot], subData100.reacConsvLim, ls='-',
          marker='o', label="100 um",
          color=pal1[0])
-ax5.plot(subData25.ReP, subData25.reacConsvLim, ls='-',
+ax5.plot(subData25[rePlot], subData25.reacConsvLim, ls='-',
          marker='o', label="25 um",
          color=pal1[1])
 ax5.set_xlabel('Reynolds Number')
@@ -172,8 +176,8 @@ sns.despine(f5)
 # Figure: Product in region where TCPO has crossed the boundary
 
 f6, ax6 = plt.subplots(1, 1, figsize=(12,10))
-ax6.plot(subData100.ReP, subData100.cTCPOLim, ls='-', marker='o', label='100 um', color=pal1[0])
-ax6.plot(subData25.ReP, subData25.cTCPOLim, ls='-',
+ax6.plot(subData100[rePlot], subData100.cTCPOLim, ls='-', marker='o', label='100 um', color=pal1[0])
+ax6.plot(subData25[rePlot], subData25.cTCPOLim, ls='-',
          marker='o', label="25 um",
          color=pal1[1])
 ax6.set_xlabel('Reynolds Number')
@@ -182,9 +186,9 @@ ax6.set_title('Region where TCPO has crossed reactant boundary')
 ax6.legend()
 
 f7, ax7 = plt.subplots(1, 1, figsize=(12,10))
-ax7.plot(subData100.ReP, subData100.cProdLim/subData100.cLim,
+ax7.plot(subData100[rePlot], subData100.cProdLim/subData100.cLim,
          ls='-', marker='o', label='100 um', color=pal1[0])
-ax7.plot(subData25.ReP, subData25.cProdLim/subData25.cLim,
+ax7.plot(subData25[rePlot], subData25.cProdLim/subData25.cLim,
          ls='-', marker='o', label="25 um",
          color=pal1[1])
 ax7.set_xlabel('Reynolds Number')
