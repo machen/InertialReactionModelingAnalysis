@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 import os
 import re
 import seaborn as sns
-import datahelper as dh
+import DataHelper as dh
 
 """TODO: Convert script inputs into user prompts, see input(). Will need to
 set up to take default values as well.
@@ -254,10 +254,10 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\RecircZoneStreamlines\\P
 caseName = "TwoPillar_"
 ext = "velStreamline.txt"
 testMode = False  # Runs on one file, produces plots, then stops PDF calculation
-nBins = 12  # Number of bins to use for PDF
+nBins = 50  # Number of bins to use for PDF
 calculatePDFs = True  # Flag to toggle calculation of PDFs.
 logVal = False  # Bin log values instead of the actual values
-dList = [100, 25]
+dList = [100, 50, 25]
 
 """MAIN SCRIPT"""
 

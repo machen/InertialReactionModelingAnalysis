@@ -507,7 +507,7 @@ workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\ChemData\\RawData\\"
 # workingDir = "..\\Comsol5.4\\TwoPillars\\Version6\\ExF\\FlowData\\RawData\\"
 # workingDir = "TestData"
 # workingDir = "..\\Working Data\\ChemData\\RawData\\"
-caseName = "TwoPillar_v6"
+caseName = "TwoPillar_v6_ExF_c3"
 #caseName = "TwoPillar_v6_ExF_c3_k2000_r100_d100_Re100"
 caseExt = r"\.chemdata.txt$"
 # caseExt = "\.flowdata.txt$"
@@ -522,15 +522,15 @@ print(workingDir)
 testMode = False  # Set to true to use only one file, which you have to specify
 plotData = False
 
-binProp = True  # True to bin values defined by binProp, false to skip
+binProp = False  # True to bin values defined by binProp, false to skip
 dataRegionX = [150, 350]
 dataRegionY = [-5000, 250]
 useMid = True  # Use middle plane for calculating recirc center?
-regionName = 'Bottom half pillar exclusive'
+regionName = 'Bottom Half Pillar Gap'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'reactCompl'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'tcpo'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 estimateRecircCenter = False
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True
@@ -541,7 +541,7 @@ metaData = pd.DataFrame([], columns=['fileName', 'r1', 'r2',
                                      'd', 'Re', 'dP', 'q', 'l'])
 # Chemistry props
 diff = 3E-9  # m2/s, H2O2
-nu = 4.3E-7  #m^2/s Acetnonitrile kinematic viscosity
+nu = 4.3E-7  # m^2/s Acetnonitrile kinematic viscosity
 
 
 """ Script start """
@@ -640,11 +640,11 @@ for fileName in fileList:
             params['Pe'] = params['velChar']*params['r1']*2E-6/diff
             params['DaDiff'] = params['k']*params['c']/1000*(2E-6*params['r1'])**2/diff
             params['DaAdv'] = params['k']*params['c']/1000*2E-6*params['r1']/params['velChar']
-        if binProp:
-            # Calculate stats of mean and std dev based solely on prop weighted by vol
             params['volWeightedMean'] = np.average(data.loc[:, binProp].values, weights=elementVol)
             var = data.loc[:,binProp].values-params['volWeightedMean']
             params['volWeightedStd']  = np.sqrt(np.average(var**2, weights=elementVol))
+        if binProp:
+            # Calculate stats of mean and std dev based solely on prop weighted by vol
             normFreq, valMean, valBin = \
                 producePDF(data, nBins=nBins, logBin=logBins, prop=binProp)
             pdfData = {'normFreq': normFreq, 'valMean': valMean,

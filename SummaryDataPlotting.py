@@ -32,6 +32,8 @@ subData100 = data.loc[(data.d == 100) & (data.k == 2000) &
                       (data.FlowCond == 'NS'), :]
 subData25 = data.loc[(data.d == 25) & (data.k == 2000) &
                      (data.FlowCond == 'NS'), :]
+subData50 = data.loc[(data.d == 50) & (data.k == 2000) &
+                      (data.FlowCond == 'NS'), :]
 # For Figure 2: Normalized Sum dCdt results, NS
 
 rePlot = 'ReP'
@@ -39,10 +41,13 @@ rePlot = 'ReP'
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 ax1.plot(subData100[rePlot],
          subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
-         marker='o', label="Sim 100um NS")
+         marker='o', label="Sim 100um NS", color=pal1[0])
+ax1.plot(subData50[rePlot],
+         subData50.dCdtSum/max(subData50.dCdtSum), ls='-',
+         marker='o', label="Sim 50um NS", color=pal1[2])
 ax1.plot(subData25[rePlot],
          subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
-         marker='o', label="Sim 25um NS")
+         marker='o', label="Sim 25um NS", color=pal1[1])
 # # Plot stokes data
 # subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
 # ax1.plot(subData100Stokes[rePlot],
@@ -70,6 +75,12 @@ ax2.plot(subData100[rePlot], subData100.cLim, ls='-',
 ax2.plot(subData100[rePlot], subData100.cTCPOLim, ls='--',
          marker='s', label="Mean TCPO 100 um",
          color=pal2[0])
+ax2.plot(subData50[rePlot], subData50.cLim, ls='-',
+         marker='o', label="C_lim Tracer 50 um",
+         color=pal1[2])
+ax2.plot(subData50[rePlot], subData50.cTCPOLim, ls='--',
+         marker='s', label="Mean TCPO 50 um",
+         color=pal2[2])
 ax2.plot(subData25[rePlot], subData25.cLim, ls='-',
          marker='o', label="C_lim Tracer 25 um",
          color=pal1[1])
@@ -89,9 +100,11 @@ f3, ax3 = plt.subplots(ncols=1, nrows=1, figsize=(12, 10))
 tReact = 1/3E-3/2000  # Half life assuming well mixed and equal reactants
 # ax3c = ax3b.twinx()
 ax3.plot(subData100[rePlot], subData100.MRT, marker="o",
-         ls='none', label="100 um Gap")
+         ls='none', label="100 um Gap", color=pal1[0])
+ax3.plot(subData50[rePlot], subData50.MRT, marker="o",
+         ls='none', label="50 um Gap", color=pal1[2])
 ax3.plot(subData25[rePlot], subData25.MRT, marker="o",
-         ls='none', label="25 um Gap")
+         ls='none', label="25 um Gap", color=pal1[1])
 ax3.set_xlabel('Reynolds Number')
 ax3.set_ylabel('Mean residence time (s)')
 ax3.set_yscale('log')
@@ -115,15 +128,26 @@ daDiff25 = subData25.loc[subData25.PePoreThroat < 1, 'DaDiffPoreThroat']
 da25 = pd.concat([daDiff25, daAdv25])
 da25.sort_values(axis='index')
 
+daAdv50 = subData50.loc[subData50.PePoreThroat > 1, 'DaAdvPoreThroat']
+daDiff50 = subData50.loc[subData50.PePoreThroat < 1, 'DaDiffPoreThroat']
+da50 = pd.concat([daDiff50, daAdv50])
+da50.sort_values(axis='index')
+
 color1 = pal1[9]
 color1desat = pal2[9]
 color2 = pal1[3]
 color2desat = pal2[3]
+color3 = pal1[5]
+color3desat = pal2[5]
 
 ax4.plot(subData100[rePlot],
          subData100.PePoreThroat, ls='-',
          marker='o', label="Pe 100um",
          color=color1)
+ax4.plot(subData50[rePlot],
+         subData50.PePoreThroat, ls='-.',
+         marker='o', label="Pe 50um",
+         color=color3)
 ax4.plot(subData25[rePlot],
          subData25.PePoreThroat, ls='--',
          marker='s', label="Pe 25um",
@@ -133,6 +157,9 @@ ax4.plot([subData25[rePlot].min(), subData25[rePlot].max()],
 ax4a.plot(subData100[rePlot],
           da100, ls=(0, (3, 5, 1, 5)), color=color2,
           marker='v', label="Da 100 um")
+ax4a.plot(subData50[rePlot],
+          da50, ls=(0, (3, 1, 1, 3)), color=color3,
+          marker='>', label="Da 50 um")
 ax4a.plot(subData25[rePlot],
           da25, ls=(0, (3, 1, 1, 1, 1, 1)), color=color2desat,
           marker='^', label="Da 25 um")
@@ -166,6 +193,9 @@ f5, ax5 = plt.subplots(1, 1,figsize=(12,10))
 ax5.plot(subData100[rePlot], subData100.reacConsvLim, ls='-',
          marker='o', label="100 um",
          color=pal1[0])
+ax5.plot(subData50[rePlot], subData50.reacConsvLim, ls='-',
+         marker='o', label="50 um",
+         color=pal1[2])
 ax5.plot(subData25[rePlot], subData25.reacConsvLim, ls='-',
          marker='o', label="25 um",
          color=pal1[1])
@@ -177,6 +207,7 @@ sns.despine(f5)
 
 f6, ax6 = plt.subplots(1, 1, figsize=(12,10))
 ax6.plot(subData100[rePlot], subData100.cTCPOLim, ls='-', marker='o', label='100 um', color=pal1[0])
+ax6.plot(subData50[rePlot], subData50.cTCPOLim, ls='-', marker='o', label='50 um', color=pal1[2])
 ax6.plot(subData25[rePlot], subData25.cTCPOLim, ls='-',
          marker='o', label="25 um",
          color=pal1[1])
@@ -188,6 +219,8 @@ ax6.legend()
 f7, ax7 = plt.subplots(1, 1, figsize=(12,10))
 ax7.plot(subData100[rePlot], subData100.cProdLim/subData100.cLim,
          ls='-', marker='o', label='100 um', color=pal1[0])
+# ax7.plot(subData50[rePlot], subData50.cProdLim/subData100.cLim,
+#          ls='-', marker='o', label='50 um', color=pal1[2])
 ax7.plot(subData25[rePlot], subData25.cProdLim/subData25.cLim,
          ls='-', marker='o', label="25 um",
          color=pal1[1])
