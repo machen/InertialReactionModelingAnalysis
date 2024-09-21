@@ -235,7 +235,6 @@ smooth = False
 window = 10
 prop = 'ReP'
 propLim = 50
-# Might be nice to do some averaging of lines that have the same experiemntal condition
 
 mainDir = "..\\..\\Experiments\\"
 

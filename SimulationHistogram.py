@@ -530,7 +530,7 @@ regionName = 'Bottom Half Pillar Gap'
 nBins = 100
 logBins = False  # True to use log spaced bins, False to use linear bins
 nPil = 1  # Number of pillars in file specification
-binProp = 'tcpo'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
+binProp = 'cProduct'  # Name of column to run PDF on, use 'angle' to do a vort./vel. angle analysis
 estimateRecircCenter = False
 recircDefinedRegion = False  # Will cut data to strictly defined single recirculation zone (x=250+)
 autoRegion = True

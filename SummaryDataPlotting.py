@@ -20,7 +20,7 @@ data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,B
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
 plt.ion()
-sns.set_context('poster',font_scale=1.25)
+sns.set_context('poster', font_scale=1.25)
 plt.rcParams['font.family'] = 'Cambria'
 plt.rcParams['svg.fonttype'] = 'none'
 
@@ -113,8 +113,7 @@ ax3.legend()
 sns.despine(f3)
 
 # Figure of Pe and relevant Da numbers
-f4, ax4 = plt.subplots(1, 1, sharex=True, figsize=(12, 10))
-ax4a = ax4.twinx()
+f4, ax4 = plt.subplots(2, 1, sharex=True, figsize=(12, 10))
 
 # Create data sets that give either the adv or diff Da depending on the Pe number
 # TODO: This relies on Pe increasing monotonically from diffusive to advective and is really hacky. Should work aribitrarily. Maybe I should be actually just creating a "net Da" column
@@ -140,51 +139,51 @@ color2desat = pal2[3]
 color3 = pal1[5]
 color3desat = pal2[5]
 
-ax4.plot(subData100[rePlot],
-         subData100.PePoreThroat, ls='-',
-         marker='o', label="Pe 100um",
-         color=color1)
-ax4.plot(subData50[rePlot],
-         subData50.PePoreThroat, ls='-.',
-         marker='o', label="Pe 50um",
-         color=color3)
-ax4.plot(subData25[rePlot],
-         subData25.PePoreThroat, ls='--',
-         marker='s', label="Pe 25um",
-         color=color1desat)
-ax4.plot([subData25[rePlot].min(), subData25[rePlot].max()],
-         [1, 1], color=color1, ls=':')
-ax4a.plot(subData100[rePlot],
-          da100, ls=(0, (3, 5, 1, 5)), color=color2,
-          marker='v', label="Da 100 um")
-ax4a.plot(subData50[rePlot],
-          da50, ls=(0, (3, 1, 1, 3)), color=color3,
-          marker='>', label="Da 50 um")
-ax4a.plot(subData25[rePlot],
-          da25, ls=(0, (3, 1, 1, 1, 1, 1)), color=color2desat,
-          marker='^', label="Da 25 um")
-ax4a.plot([subData25[rePlot].min(), subData25[rePlot].max()],
-          [1, 1], color=color2, ls=':')
+ax4[0].plot(subData100[rePlot],
+            subData100.PePoreThroat, ls='-',
+            marker='o', label="Pe 100um",
+            color=color1)
+ax4[0].plot(subData50[rePlot],
+            subData50.PePoreThroat, ls='-.',
+            marker='^', label="Pe 50um",
+            color=color3)
+ax4[0].plot(subData25[rePlot],
+            subData25.PePoreThroat, ls='--',
+            marker='s', label="Pe 25um",
+            color=color1desat)
+ax4[0].plot([subData25[rePlot].min(), subData25[rePlot].max()],
+            [1, 1], color='k', ls=':')
+ax4[1].plot(subData100[rePlot],
+            da100, ls = '-', color=color2,
+            marker='o', label="Da 100 um")
+ax4[1].plot(subData50[rePlot],
+            da50, ls='-.', color=color3,
+            marker='^', label="Da 50 um")
+ax4[1].plot(subData25[rePlot],
+            da25, ls='--', color=color2desat,
+            marker='s', label="Da 25 um")
+ax4[1].plot([subData25[rePlot].min(), subData25[rePlot].max()],
+            [1, 1], color='k', ls=':')
 
 # Also set axis properties
-ax4.spines['left'].set_color(color1)
-ax4a.spines['left'].set_color(color1)
-ax4.tick_params(axis='y', colors=color1, which='both')
-ax4.yaxis.label.set_color(color1)
+# ax4[0].spines['left'].set_color(color1)
+# ax4[1].spines['left'].set_color(color1)
+# # ax4[0].tick_params(axis='y', colors=color1, which='both')
+# ax4[0].yaxis.label.set_color(color1)
 
-ax4a.spines['right'].set_color(color2)
-ax4a.tick_params(axis='y',colors=color2, which='both')
-ax4a.yaxis.label.set_color(color2)
+# ax4[1].spines['right'].set_color(color2)
+# # ax4[1].tick_params(axis='y',colors=color2, which='both')
+# # ax4[1].yaxis.label.set_color(color2)
 
-ax4.set_xlabel('Reynolds Number')
-ax4a.set_xlabel('Reynolds Number')
-ax4.set_ylabel('Peclet Number (-)')
-ax4.set_yscale('log')
-ax4a.set_ylabel('Dahmkohler Number (-)')
-ax4a.set_yscale('log')
-ax4.legend()
-ax4a.legend()
-ax4.set_title('Pore throat ND Numbers')
+ax4[0].set_xlabel('Reynolds Number')
+ax4[1].set_xlabel('Reynolds Number')
+ax4[0].set_ylabel('Peclet Number (-)')
+ax4[0].set_yscale('log')
+ax4[1].set_ylabel('Dahmkohler Number (-)')
+ax4[1].set_yscale('log')
+ax4[0].legend()
+ax4[1].legend()
+ax4[0].set_title('Pore throat ND Numbers')
 sns.despine(f4, right=False)
 
 
