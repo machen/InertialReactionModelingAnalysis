@@ -15,7 +15,7 @@ data = pd.read_excel(dataFile, sheet_name='Data',usecols="A:P,Z:AA,AK,AP,AR,BA,B
                             "dCdtSum",
                             "dilConsLim","reacConsvLim",
                             "ReHd",
-                            "ReDarcy"
+                            "ReMod"
                             ], skiprows=2)
 data.sort_values(by=["FlowCond","ReP"], inplace=True)
 
@@ -36,18 +36,18 @@ subData50 = data.loc[(data.d == 50) & (data.k == 2000) &
                       (data.FlowCond == 'NS'), :]
 # For Figure 2: Normalized Sum dCdt results, NS
 
-rePlot = 'ReP'
+rePlot = 'ReMod'
 
 f1, ax1 = plt.subplots(1, 1, sharex='col', figsize=(12, 10))
 ax1.plot(subData100[rePlot],
          subData100.dCdtSum/max(subData100.dCdtSum), ls='-',
-         marker='o', label="Sim 100um NS", color=pal1[0])
+         marker='>', label="Sim 100um NS", color=pal1[0])
 ax1.plot(subData50[rePlot],
          subData50.dCdtSum/max(subData50.dCdtSum), ls='-',
-         marker='o', label="Sim 50um NS", color=pal1[2])
+         marker='h', label="Sim 50um NS", color=pal1[2])
 ax1.plot(subData25[rePlot],
          subData25.dCdtSum/max(subData25.dCdtSum), ls='-',
-         marker='o', label="Sim 25um NS", color=pal1[1])
+         marker='s', label="Sim 25um NS", color=pal1[1])
 # # Plot stokes data
 # subData100Stokes = data.loc[(data.d == 100) & (data.k==2000) & (data.FlowCond=='Stokes'), :]
 # ax1.plot(subData100Stokes[rePlot],
